@@ -13,8 +13,9 @@ pub fn validate_address(value: String) -> Result<(), String> {
 pub fn validate_port(value: String) -> Result<(), String> {
     match value.parse::<u16>() {
         Ok(_) => Ok(()),
-        Err(_) => Err(format!(
+        Err(_) => Err(
             "The provided value must be a number and must be a 16-bit integer (maximum: 65535)"
-        )),
+                .to_string(),
+        ),
     }
 }

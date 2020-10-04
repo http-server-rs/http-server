@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTTP Server | File Explorer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="current-directory">
+    <div id="container">
+      <article id="dirname">
+        <h2>{dirname}</h2>
+        <code class="code">{dirpath}</code>
+      </article>
+      <ul id="toolbox"></ul>
+    </div>
+  </header>
+  <main>
+    <table id="file-table">
+      <thead>
+        <th width="35px">&nbsp;</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Created</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td><svg height='20px' width='30px'  fill="#437CB0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" x="0px" y="0px"><g data-name="22"><path d="M21,7H12.72L12,4.68A1,1,0,0,0,11,4H3A1,1,0,0,0,2,5V19a1,1,0,0,0,1,1H21a1,1,0,0,0,1-1V8A1,1,0,0,0,21,7Z"></path></g></svg></td>
+          <td><a href="{filepath}">{filename}</a></td>
+          <td>{filetype}</td>
+          <td>{file_created}</td>
+        </tr>
+        <tr>
+          <td><svg height='20px' width='30px'  fill="#437CB0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" baseProfile="tiny" x="0px" y="0px" viewBox="0 0 80 80" xml:space="preserve"><polygon points="65,7.5 65,25 82.5,25"></polygon><polygon points="17.5,7.5 17.5,92.5 82.5,92.5 82.5,30 60,30 60,7.5"></polygon></svg></td>
+          <td><a href="{filepath}">{filename}</a></td>
+          <td>{filetype}</td>
+          <td>{file_created}</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+  <footer id="fs-footer">
+    <code class="code">http-server | 0.0.9</code>
+  </footer>
+</body>
+</html>
