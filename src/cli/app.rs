@@ -4,8 +4,8 @@ use clap::{crate_version, App};
 /// Creates a CLAP `App` instance
 pub fn make_app() -> App<'static, 'static> {
     App::new("http-server")
-        .about("Command-line HTTP Server")
-        .author("Authors: https://github.com/EstebanBorai/http-server/blob/main/AUTHORS")
+        .author("Esteban Borai (https://github.com/EstebanBorai)")
+        .about("A simple, zero-configuration command-line HTTP server")
         .version(crate_version!())
         .setting(clap::AppSettings::ColoredHelp)
         .args(&make_args())
