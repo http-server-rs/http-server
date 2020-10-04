@@ -1,6 +1,6 @@
 [package]
 name = "http-server"
-version = "0.1.0"
+version = "0.0.9"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -12,4 +12,7 @@ categories = ["authentication", "encoding", "web-programming", "web-programming:
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ascii = "0.8"
 clap = "2.33.3"
+mime_guess = "2.0"
+tiny_http = "0.6"
