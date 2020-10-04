@@ -7,21 +7,16 @@ use clap::Arg;
 /// the element `1` represents the `long` name.
 pub type CommandLineOption<'a> = (&'a str, &'a str);
 
-/// The address to bind the HTTP server to
 pub const ADDRESS: CommandLineOption = ("a", "address");
-/// The port to bind the HTTP server to
 pub const PORT: CommandLineOption = ("p", "port");
-/// The root directory to serve files from
-pub const ROOT_DIR: CommandLineOption = ("", "root_dir");
-/// If `true` every output will not be logged
 pub const SILENT: CommandLineOption = ("s", "silent");
 
 trait IntoArg {
-    /// Creates an argument with the `short` and `long` names
-    /// defined in the `CommandLineOption` tuple
+    /// Creates a `clap::Arg` from a `CommandLineOption`
+    /// where the element at index `0` of the tuple will be the `short`
+    /// argument name and the element at index `1` will be the `long`
+    /// argument name
     fn into_arg(&self) -> Arg<'static, 'static>;
-    /// Creates a positional argument with the provided `index` and `name`
-    fn into_positional(&self, index: u64) -> Arg<'static, 'static>;
 }
 
 impl IntoArg for CommandLineOption<'static> {
@@ -29,10 +24,6 @@ impl IntoArg for CommandLineOption<'static> {
         Arg::<'static, 'static>::with_name(self.1)
             .short(self.0)
             .long(self.1)
-    }
-
-    fn into_positional(&self, index: u64) -> Arg<'static, 'static> {
-        Arg::with_name(self.1).index(index).required(false)
     }
 }
 
@@ -51,9 +42,6 @@ pub fn make_args() -> Vec<Arg<'static, 'static>> {
             .takes_value(true)
             .default_value("7878")
             .validator(validate_port),
-        ROOT_DIR
-            .into_positional(1)
-            .help("Directory to serve files from"),
-        // SILENT.into_arg().help("Disable outputs").takes_value(false),
+        SILENT.into_arg().help("Disable outputs").takes_value(false),
     ]
 }
