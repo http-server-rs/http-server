@@ -1,0 +1,14 @@
+[package]
+name = "http-server"
+version = "0.1.0"
+authors = ["Esteban Borai <estebanborai@gmail.com>"]
+edition = "2018"
+license = "MIT"
+description = "Zero-configuration command-line HTTP server"
+readme = "README.md"
+repository = "https://github.com/EstebanBorai/http-server"
+categories = ["authentication", "encoding", "web-programming", "web-programming::http-server"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

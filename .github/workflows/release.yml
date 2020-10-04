@@ -1,0 +1,107 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [
+            linux,
+            windows,
+            macos
+        ]
+
+        include:
+          - name: linux
+            os: ubuntu-latest
+            artifact_name: http-server
+            asset_name: http-server-linux
+            asset_extension: .tar.gz
+
+          - name: windows
+            os: windows-latest
+            artifact_name: http-server.exe
+            asset_name: http-server-windows
+            asset_extension: .zip
+
+          - name: macos
+            os: macos-latest
+            artifact_name: http-server
+            asset_name: http-server-macos
+            asset_extension: .tar.gz
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set env
+      run: |
+          RELEASE_VERSION=$(echo ${GITHUB_REF:10})
+          echo ::set-env name=ASSET_NAME::${{ matrix.asset_name }}-$RELEASE_VERSION${{ matrix.asset_extension }}
+      shell: bash
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+
+    - name: Build
+      run: cargo build --release --locked
+
+    - name: Archive Release
+      shell: bash
+      run: |
+        cp "target/release/${{ matrix.artifact_name }}" "${{ matrix.artifact_name }}"
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          7z a "${{ env.ASSET_NAME }}" "${{ matrix.artifact_name }}"
+        else
+          tar czf "${{ env.ASSET_NAME }}" "${{ matrix.artifact_name }}"
+        fi
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v1-release
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ env.ASSET_NAME }}
+        asset_name: ${{ env.ASSET_NAME }}
+        tag: ${{ github.ref }}
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: ''
+          draft: false
+          prerelease: false
+
+  publish-crate:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - run: cargo login ${CRATES_IO_TOKEN}
+        env:
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: publish http-server
+        run: cargo publish
