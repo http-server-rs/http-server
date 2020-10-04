@@ -1,7 +1,7 @@
 use crate::file_explorer::{Entry, Error};
+use std::io::ErrorKind;
 use std::env::current_dir;
 use std::fs::metadata;
-use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -36,7 +36,7 @@ impl FileExplorer {
 
         Self {
             root_dir: final_path.clone(),
-            root_dir_string: final_path.to_str().unwrap().to_string(),
+            root_dir_string: final_path.to_str().unwrap().to_string()
         }
     }
 
@@ -46,10 +46,12 @@ impl FileExplorer {
 
         match metadata(path.clone()) {
             Ok(meta) => Ok(Entry::new(path, meta)),
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => Err(Error::NoExists(path.to_str().unwrap().to_string())),
-                _ => Err(Error::IOError(err)),
-            },
+            Err(err) => {
+                match err.kind() {
+                    ErrorKind::NotFound => Err(Error::NoExists(path.to_str().unwrap().to_string())),
+                    _ => Err(Error::IOError(err)),
+                }
+            }
         }
     }
 
@@ -74,8 +76,7 @@ impl FileExplorer {
         }
 
         // retrieve every fragment of the path (directory).
-        let sanitized_path = path
-            .split('/')
+        let sanitized_path = path.split('/')
             .collect::<Vec<&str>>()
             .into_iter()
             .filter(|&e| e != "")
@@ -83,7 +84,7 @@ impl FileExplorer {
             .join("/");
 
         let mut next_path = self.root_dir.clone();
-
+        
         next_path.push(PathBuf::from_str(&sanitized_path).unwrap());
 
         next_path
@@ -99,10 +100,7 @@ mod tests {
         let file_explorer = FileExplorer::new(PathBuf::from_str("").unwrap());
         let relative = file_explorer.build_relative_path("/");
 
-        assert_eq!(
-            file_explorer.root_dir.to_str().unwrap(),
-            relative.to_str().unwrap()
-        );
+        assert_eq!(file_explorer.root_dir.to_str().unwrap(), relative.to_str().unwrap());
     }
 
     #[test]
@@ -114,10 +112,7 @@ mod tests {
 
         let relative = file_explorer.build_relative_path("/music/favorites");
 
-        assert_eq!(
-            root_dir_on_music.to_str().unwrap(),
-            relative.to_str().unwrap()
-        );
+        assert_eq!(root_dir_on_music.to_str().unwrap(), relative.to_str().unwrap());
     }
 
     #[test]
@@ -129,9 +124,6 @@ mod tests {
 
         let relative = file_explorer.build_relative_path("//music/favorites");
 
-        assert_eq!(
-            root_dir_on_music.to_str().unwrap(),
-            relative.to_str().unwrap()
-        );
+        assert_eq!(root_dir_on_music.to_str().unwrap(), relative.to_str().unwrap());
     }
 }
