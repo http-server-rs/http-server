@@ -54,6 +54,6 @@ pub fn make_args() -> Vec<Arg<'static, 'static>> {
         ROOT_DIR
             .into_positional(1)
             .help("Directory to serve files from"),
-        SILENT.into_arg().help("Disable outputs").takes_value(false),
+        // SILENT.into_arg().help("Disable outputs").takes_value(false),
     ]
 }

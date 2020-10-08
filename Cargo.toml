@@ -3,10 +3,11 @@ name = "http-server"
 version = "0.0.9"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2018"
-description = "Configurable and simple command-line HTTP server"
-repository = "https://github.com/http-server-rs/http-server"
+license = "MIT"
+description = "Command-line HTTP Server"
+readme = "README.md"
+repository = "https://github.com/EstebanBorai/http-server"
 categories = ["web-programming", "web-programming::http-server"]
-keywords = ["configurable", "file", "http", "server", "serve", "static"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
