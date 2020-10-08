@@ -4,8 +4,8 @@ use std::io::Error as IOError;
 /// errors
 #[derive(Debug)]
 pub enum Error {
-  /// The path provided doesn't exists
-  NoExists(String),
-  /// A generic IO Error
-  IOError(IOError)
+    /// The path provided doesn't exists
+    NoExists(String),
+    /// A generic IO Error
+    IOError(IOError),
 }
