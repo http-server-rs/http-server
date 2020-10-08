@@ -1,4 +1,4 @@
-use crate::file_explorer::{FileExplorer, Entry};
+use crate::file_explorer::{Entry, FileExplorer};
 use std::fs::ReadDir;
 
 pub const HTML_DOCUMENT_START: &str = r#"
@@ -146,11 +146,7 @@ pub const FOLDER_ICON: &str = r##"<svg height='20px' width='30px'  fill="#437CB0
 pub const FILE_ICON: &str = r##"<svg height='20px' width='30px'  fill="#437CB0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" baseProfile="tiny" x="0px" y="0px" viewBox="0 0 80 80" xml:space="preserve"><polygon points="65,7.5 65,25 82.5,25"></polygon><polygon points="17.5,7.5 17.5,92.5 82.5,92.5 82.5,30 60,30 60,7.5"></polygon></svg>"##;
 
 fn make_header(dirname: &str, root_dir: &str) -> String {
-  let dirname = if dirname == "" {
-    "/"
-  } else {
-    dirname
-  };
+    let dirname = if dirname == "" { "/" } else { dirname };
 
     format!(
         r##"<header id="current-directory">
@@ -189,22 +185,26 @@ fn make_html_table_row(fsystem: &FileExplorer, fs_entry: &Entry) -> String {
     )
 }
 
-pub fn build_html(dirname: &str, root_dir: &str, fsystem: &FileExplorer, entries: ReadDir) -> String {
+pub fn build_html(
+    dirname: &str,
+    root_dir: &str,
+    fsystem: &FileExplorer,
+    entries: ReadDir,
+) -> String {
     let mut html = String::from(HTML_DOCUMENT_START);
 
     html.push_str(make_header(dirname, root_dir).as_str());
     html.push_str(MAIN_INIT);
 
-    let mut entries = entries.into_iter()
-      .map(|dir_entry| Entry::from(dir_entry.unwrap()))
-      .collect::<Vec<Entry>>();
+    let mut entries = entries
+        .map(|dir_entry| Entry::from(dir_entry.unwrap()))
+        .collect::<Vec<Entry>>();
 
-      entries.sort();
+    entries.sort();
 
-      entries.into_iter()
-        .for_each(|entry| {
-          html.push_str(make_html_table_row(fsystem, &entry).as_str());
-        });
+    entries.into_iter().for_each(|entry| {
+        html.push_str(make_html_table_row(fsystem, &entry).as_str());
+    });
 
     html.push_str(TABLE_END);
     html.push_str(HTML_FOOTER);

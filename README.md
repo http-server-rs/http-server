@@ -5,31 +5,67 @@
 
 <div align="center">
 
+  [![Crates.io](https://img.shields.io/crates/v/http-server.svg)](https://crates.io/crates/http-server)
+  [![Documentation](https://docs.rs/http-server/badge.svg)](https://docs.rs/http-server)
   ![Build](https://github.com/EstebanBorai/http-server/workflows/build/badge.svg)
   ![Lint](https://github.com/EstebanBorai/http-server/workflows/clippy/fmt/badge.svg)
   ![Tests](https://github.com/EstebanBorai/http-server/workflows/tests/badge.svg)
 
 </div>
 
-## Modules
+## Index
 
-This project is composed by 3 main modules:
+- [Installation](#installation)
+- [Usage](#usage)
+    - [Flags](#flags)
+    - [Options](#options)
+- [Contributing](#contributing)
+- [License](#license)
+    - [Contribution](#contribution)
 
-### The `cli` module
+## Installation
 
-Which is in charge of gathering command-line arguments and options
+```bash
+cargo install http-server
+```
 
-### The `config` module
+Check for the installation to be successful.
 
-Defines the shape of the HTTP server configuration. This module acts on an input
-(the `cli` for instance), to build an instance of `Config`, which is then passed to
-the `server` module
+```bash
+http-server --help
+```
 
-### The `server` module
+## Usage
 
-The main logic for the _HTTP Server_. This module must receive a `Config` instance
-which is used to build an _HTTP Server_ instance, and then binds the server process
-to the specified socket address.
+```
+http-server [FLAGS] [OPTIONS] [root_dir]
+```
+
+### Flags
+
+Flags are provided without any values. For example:
+
+```
+http-server --help
+```
+
+Name | Short | Long | Description
+--- | --- | --- | ---
+Help | `h` | `help` | Prints help information
+Version | `V` | `version` | Prints version information
+
+### Options
+
+Options are provided with a value and also have default values. For example:
+
+```
+http-server --address 127.0.0.1
+```
+
+Name | Short | Long | Description | Default Value
+--- | --- | --- | --- | ---
+Address | `a` | `address` | Address to bind the server | `0.0.0.0`
+Port | `p` | `port` | Port to bind the server | `7878`
 
 ## Contributing
 

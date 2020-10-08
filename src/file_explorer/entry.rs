@@ -1,7 +1,7 @@
+use std::cmp::Ordering;
 use std::fs::{DirEntry, Metadata};
 use std::path::PathBuf;
 use std::time::SystemTime;
-use std::cmp::Ordering;
 
 /// `FileExplorer` entry containing it's path (`PathBuf`) and
 /// it's `Metadata`
