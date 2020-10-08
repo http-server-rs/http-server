@@ -33,7 +33,12 @@ pub fn static_fs(request: Request, file_explorer: &FileExplorer) {
 
                 let entries = read_dir(entry.path).unwrap();
 
-                let html = build_html(dirname, &file_explorer.root_dir_string, &file_explorer, entries);
+                let html = build_html(
+                    dirname,
+                    &file_explorer.root_dir_string,
+                    &file_explorer,
+                    entries,
+                );
                 let mime_type_value: AsciiString = AsciiString::from_ascii("text/html").unwrap();
 
                 request
