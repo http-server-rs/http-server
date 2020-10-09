@@ -1,9 +1,10 @@
 use crate::config::Config;
 use crate::file_explorer::FileExplorer;
-use crate::handler::static_fs;
+use crate::handler::main_handler;
 use std::net::SocketAddr;
-use tiny_http::{Response, Server, ServerConfig};
+use tiny_http::{Server, ServerConfig};
 
+/// HTTP Server instance
 pub struct HttpServer {
     pub server: tiny_http::Server,
     pub address: SocketAddr,
@@ -31,6 +32,7 @@ impl From<Config> for HttpServer {
 }
 
 impl HttpServer {
+    /// Binds the server to the specified address and listen for incomming requests
     pub fn serve(&self) {
         if self.must_log {
             println!(
@@ -40,12 +42,8 @@ impl HttpServer {
         }
 
         for request in self.server.incoming_requests() {
-            match request.method().as_str().to_lowercase().as_str() {
-                "get" => static_fs(request, &self.file_explorer),
-                _ => request
-                    .respond(Response::from_string("Method Not Allowed").with_status_code(405))
-                    .unwrap(),
-            }
+            let (req, res) = main_handler(request, &self.file_explorer);
+            req.respond(res).unwrap();
         }
     }
 }

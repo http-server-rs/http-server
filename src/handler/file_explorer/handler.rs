@@ -2,7 +2,7 @@ use crate::file_explorer::FileExplorer;
 use crate::handler::build_html;
 use ascii::AsciiString;
 use std::fs::{read_dir, File};
-use tiny_http::{Request, Response};
+use tiny_http::{Request, Response, ResponseBox};
 
 /// Creates a path by merging the URL params and the `root_dir`.
 /// Then reads the file system entries in the resulting path.
@@ -11,7 +11,7 @@ use tiny_http::{Request, Response};
 /// and responds with an HTML with the entry listing.
 ///
 /// Otherwise retrieves the provided file.
-pub fn static_fs(request: Request, file_explorer: &FileExplorer) {
+pub fn file_explorer(request: Request, file_explorer: &FileExplorer) -> (Request, ResponseBox) {
     match file_explorer.read(request.url().as_ref()) {
         Ok(entry) => {
             if entry.is_file {
@@ -20,12 +20,16 @@ pub fn static_fs(request: Request, file_explorer: &FileExplorer) {
                     .to_string();
                 let mime_type = AsciiString::from_ascii(mime_type.as_bytes()).unwrap();
                 let file = File::open(entry.path).unwrap();
-                let response = Response::from_file(file).with_header(tiny_http::Header {
-                    field: "Content-Type".parse().unwrap(),
-                    value: mime_type,
-                });
 
-                request.respond(response).unwrap();
+                (
+                    request,
+                    Response::from_file(file)
+                        .with_header(tiny_http::Header {
+                            field: "Content-Type".parse().unwrap(),
+                            value: mime_type,
+                        })
+                        .boxed(),
+                )
             } else {
                 let dirpath = entry.path.clone();
                 let dirpath = dirpath.to_str().unwrap();
@@ -40,21 +44,21 @@ pub fn static_fs(request: Request, file_explorer: &FileExplorer) {
                     entries,
                 );
                 let mime_type_value: AsciiString = AsciiString::from_ascii("text/html").unwrap();
+                let response = Response::from_string(html)
+                    .with_status_code(200)
+                    .with_header(tiny_http::Header {
+                        field: "Content-Type".parse().unwrap(),
+                        value: mime_type_value,
+                    });
 
-                request
-                    .respond(
-                        Response::from_string(html)
-                            .with_status_code(200)
-                            .with_header(tiny_http::Header {
-                                field: "Content-Type".parse().unwrap(),
-                                value: mime_type_value,
-                            }),
-                    )
-                    .unwrap()
+                (request, response.boxed())
             }
         }
-        Err(_) => request
-            .respond(Response::from_string("Not Found").with_status_code(404))
-            .unwrap(),
+        Err(_) => (
+            request,
+            Response::from_string("Not Found")
+                .with_status_code(404)
+                .boxed(),
+        ),
     }
 }

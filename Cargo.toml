@@ -1,6 +1,6 @@
 [package]
 name = "http-server"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2018"
 license = "MIT"
