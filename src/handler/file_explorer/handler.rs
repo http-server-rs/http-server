@@ -1,5 +1,6 @@
 use crate::file_explorer::FileExplorer;
 use crate::handler::build_html;
+use crate::server::make_entity_tag;
 use ascii::AsciiString;
 use std::fs::{read_dir, File};
 use tiny_http::{Request, Response, ResponseBox};
@@ -16,10 +17,12 @@ pub fn file_explorer(request: Request, file_explorer: &FileExplorer) -> (Request
         Ok(entry) => {
             if entry.is_file {
                 let mime_type = mime_guess::from_path(&entry.path)
-                    .first_or_octet_stream()
-                    .to_string();
+                .first_or_octet_stream()
+                .to_string();
                 let mime_type = AsciiString::from_ascii(mime_type.as_bytes()).unwrap();
                 let file = File::open(entry.path).unwrap();
+                let entity_tag = make_entity_tag(&file.metadata().unwrap());
+                let entity_tag = AsciiString::from_ascii(entity_tag).unwrap();
 
                 (
                     request,
@@ -27,6 +30,10 @@ pub fn file_explorer(request: Request, file_explorer: &FileExplorer) -> (Request
                         .with_header(tiny_http::Header {
                             field: "Content-Type".parse().unwrap(),
                             value: mime_type,
+                        })
+                        .with_header(tiny_http::Header {
+                            field: "Etag".parse().unwrap(),
+                            value: entity_tag
                         })
                         .boxed(),
                 )

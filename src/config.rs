@@ -28,8 +28,6 @@ impl From<App<'static, 'static>> for Config {
         };
 
         let silent = matches.is_present(SILENT.1);
-
-        // at this point the values provided to the config are validated by the CLI
         Self {
             address,
             port,
