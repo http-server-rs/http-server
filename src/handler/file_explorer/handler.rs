@@ -1,9 +1,9 @@
 use crate::file_explorer::FileExplorer;
 use crate::handler::build_html;
-use crate::server::make_entity_tag;
+use crate::server::{ETag, HttpHeader};
 use ascii::AsciiString;
 use std::fs::{read_dir, File};
-use tiny_http::{Request, Response, ResponseBox};
+use tiny_http::{Header, Request, Response, ResponseBox};
 
 /// Creates a path by merging the URL params and the `root_dir`.
 /// Then reads the file system entries in the resulting path.
@@ -21,8 +21,9 @@ pub fn file_explorer(request: Request, file_explorer: &FileExplorer) -> (Request
                 .to_string();
                 let mime_type = AsciiString::from_ascii(mime_type.as_bytes()).unwrap();
                 let file = File::open(entry.path).unwrap();
-                let entity_tag = make_entity_tag(&file.metadata().unwrap());
-                let entity_tag = AsciiString::from_ascii(entity_tag).unwrap();
+                let entity_tag = ETag::from_metadata(&file.metadata().unwrap()).unwrap();
+                let entity_tag: HttpHeader = entity_tag.into();
+                let entity_tag: Header = entity_tag.into();
 
                 (
                     request,
@@ -31,10 +32,7 @@ pub fn file_explorer(request: Request, file_explorer: &FileExplorer) -> (Request
                             field: "Content-Type".parse().unwrap(),
                             value: mime_type,
                         })
-                        .with_header(tiny_http::Header {
-                            field: "Etag".parse().unwrap(),
-                            value: entity_tag
-                        })
+                        .with_header(entity_tag)
                         .boxed(),
                 )
             } else {

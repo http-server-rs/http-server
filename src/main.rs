@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod error;
 mod file_explorer;
 mod handler;
 mod server;

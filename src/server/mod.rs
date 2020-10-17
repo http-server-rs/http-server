@@ -1,5 +1,5 @@
-mod etag;
+mod header;
 mod http;
 
-pub use etag::*;
+pub use header::*;
 pub use http::*;
