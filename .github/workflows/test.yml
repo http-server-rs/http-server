@@ -1,4 +1,4 @@
-name: build
+name: test
 on:
   pull_request:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -14,7 +14,6 @@ jobs:
           - stable
           - beta
           - nightly
-
     steps:
       - uses: actions/checkout@v2
 
@@ -24,12 +23,11 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-build-
-
-      - name: cargo build
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-test-
+      - name: cargo test
         uses: actions-rs/cargo@v1
         with:
-          command: build
+          command: test
