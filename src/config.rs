@@ -1,41 +1,72 @@
-use crate::cli::{ADDRESS, PORT, ROOT_DIR, SILENT};
-use clap::App;
-use std::env::current_dir;
-use std::net::{IpAddr, SocketAddr};
-use std::path::PathBuf;
+use clap::ArgMatches;
+use std::convert::TryFrom;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
 
-/// Configuration for the HTTP/S Server
+/// Server instance configuration used on initialization
 #[derive(Debug)]
 pub struct Config {
-    pub address: IpAddr,
-    pub port: u16,
-    pub socket_address: SocketAddr,
-    pub root_dir: PathBuf,
-    pub silent: bool,
+    host: IpAddr,
+    port: u16,
+    address: SocketAddr,
 }
 
-impl From<App<'static, 'static>> for Config {
-    fn from(app: App) -> Self {
-        let matches = app.get_matches();
-        let address = IpAddr::from_str(matches.value_of(ADDRESS.1).unwrap()).unwrap();
-        let port = matches.value_of(PORT.1).unwrap().parse::<u16>().unwrap();
-        let socket_address = SocketAddr::new(address, port);
-        let root_dir = if let Some(root_dir) = matches.value_of(ROOT_DIR.1) {
-            PathBuf::from_str(root_dir).unwrap()
-        } else {
-            current_dir().unwrap()
-        };
+impl Default for Config {
+    fn default() -> Self {
+        let host = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let port = 7878;
+        let address = SocketAddr::new(host, port);
 
-        let silent = matches.is_present(SILENT.1);
-
-        // at this point the values provided to the config are validated by the CLI
         Self {
-            address,
+            host,
             port,
-            socket_address,
-            root_dir,
-            silent,
+            address,
         }
+    }
+}
+
+impl TryFrom<ArgMatches<'static>> for Config {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(matches: ArgMatches<'static>) -> Result<Self, Self::Error> {
+        let host = matches.value_of("host").unwrap();
+        let host = IpAddr::from_str(host)?;
+
+        let port = matches.value_of("port").unwrap();
+        let port = port.parse::<u16>()?;
+
+        let address = SocketAddr::new(host, port);
+
+        Ok(Config {
+            host,
+            port,
+            address,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn creates_default_config() {
+        let host = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let port = 7878;
+        let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 7878);
+        let config = Config::default();
+
+        assert_eq!(
+            config.host,
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            "default host: {}",
+            host
+        );
+        assert_eq!(config.port, 7878, "default port: {}", port);
+        assert_eq!(
+            config.address, address,
+            "default socket address: {}",
+            address
+        )
     }
 }

@@ -1,21 +1,43 @@
-use std::net::IpAddr;
+use std::net::Ipv4Addr;
 use std::str::FromStr;
 
-/// Validate a `String` to be a valid IP Address
-pub fn validate_address(value: String) -> Result<(), String> {
-    match IpAddr::from_str(value.as_str()) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(format!("The address {} is not a valid IP address", value)),
+pub fn is_valid_host(v: String) -> Result<(), String> {
+    if let Err(e) = Ipv4Addr::from_str(v.as_str()) {
+        return Err(format!("Invalid host value provided. {}", e.to_string()));
     }
+
+    Ok(())
 }
 
-/// Validate a `String` to be a valid number and also to be a number lower than or equal to 65535
-pub fn validate_port(value: String) -> Result<(), String> {
-    match value.parse::<u16>() {
-        Ok(_) => Ok(()),
-        Err(_) => Err(
-            "The provided value must be a number and must be a 16-bit integer (maximum: 65535)"
-                .to_string(),
-        ),
+pub fn is_valid_port(v: String) -> Result<(), String> {
+    if let Err(e) = v.parse::<u16>() {
+        return Err(format!("Invalid port value provided. {}", e.to_string()));
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_host() {
+        assert!(is_valid_host("127.0.0.1".to_string()).is_ok());
+    }
+
+    #[test]
+    fn invalidates_host() {
+        assert!(is_valid_host("foobar".to_string()).is_err());
+    }
+
+    #[test]
+    fn validates_port() {
+        assert!(is_valid_port("4500".to_string()).is_ok());
+    }
+
+    #[test]
+    fn invalidates_port() {
+        assert!(is_valid_port("128785425".to_string()).is_err());
     }
 }

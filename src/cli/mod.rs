@@ -1,7 +1,5 @@
-mod app;
-mod args;
+mod argument;
+mod cli;
 mod validator;
 
-pub use app::*;
-pub use args::*;
-pub use validator::*;
+pub use cli::build;
