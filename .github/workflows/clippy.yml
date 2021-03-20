@@ -1,5 +1,4 @@
-name: clippy/fmt
-
+name: clippy
 on:
   pull_request:
   push:
@@ -7,8 +6,7 @@ on:
       - main
 
 jobs:
-  clippy_fmt:
-    name: Runs Clippy and Fmt
+  clippy:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -18,23 +16,27 @@ jobs:
           - nightly
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-          components: rustfmt, clippy
+          components: clippy
 
-      - name: Run fmt
-        uses: actions-rs/cargo@v1
+      - name: Cache .cargo and target
+        uses: actions/cache@v2
         with:
-          command: fmt
-          args: --all -- --check
+          path: |
+            ~/.cargo
+            ./target
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-
 
-      - name: Run clippy
+      - name: cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy

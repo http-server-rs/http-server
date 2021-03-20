@@ -1,4 +1,4 @@
-# Contributing to http-server
+# Contributing
 
 * [Code of Conduct](#code-of-conduct)
 * [Pull Requests](#pull-requests)
