@@ -1,7 +1,10 @@
+use anyhow::Result;
 use clap::ArgMatches;
 use std::convert::TryFrom;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
+
+use super::ConfigFile;
 
 /// Server instance configuration used on initialization
 #[derive(Debug)]
@@ -42,6 +45,20 @@ impl TryFrom<ArgMatches<'static>> for Config {
             port,
             address,
         })
+    }
+}
+
+impl From<ConfigFile> for Config {
+    fn from(file: ConfigFile) -> Self {
+        let host = file.host;
+        let port = file.port;
+        let address = SocketAddr::new(host, port);
+
+        Config {
+            host,
+            port,
+            address,
+        }
     }
 }
 
