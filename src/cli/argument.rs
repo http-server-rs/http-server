@@ -24,6 +24,10 @@ pub fn make_arguments() -> Vec<Arg<'static, 'static>> {
             .long("config")
             .short("c")
             .help("Path to TOML configuration file.\nExample: https://github.com/http-server-rs/http-server/blob/main/example/config.toml")
-            .value_name("CONFIG")
+            .value_name("CONFIG"),
+        Arg::with_name("verbose")
+            .long("verbose")
+            .short("v")
+            .help("Prints output to stdout")
     ]
 }

@@ -10,6 +10,7 @@ use toml;
 pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
+    pub verbose: bool,
 }
 
 impl ConfigFile {
@@ -48,6 +49,7 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
+            verbose = true
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
@@ -55,6 +57,7 @@ mod tests {
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
+        assert!(config.verbose);
     }
 
     #[test]
