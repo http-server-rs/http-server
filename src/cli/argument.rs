@@ -20,5 +20,10 @@ pub fn make_arguments() -> Vec<Arg<'static, 'static>> {
             .takes_value(true)
             .default_value("7878")
             .validator(validator::is_valid_port),
+        Arg::with_name("config")
+            .long("config")
+            .short("c")
+            .help("Path to TOML configuration file.\nExample: https://github.com/http-server-rs/http-server/blob/main/example/config.toml")
+            .value_name("CONFIG")
     ]
 }

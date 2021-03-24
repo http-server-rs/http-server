@@ -1,5 +1,5 @@
 # Server configuration is also provided by specifying a TOML file with the
 # following values
 
-host = "127.0.0.1"
-port = 7878
+host = "0.0.0.0"
+port = 5200

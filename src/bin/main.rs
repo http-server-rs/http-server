@@ -1,12 +1,11 @@
-use http_server::cli;
-use http_server::config::Config;
-use std::convert::TryFrom;
+use http_server::run;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = cli::build();
-    let matches = cli.get_matches();
-    let config = Config::try_from(matches)?;
-
-    println!("{:?}", config);
-    Ok(())
+fn main() {
+    match run() {
+        Ok(_) => println!("Execution terminated with success"),
+        Err(e) => {
+            eprintln!("An error ocurred executing the HTTP Server");
+            eprintln!("{}", e.to_string())
+        }
+    }
 }

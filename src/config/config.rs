@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Error, Result};
 use clap::ArgMatches;
 use std::convert::TryFrom;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -29,7 +29,7 @@ impl Default for Config {
 }
 
 impl TryFrom<ArgMatches<'static>> for Config {
-    type Error = Box<dyn std::error::Error>;
+    type Error = Error;
 
     fn try_from(matches: ArgMatches<'static>) -> Result<Self, Self::Error> {
         let host = matches.value_of("host").unwrap();
