@@ -13,5 +13,7 @@ keywords = ["configurable", "file", "http", "server", "serve", "static"]
 [dependencies]
 anyhow = "1"
 clap = "2"
+hyper = { version = "0.14", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
 toml = "0.5"
 serde = { version = "1", features = ["derive"] }
