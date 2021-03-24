@@ -1,3 +1,5 @@
+> Project moved to: https://github.com/http-server-rs/http-server
+
 <div>
   <h1 align="center">http-server</h1>
   <h4 align="center">Configurable and simple command-line HTTP server</h4>
