@@ -9,9 +9,16 @@ use super::ConfigFile;
 /// Server instance configuration used on initialization
 #[derive(Debug)]
 pub struct Config {
+    address: SocketAddr,
     host: IpAddr,
     port: u16,
-    address: SocketAddr,
+    pub verbose: bool,
+}
+
+impl Config {
+    pub fn address(&self) -> SocketAddr {
+        self.address
+    }
 }
 
 impl Default for Config {
@@ -24,6 +31,7 @@ impl Default for Config {
             host,
             port,
             address,
+            verbose: false,
         }
     }
 }
@@ -40,10 +48,13 @@ impl TryFrom<ArgMatches<'static>> for Config {
 
         let address = SocketAddr::new(host, port);
 
+        let verbose = matches.is_present("verbose");
+
         Ok(Config {
             host,
             port,
             address,
+            verbose,
         })
     }
 }
@@ -53,11 +64,13 @@ impl From<ConfigFile> for Config {
         let host = file.host;
         let port = file.port;
         let address = SocketAddr::new(host, port);
+        let verbose = file.verbose;
 
         Config {
             host,
             port,
             address,
+            verbose,
         }
     }
 }
@@ -84,6 +97,7 @@ mod tests {
             config.address, address,
             "default socket address: {}",
             address
-        )
+        );
+        assert!(!config.verbose, "verbose is off by default");
     }
 }
