@@ -1,3 +1,3 @@
-mod hello_world;
+mod static_resource;
 
-pub use hello_world::hello_world;
+pub use static_resource::static_resource;
