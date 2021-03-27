@@ -1,5 +1,4 @@
 use std::net::Ipv4Addr;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 pub fn is_valid_host(v: String) -> Result<(), String> {

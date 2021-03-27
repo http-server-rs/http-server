@@ -1,4 +1,4 @@
-use clap::{crate_authors, crate_description, crate_name, crate_version, App, ArgMatches};
+use clap::{crate_authors, crate_name, crate_version, App};
 
 use super::argument::make_arguments;
 
