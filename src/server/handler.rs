@@ -1,35 +1,21 @@
-use anyhow::{Error, Result};
-use http::header;
+use anyhow::Result;
 use http::response::Builder as ResponseBuilder;
 use http::StatusCode;
 use hyper::{Body, Method, Request, Response};
-use hyper_staticfile::Static;
-use std::path::PathBuf;
 
 use crate::Config;
 
+use super::service::FileExplorer;
+
 #[derive(Clone)]
 pub struct Handler {
-    root_dir: PathBuf,
-    staticfile: Static,
+    file_explorer: FileExplorer,
 }
 
 impl Handler {
     pub async fn handle_request(self, req: Request<Body>) -> Result<Response<Body>> {
         match (req.method(), req.uri()) {
-            (&Method::GET, _) => {
-                if req.uri().path() == "/" {
-                    let res = ResponseBuilder::new()
-                        .status(StatusCode::MOVED_PERMANENTLY)
-                        .header(header::LOCATION, "/")
-                        .body(Body::empty())
-                        .expect("Unable to build response");
-
-                    return Ok(res);
-                }
-
-                self.staticfile.serve(req).await.map_err(Error::from)
-            }
+            (&Method::GET, _) => self.file_explorer.resolve(req).await,
             (_, _) => {
                 let res = ResponseBuilder::new()
                     .status(StatusCode::METHOD_NOT_ALLOWED)
@@ -44,11 +30,8 @@ impl Handler {
 
 impl From<Config> for Handler {
     fn from(config: Config) -> Self {
-        let staticfile = Static::new(config.root_dir());
+        let file_explorer = FileExplorer::new(config.root_dir());
 
-        Handler {
-            root_dir: config.root_dir(),
-            staticfile,
-        }
+        Handler { file_explorer }
     }
 }
