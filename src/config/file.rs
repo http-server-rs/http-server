@@ -11,6 +11,7 @@ pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
     pub verbose: bool,
+    pub root_dir: Option<PathBuf>,
 }
 
 impl ConfigFile {
@@ -50,13 +51,16 @@ mod tests {
             host = "192.168.0.1"
             port = 7878
             verbose = true
+            root_dir = "~/Desktop"
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
+        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
+        assert_eq!(config.root_dir.unwrap(), root_dir);
         assert!(config.verbose);
     }
 
