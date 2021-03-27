@@ -9,7 +9,7 @@ use super::service::FileExplorer;
 
 #[derive(Clone)]
 pub struct Handler {
-    file_explorer: FileExplorer,
+    file_explorer: FileExplorer<'static>,
 }
 
 impl Handler {
