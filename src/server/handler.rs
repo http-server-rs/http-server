@@ -2,7 +2,7 @@ use anyhow::{Error, Result};
 use http::header;
 use http::response::Builder as ResponseBuilder;
 use http::StatusCode;
-use hyper::{Body, Request, Response};
+use hyper::{Body, Method, Request, Response};
 use hyper_staticfile::Static;
 use std::path::PathBuf;
 
@@ -16,17 +16,29 @@ pub struct Handler {
 
 impl Handler {
     pub async fn handle_request(self, req: Request<Body>) -> Result<Response<Body>> {
-        if req.uri().path() == "/" {
-            let res = ResponseBuilder::new()
-                .status(StatusCode::MOVED_PERMANENTLY)
-                .header(header::LOCATION, "/")
-                .body(Body::empty())
-                .expect("Unable to build response");
+        match (req.method(), req.uri()) {
+            (&Method::GET, _) => {
+                if req.uri().path() == "/" {
+                    let res = ResponseBuilder::new()
+                        .status(StatusCode::MOVED_PERMANENTLY)
+                        .header(header::LOCATION, "/")
+                        .body(Body::empty())
+                        .expect("Unable to build response");
 
-            return Ok(res);
+                    return Ok(res);
+                }
+
+                self.staticfile.serve(req).await.map_err(Error::from)
+            }
+            (_, _) => {
+                let res = ResponseBuilder::new()
+                    .status(StatusCode::METHOD_NOT_ALLOWED)
+                    .body(Body::empty())
+                    .expect("Unable to build response");
+
+                Ok(res)
+            }
         }
-
-        self.staticfile.serve(req).await.map_err(Error::from)
     }
 }
 
