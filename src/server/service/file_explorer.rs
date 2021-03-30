@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{fs::read_dir, str::FromStr};
 
-const DIRECTORY_INDEX_TEMPLATE: &str = "directory_index";
+const EXPLORER_TEMPLATE: &str = "explorer";
 
 #[derive(Debug, Serialize)]
 struct DirectoryEntry {
@@ -47,11 +47,11 @@ impl<'a> FileExplorer<'a> {
     fn make_handlebars_engine() -> Arc<Handlebars<'a>> {
         let mut handlebars = Handlebars::new();
 
-        let template = std::include_bytes!("../template/directory_index.hbs");
+        let template = std::include_bytes!("../template/explorer.hbs");
         let template = std::str::from_utf8(template).unwrap();
 
         handlebars
-            .register_template_string(DIRECTORY_INDEX_TEMPLATE, template)
+            .register_template_string(EXPLORER_TEMPLATE, template)
             .unwrap();
 
         Arc::new(handlebars)
@@ -68,7 +68,7 @@ impl<'a> FileExplorer<'a> {
                 .body(Body::empty())
                 .expect("Failed to build response")),
             ResolveResult::NotFound => {
-                if req.uri().to_string() == "/" {
+                if req.uri() == "/" {
                     let directory_path = self.make_absolute_path_from_request(&req)?;
 
                     return self.render_directory_index(directory_path).await;
@@ -100,7 +100,7 @@ impl<'a> FileExplorer<'a> {
         let directory_index = FileExplorer::index_directory(path)?;
         let html = self
             .handlebars
-            .render(DIRECTORY_INDEX_TEMPLATE, &directory_index)
+            .render(EXPLORER_TEMPLATE, &directory_index)
             .unwrap();
 
         let body = Body::from(html);
