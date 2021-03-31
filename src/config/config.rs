@@ -15,7 +15,7 @@ pub struct Config {
     host: IpAddr,
     port: u16,
     root_dir: PathBuf,
-    pub verbose: bool,
+    verbose: bool,
 }
 
 impl Config {
@@ -25,6 +25,10 @@ impl Config {
 
     pub fn root_dir(&self) -> PathBuf {
         self.root_dir.clone()
+    }
+
+    pub fn verbose(&self) -> bool {
+        self.verbose
     }
 }
 
