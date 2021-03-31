@@ -1,5 +1,3 @@
-> Project moved to: https://github.com/http-server-rs/http-server
-
 <div>
   <div align="center" style="display: block; text-align: center;">
     <img src="https://raw.githubusercontent.com/EstebanBorai/http-server/main/docs/http-logo.png" height="120" width="200" />
