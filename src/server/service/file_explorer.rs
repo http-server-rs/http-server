@@ -21,6 +21,7 @@ struct DirectoryEntry {
     display_name: String,
     is_dir: bool,
     size: String,
+    entry_path: String,
     created_at: String,
     updated_at: String,
 }
@@ -102,7 +103,7 @@ impl<'a> FileExplorer<'a> {
     }
 
     async fn render_directory_index(&self, path: PathBuf) -> Result<Response<Body>> {
-        let directory_index = FileExplorer::index_directory(path)?;
+        let directory_index = FileExplorer::index_directory(self.root_dir.clone(), path)?;
         let html = self
             .handlebars
             .render(EXPLORER_TEMPLATE, &directory_index)
@@ -116,7 +117,8 @@ impl<'a> FileExplorer<'a> {
             .expect("Failed to build response"))
     }
 
-    fn index_directory(path: PathBuf) -> Result<DirectoryIndex> {
+    fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
+        let root_dir = root_dir.to_str().unwrap();
         let full_path = path
             .clone()
             .to_str()
@@ -147,6 +149,11 @@ impl<'a> FileExplorer<'a> {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size: FileExplorer::format_bytes(metadata.len() as f64),
+                entry_path: FileExplorer::make_entry_relative_path(
+                    root_dir,
+                    entry.path().to_str().unwrap(),
+                )
+                .to_string(),
                 created_at,
                 updated_at,
             });
@@ -177,6 +184,10 @@ impl<'a> FileExplorer<'a> {
         root_dir.push(req_path);
 
         Ok(root_dir)
+    }
+
+    fn make_entry_relative_path<'b>(current_dir_path: &'b str, entry_path: &'b str) -> &'b str {
+        &entry_path[current_dir_path.len()..]
     }
 
     fn format_bytes(bytes: f64) -> String {
