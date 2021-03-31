@@ -12,6 +12,7 @@ keywords = ["configurable", "file", "http", "server", "serve", "static"]
 
 [dependencies]
 anyhow = "1"
+chrono = "0.4"
 clap = "2"
 http = "0.2"
 handlebars = "3"

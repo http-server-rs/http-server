@@ -1,13 +1,17 @@
 use anyhow::{Context, Result};
+use chrono::prelude::*;
+use chrono::{DateTime, Local};
 use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::StatusCode;
 use hyper::{Body, Request, Response};
 use hyper_staticfile::{resolve, ResolveResult, ResponseBuilder as FileResponseBuilder};
 use serde::Serialize;
+use std::fs::read_dir;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
-use std::{fs::read_dir, str::FromStr};
+use std::time::SystemTime;
 
 const EXPLORER_TEMPLATE: &str = "explorer";
 const BYTE_SIZE_UNIT: [&str; 9] = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
@@ -124,6 +128,16 @@ impl<'a> FileExplorer<'a> {
         for entry in entries.into_iter() {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
+            let created_at = if let Ok(time) = metadata.created() {
+                FileExplorer::format_system_date(time)
+            } else {
+                String::default()
+            };
+            let updated_at = if let Ok(time) = metadata.modified() {
+                FileExplorer::format_system_date(time)
+            } else {
+                String::default()
+            };
 
             directory_entries.push(DirectoryEntry {
                 display_name: entry
@@ -133,8 +147,8 @@ impl<'a> FileExplorer<'a> {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size: FileExplorer::format_bytes(metadata.len() as f64),
-                created_at: String::default(),
-                updated_at: String::default(),
+                created_at,
+                updated_at,
             });
         }
 
@@ -174,6 +188,20 @@ impl<'a> FileExplorer<'a> {
         let value = bytes / 1024_f64.powf(i);
 
         format!("{:.2} {}", value, BYTE_SIZE_UNIT[i as usize])
+    }
+
+    fn format_system_date(system_time: SystemTime) -> String {
+        let datetime: DateTime<Local> = DateTime::from(system_time);
+
+        format!(
+            "{}/{:0>2}/{:0>2} {:0>2}:{:0>2}:{:0>2}",
+            datetime.year(),
+            datetime.month(),
+            datetime.day(),
+            datetime.hour(),
+            datetime.minute(),
+            datetime.second()
+        )
     }
 }
 
