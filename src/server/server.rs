@@ -28,7 +28,7 @@ impl Server {
 
         let server = hyper::Server::bind(&address).serve(main_svc);
 
-        if self.config.verbose {
+        if self.config.verbose() {
             println!("Server binded to: {}", address.to_string());
             println!(
                 "Serving directory: {}",
