@@ -9,12 +9,6 @@ jobs:
   fmt:
     name: fmt
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
 
     steps:
       - name: Checkout
@@ -23,9 +17,20 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           override: true
           components: rustfmt
+
+      - name: Cache .cargo and target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo
+            ./target
+          key: ${{ runner.os }}-cargo-fmt-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fmt-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-fmt
 
       - name: Run fmt
         uses: actions-rs/cargo@v1

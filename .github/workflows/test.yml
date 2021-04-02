@@ -8,12 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
+
     steps:
       - uses: actions/checkout@v2
 
@@ -23,10 +18,11 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-test-
+            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-test
+
       - name: cargo test
         uses: actions-rs/cargo@v1
         with:
