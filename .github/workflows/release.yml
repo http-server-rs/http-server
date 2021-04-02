@@ -41,27 +41,21 @@ jobs:
 
     - name: Set env
       run: |
-          RELEASE_VERSION=$(echo ${GITHUB_REF:10})
-          echo ::set-env name=ASSET_NAME::${{ matrix.asset_name }}-$RELEASE_VERSION${{ matrix.asset_extension }}
+          echo RELEASE_VERSION=$(echo ${GITHUB_REF:10}) >> $GITHUB_ENV
+          echo name=ASSET_NAME::http-server-$RELEASE_VERSION$ >> $GITHUB_ENV
       shell: bash
 
-    - uses: actions-rs/toolchain@v1
+    - name: cargo build
+      uses: actions-rs/cargo@v1
       with:
-        profile: minimal
-        toolchain: stable
-
-    - name: Build
-      run: cargo build --release --locked
+        command: build
+        args: --release --locked
 
     - name: Archive Release
       shell: bash
       run: |
-        cp "target/release/${{ matrix.artifact_name }}" "${{ matrix.artifact_name }}"
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a "${{ env.ASSET_NAME }}" "${{ matrix.artifact_name }}"
-        else
-          tar czf "${{ env.ASSET_NAME }}" "${{ matrix.artifact_name }}"
-        fi
+        cp target/release/main http-server
+        tar czf "${{ env.ASSET_NAME }}" "${{ env.RELEASE_VERSION }}"
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v1-release
@@ -77,6 +71,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -103,5 +98,5 @@ jobs:
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
-      - name: publish http-server
+      - name: publish crate
         run: cargo publish
