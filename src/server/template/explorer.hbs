@@ -146,7 +146,12 @@
         {{/each}}
       </ul>
       <div id="path">
-        <span>{{path}}</span>
+        {{#each path_parts}}
+          <span>
+            <a href={{path}}>{{name}}</a>
+            <b>/</b>
+          </span>
+        {{/each}}
       </div>
     </main>
   </body>
