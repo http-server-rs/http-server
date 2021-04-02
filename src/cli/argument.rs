@@ -28,6 +28,10 @@ pub fn make_arguments() -> Vec<Arg<'static, 'static>> {
         Arg::with_name("verbose")
             .long("verbose")
             .short("v")
-            .help("Prints output to stdout")
+            .help("Prints output to stdout"),
+        Arg::with_name("root_dir")
+            .index(1)
+            .required(false)
+            .help("Directory to server files from")
     ]
 }

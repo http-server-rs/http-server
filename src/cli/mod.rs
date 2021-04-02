@@ -9,6 +9,6 @@ pub fn build() -> App<'static, 'static> {
     App::new(crate_name!())
     .version(crate_version!())
     .author(crate_authors!())
-    .about("Configurable and simple command-line HTTP server\nSource: https://github.com/EstebanBorai/http-server")
+    .about("Simple and configurable command-line HTTP server\nSource: https://github.com/EstebanBorai/http-server")
     .args(&argument::make_arguments())
 }
