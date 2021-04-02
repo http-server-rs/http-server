@@ -7,6 +7,7 @@ use http::StatusCode;
 use hyper::{Body, Request, Response};
 use hyper_staticfile::{resolve, ResolveResult, ResponseBuilder as FileResponseBuilder};
 use serde::Serialize;
+use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -19,7 +20,7 @@ const BYTE_SIZE_UNIT: [&str; 9] = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", 
 /// A Directory entry used to display a File Explorer's entry.
 /// This struct is directly related to the Handlebars template used
 /// to power the File Explorer's UI
-#[derive(Debug, Serialize)]
+#[derive(Debug, Eq, Serialize)]
 struct DirectoryEntry {
     display_name: String,
     is_dir: bool,
@@ -27,6 +28,41 @@ struct DirectoryEntry {
     entry_path: String,
     created_at: String,
     updated_at: String,
+}
+
+impl Ord for DirectoryEntry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.is_dir && other.is_dir {
+            return self.display_name.cmp(&other.display_name);
+        }
+
+        if self.is_dir && !other.is_dir {
+            return Ordering::Less;
+        }
+
+        Ordering::Greater
+    }
+}
+
+impl PartialOrd for DirectoryEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.is_dir && other.is_dir {
+            return Some(self.display_name.cmp(&other.display_name));
+        }
+
+        if self.is_dir && !other.is_dir {
+            return Some(Ordering::Less);
+        }
+
+        Some(Ordering::Greater)
+    }
+}
+
+impl PartialEq for DirectoryEntry {
+    fn eq(&self, other: &Self) -> bool {
+        ((self.is_dir && other.is_dir) && self.display_name == other.display_name)
+            || ((!self.is_dir && !other.is_dir) && self.display_name == other.display_name)
+    }
 }
 
 /// The value passed to the Handlebars template engine.
@@ -205,6 +241,8 @@ impl<'a> FileExplorer<'a> {
                 updated_at,
             });
         }
+
+        directory_entries.sort();
 
         Ok(DirectoryIndex {
             entries: directory_entries,
