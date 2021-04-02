@@ -2,7 +2,8 @@ use anyhow::Result;
 use clap::ArgMatches;
 use std::{convert::TryFrom, path::PathBuf, str::FromStr};
 
-use crate::config::{Config, ConfigFile};
+use crate::config::file::ConfigFile;
+use crate::config::Config;
 
 mod cli;
 mod config;
