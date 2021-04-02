@@ -8,12 +8,6 @@ on:
 jobs:
   clippy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
 
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +15,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           override: true
           components: clippy
 
@@ -31,10 +25,10 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-${{ matrix.rust }}-cargo-clippy-
+            ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-clippy
 
       - name: cargo clippy
         uses: actions-rs/cargo@v1
