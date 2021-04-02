@@ -64,6 +64,29 @@ Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
 Port | `-p` | `--port` | Port to bind the server | `7878`
 Configuration File | `-c` | `--config` | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
 
+## Release
+
+In order to create a release you must push a Git tag as follows
+
+```shell
+git tag -a <version> -m <message>
+```
+
+**Example**
+
+```shell
+git tag -a  v0.1.0 -m "First release"
+```
+
+> Tags must follow semver conventions
+> Tags must be prefixed with a lowercase `v` letter.
+
+Then push tags as follows:
+
+```shell
+git push origin main --follow-tags
+```
+
 ## Contributing
 
 Every contribution to this project is welcome. Feel free to open a pull request,
