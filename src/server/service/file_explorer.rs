@@ -60,8 +60,11 @@ impl PartialOrd for DirectoryEntry {
 
 impl PartialEq for DirectoryEntry {
     fn eq(&self, other: &Self) -> bool {
-        ((self.is_dir && other.is_dir) && self.display_name == other.display_name)
-            || ((!self.is_dir && !other.is_dir) && self.display_name == other.display_name)
+        if self.is_dir && other.is_dir {
+            return self.display_name == other.display_name;
+        }
+
+        self.display_name == other.display_name
     }
 }
 
@@ -254,10 +257,10 @@ impl<'a> FileExplorer<'a> {
     fn make_absolute_path_from_request(&self, req: &Request<Body>) -> Result<PathBuf> {
         let mut root_dir = self.root_dir.clone();
         let req_path = req.uri().to_string();
-        let req_path = if req_path.starts_with("/") {
+        let req_path = if req_path.starts_with('/') {
             let path = req_path[1..req_path.len()].to_string();
 
-            if path.ends_with("/") {
+            if path.ends_with('/') {
                 return PathBuf::from_str(path[..path.len() - 1].to_string().as_str())
                     .context("Unable to buid path");
             }

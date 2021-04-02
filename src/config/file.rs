@@ -4,7 +4,6 @@ use std::fs;
 use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use toml;
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
