@@ -16,6 +16,9 @@ use std::time::SystemTime;
 const EXPLORER_TEMPLATE: &str = "explorer";
 const BYTE_SIZE_UNIT: [&str; 9] = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
+/// A Directory entry used to display a File Explorer's entry.
+/// This struct is directly related to the Handlebars template used
+/// to power the File Explorer's UI
 #[derive(Debug, Serialize)]
 struct DirectoryEntry {
     display_name: String,
@@ -26,12 +29,32 @@ struct DirectoryEntry {
     updated_at: String,
 }
 
+/// The value passed to the Handlebars template engine.
+/// All references contained in File Explorer's UI are provided
+/// via the `DirectoryIndex` struct
 #[derive(Debug, Serialize)]
 struct DirectoryIndex {
-    path: String,
+    /// Breadcrumbs path parts
+    path_parts: Vec<PathPart>,
+    /// Directory listing entry
     entries: Vec<DirectoryEntry>,
 }
 
+/// The File Explorer service is in charge of indexing and rendering a
+/// rich view of a Directory served by the HTTP Server.
+///
+/// Files and directories rendered should be relative to the configured
+/// `root_dir`. This means that if the provided `root_dir` is:
+/// `Users/Esteban/Documents` then the HTTP Request URI `/` will match
+/// `Users/Esteban/Documents` and HTTP Request URI `/Lists/FavoriteFood.txt`
+/// will match `Users/Esteban/Documents/Lists/FavoriteFood.txt`.
+///
+/// The File Explorer will read the HTTP Request URI and serve either
+/// a directory listing UI, for directory/folder matches or a static file
+/// for supported MIME types.
+///
+/// If the matched file is not a supported MIME type, such file will be
+/// downloaded based on navigator preferences.
 #[derive(Clone)]
 pub struct FileExplorer<'a> {
     root_dir: PathBuf,
@@ -40,6 +63,7 @@ pub struct FileExplorer<'a> {
 }
 
 impl<'a> FileExplorer<'a> {
+    /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
     pub fn new(root_dir: PathBuf) -> Self {
         let handlebars = FileExplorer::make_handlebars_engine();
 
@@ -50,6 +74,7 @@ impl<'a> FileExplorer<'a> {
         }
     }
 
+    /// Creates a new `Handlebars` instance with templates registered
     fn make_handlebars_engine() -> Arc<Handlebars<'a>> {
         let mut handlebars = Handlebars::new();
 
@@ -63,6 +88,30 @@ impl<'a> FileExplorer<'a> {
         Arc::new(handlebars)
     }
 
+    /// Resolves a HTTP Request to a file or directory.
+    ///
+    /// If the method of the HTTP Request is not `GET`, then responds with
+    /// `Bad Request`
+    ///
+    /// If URI doesn't matches a path relative to `root_dir`, then responds
+    /// with `Bad Reuest`
+    ///
+    /// If the HTTP Request URI points to `/` (root), the default behavior
+    /// would be to respond with `Not Found` but in order to provide `root_dir`
+    /// indexing, the request is handled and renders `root_dir` directory listing
+    /// instead.
+    ///
+    /// If the HTTP Request doesn't match any file relative to `root_dir` then
+    /// responds with 'Not Found'
+    ///
+    /// If the HTTP Request matches a forbidden file (User doesn't have 
+    /// permissions to read), responds with `Forbidden`
+    ///
+    /// If the matched path resolves a directory, responds with the directory
+    /// listing page
+    ///
+    /// If the matched path resolves to a file, attempts to render it if the
+    /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req: Request<Body>) -> Result<Response<Body>> {
         match resolve(&self.root_dir, &req).await.unwrap() {
             ResolveResult::MethodNotMatched => Ok(HttpResponseBuilder::new()
@@ -102,6 +151,9 @@ impl<'a> FileExplorer<'a> {
         }
     }
 
+    /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`
+    /// is used to build the Handlebars "Explorer" template using the Handlebars
+    /// engine and builds an HTTP Response containing such file
     async fn render_directory_index(&self, path: PathBuf) -> Result<Response<Body>> {
         let directory_index = FileExplorer::index_directory(self.root_dir.clone(), path)?;
         let html = self
@@ -117,13 +169,11 @@ impl<'a> FileExplorer<'a> {
             .expect("Failed to build response"))
     }
 
+    /// Creates a `DirectoryIndex` with the provided `root_dir` and `path`
+    /// (HTTP Request URI)
     fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
-        let root_dir = root_dir.to_str().unwrap();
-        let full_path = path
-            .clone()
-            .to_str()
-            .context("Unable to gather directory path into a String")?
-            .to_string();
+        let root_dir: &str = root_dir.to_str().unwrap();
+        let path_parts = FileExplorer::make_path_parts(root_dir, path.clone());
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
@@ -160,11 +210,13 @@ impl<'a> FileExplorer<'a> {
         }
 
         Ok(DirectoryIndex {
-            path: full_path,
+            path_parts,
             entries: directory_entries,
         })
     }
 
+    /// Creates an absolute path by appending the HTTP Request URI to the
+    /// `root_dir`
     fn make_absolute_path_from_request(&self, req: &Request<Body>) -> Result<PathBuf> {
         let mut root_dir = self.root_dir.clone();
         let req_path = req.uri().to_string();
@@ -186,10 +238,44 @@ impl<'a> FileExplorer<'a> {
         Ok(root_dir)
     }
 
+    /// Creates entry's relative path. Used by Handlebars template engine to
+    /// provide navigation through `FileExplorer`
     fn make_entry_relative_path<'b>(current_dir_path: &'b str, entry_path: &'b str) -> &'b str {
         &entry_path[current_dir_path.len()..]
     }
 
+    /// Create breadcrumb path parts from the `root_dir` and `path`
+    /// (HTTP Request URI)
+    fn make_path_parts(root_dir: &str, path: PathBuf) -> Vec<PathPart> {
+        let mut result: Vec<PathPart> = vec![PathPart {
+            name: String::from("root"),
+            path: String::from("/"),
+        }];
+
+        let path_parts = path.clone();
+        let path_parts = path_parts.to_str().unwrap();
+        let parts = path_parts[root_dir.len() + 1..]
+            .split("/")
+            .collect::<Vec<&str>>();
+
+        parts.iter().enumerate().for_each(|(idx, name)| {
+            let path = parts[..idx + 1].join("/");
+
+            result.push(PathPart {
+                name: name.to_string(),
+                path,
+            });
+        });
+
+        println!("{:?}", root_dir);
+        println!("{:?}", path_parts);
+        println!("{:?}", result);
+
+        result
+    }
+
+    /// Calculates the format of the `Bytes` by converting `bytes` to the
+    /// corresponding unit and returns a human readable size label
     fn format_bytes(bytes: f64) -> String {
         if bytes == 0. {
             return String::from("0 Bytes");
@@ -201,6 +287,7 @@ impl<'a> FileExplorer<'a> {
         format!("{:.2} {}", value, BYTE_SIZE_UNIT[i as usize])
     }
 
+    /// Formats a `SystemTime` into a YYYY/MM/DD HH:MM:SS time `String`
     fn format_system_date(system_time: SystemTime) -> String {
         let datetime: DateTime<Local> = DateTime::from(system_time);
 
