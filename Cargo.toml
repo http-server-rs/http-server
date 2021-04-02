@@ -7,6 +7,8 @@ description = "Simple and configurable command-line HTTP server"
 repository = "https://github.com/EstebanBorai/http-server"
 categories = ["web-programming", "web-programming::http-server"]
 keywords = ["configurable", "http", "server", "serve", "static"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
