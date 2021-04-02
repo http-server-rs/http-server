@@ -34,8 +34,6 @@ struct DirectoryEntry {
 /// via the `DirectoryIndex` struct
 #[derive(Debug, Serialize)]
 struct DirectoryIndex {
-    /// Breadcrumbs path parts
-    path_parts: Vec<PathPart>,
     /// Directory listing entry
     entries: Vec<DirectoryEntry>,
 }
@@ -104,7 +102,7 @@ impl<'a> FileExplorer<'a> {
     /// If the HTTP Request doesn't match any file relative to `root_dir` then
     /// responds with 'Not Found'
     ///
-    /// If the HTTP Request matches a forbidden file (User doesn't have 
+    /// If the HTTP Request matches a forbidden file (User doesn't have
     /// permissions to read), responds with `Forbidden`
     ///
     /// If the matched path resolves a directory, responds with the directory
@@ -173,7 +171,6 @@ impl<'a> FileExplorer<'a> {
     /// (HTTP Request URI)
     fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
         let root_dir: &str = root_dir.to_str().unwrap();
-        let path_parts = FileExplorer::make_path_parts(root_dir, path.clone());
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
@@ -210,7 +207,6 @@ impl<'a> FileExplorer<'a> {
         }
 
         Ok(DirectoryIndex {
-            path_parts,
             entries: directory_entries,
         })
     }
@@ -242,36 +238,6 @@ impl<'a> FileExplorer<'a> {
     /// provide navigation through `FileExplorer`
     fn make_entry_relative_path<'b>(current_dir_path: &'b str, entry_path: &'b str) -> &'b str {
         &entry_path[current_dir_path.len()..]
-    }
-
-    /// Create breadcrumb path parts from the `root_dir` and `path`
-    /// (HTTP Request URI)
-    fn make_path_parts(root_dir: &str, path: PathBuf) -> Vec<PathPart> {
-        let mut result: Vec<PathPart> = vec![PathPart {
-            name: String::from("root"),
-            path: String::from("/"),
-        }];
-
-        let path_parts = path.clone();
-        let path_parts = path_parts.to_str().unwrap();
-        let parts = path_parts[root_dir.len() + 1..]
-            .split("/")
-            .collect::<Vec<&str>>();
-
-        parts.iter().enumerate().for_each(|(idx, name)| {
-            let path = parts[..idx + 1].join("/");
-
-            result.push(PathPart {
-                name: name.to_string(),
-                path,
-            });
-        });
-
-        println!("{:?}", root_dir);
-        println!("{:?}", path_parts);
-        println!("{:?}", result);
-
-        result
     }
 
     /// Calculates the format of the `Bytes` by converting `bytes` to the
