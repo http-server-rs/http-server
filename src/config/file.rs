@@ -5,12 +5,15 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::tls::TlsConfigFile;
+
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
     pub verbose: bool,
     pub root_dir: Option<PathBuf>,
+    pub tls: Option<TlsConfigFile>,
 }
 
 impl ConfigFile {
@@ -72,5 +75,33 @@ mod tests {
             port = 7878
         "#;
         ConfigFile::parse_toml(file_contents).unwrap();
+    }
+
+    #[test]
+    fn parses_config_with_ssl() {
+        let file_contents = r#"
+            host = "192.168.0.1"
+            port = 7878
+            verbose = true
+            root_dir = "~/Desktop"
+
+            [tls]
+            cert = "cert_123.pem"
+            key = "key_123.pem"
+        "#;
+        let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
+        let port = 7878;
+        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
+        let tls = TlsConfigFile {
+            cert: PathBuf::from_str("cert_123.pem").unwrap(),
+            key: PathBuf::from_str("key_123.pem").unwrap(),
+        };
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert_eq!(config.host, host);
+        assert_eq!(config.port, port);
+        assert_eq!(config.root_dir.unwrap(), root_dir);
+        assert_eq!(config.tls.unwrap(), tls);
+        assert!(config.verbose);
     }
 }

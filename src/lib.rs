@@ -16,7 +16,7 @@ fn resolve_config(matches: ArgMatches<'static>) -> Result<Config> {
         let file_path = matches.value_of("config").unwrap();
         let file_path = PathBuf::from_str(file_path)?;
         let config_file = ConfigFile::from_file(Some(file_path))?;
-        let config = Config::from(config_file);
+        let config = Config::try_from(config_file)?;
 
         return Ok(config);
     }

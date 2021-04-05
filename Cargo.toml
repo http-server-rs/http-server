@@ -19,7 +19,9 @@ clap = "2"
 http = "0.2"
 handlebars = "3"
 hyper = { version = "0.14", features = ["full"] }
+hyper-rustls = "0.22"
 hyper-staticfile = "0.6"
+rustls = "0.19"
 tokio = { version = "1", features = ["full"] }
 toml = "0.5"
 serde = { version = "1", features = ["derive"] }

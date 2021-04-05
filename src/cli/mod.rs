@@ -1,6 +1,6 @@
 use clap::{crate_authors, crate_name, crate_version, App};
 
-mod argument;
+pub mod argument;
 mod validator;
 
 /// Creates a **clap** application, bind arguments to it and then get matches
