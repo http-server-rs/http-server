@@ -1,9 +1,12 @@
 use anyhow::Error;
 use hyper::service::{make_service_fn, service_fn};
+use std::net::SocketAddr;
 
+use crate::config::tls::TlsConfig;
 use crate::config::Config;
 
 mod handler;
+mod https;
 mod service;
 
 pub struct Server {
@@ -11,10 +14,24 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn serve(&self) {
+    pub async fn new(config: Config) -> Server {
+        Server { config }
+    }
+
+    pub async fn run(&self) {
         let address = self.config.address();
         let handler = handler::Handler::from(self.config.clone());
 
+        if self.config.tls().is_some() {
+            let https_config = self.config.tls().unwrap();
+
+            return self.serve_https(address, handler, https_config).await;
+        }
+
+        self.serve(address, handler).await;
+    }
+
+    pub async fn serve(&self, address: SocketAddr, handler: handler::Handler) {
         let main_svc = make_service_fn(move |_| {
             // Move a clone of `handler` into the `service_fn`.
             let handler = handler.clone();
@@ -30,21 +47,42 @@ impl Server {
         let server = hyper::Server::bind(&address).serve(main_svc);
 
         if self.config.verbose() {
-            println!("Server binded to: {}", address.to_string());
-            println!(
-                "Serving directory: {}",
-                self.config.root_dir().to_str().unwrap()
-            );
+            println!("Server binded");
         }
 
         if let Err(e) = server.await {
             eprint!("Server Error: {}", e);
         }
     }
-}
 
-impl From<Config> for Server {
-    fn from(config: Config) -> Self {
-        Server { config }
+    pub async fn serve_https(
+        &self,
+        address: SocketAddr,
+        handler: handler::Handler,
+        https_config: TlsConfig,
+    ) {
+        let (cert, key) = https_config.parts();
+        let https_server_builder = https::Https::new(cert, key);
+        let server = https_server_builder.make_server(address).await.unwrap();
+
+        let main_svc = make_service_fn(move |_| {
+            // Move a clone of `handler` into the `service_fn`.
+            let handler = handler.clone();
+
+            async {
+                Ok::<_, Error>(service_fn(move |req| {
+                    // Clone again to ensure that `handler` outlives this closure.
+                    handler.to_owned().handle_request(req)
+                }))
+            }
+        });
+
+        if self.config.verbose() {
+            println!("Server binded with TLS");
+        }
+
+        if let Err(e) = server.serve(main_svc).await {
+            eprint!("Server Error: {}", e);
+        }
     }
 }

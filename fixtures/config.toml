@@ -1,5 +1,10 @@
 # Server configuration is also provided by specifying a TOML file with the
 # following values
-
 host = "0.0.0.0"
-port = 5200
+port = 5800
+verbose = true
+root_dir = "~/Desktop"
+
+[tls]
+cert = "cert.pem"
+key = "key.pem"
