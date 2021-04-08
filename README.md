@@ -63,18 +63,42 @@ Name | Short | Long | Description | Default Value
 Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
 Port | `-p` | `--port` | Port to bind the server | `7878`
 Configuration File | `-c` | `--config` | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
+TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
+TLS Ceritificate | N/A | `--tls_cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
+TLS Key | N/A | `--tls_key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
+
+## References
+
+The following are some relevant details on features supported by this HTTP Server
+solution that may be of the interest of the user.
+
+### TLS Reference
+
+The TLS solution supported for this HTTP Server is built with [rustls](https://github.com/ctz/rustls)
+crate along with [hyper-rustls](https://github.com/ctz/hyper-rustls).
+
+When running with TLS support you will need:
+
+- A certificate
+- A RSA Private Key for such certificate
+
+Run `http-server` as follows:
+
+```sh
+http-server --tls --tls_cert <PATH TO YOUR CERTIFICATE> --tls_key <PATH TO YOUR KEY>
+```
 
 ## Release
 
 In order to create a release you must push a Git tag as follows
 
-```shell
+```sh
 git tag -a <version> -m <message>
 ```
 
 **Example**
 
-```shell
+```sh
 git tag -a  v0.1.0 -m "First release"
 ```
 
@@ -83,7 +107,7 @@ git tag -a  v0.1.0 -m "First release"
 
 Then push tags as follows:
 
-```shell
+```sh
 git push origin main --follow-tags
 ```
 
@@ -95,9 +119,3 @@ an issue or just by starting this project.
 ## License
 
 Distributed under the terms of both the MIT license and the Apache License (Version 2.0)
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for
-inclusion in http-server by you, shall be dual licensed as above, without any additional
-terms or conditions.
