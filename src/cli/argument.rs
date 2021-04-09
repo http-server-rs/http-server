@@ -62,6 +62,12 @@ pub const TLS_KEY: CliArgument<'static> = CliArgument {
     help: "Path to TLS key file",
 };
 
+pub const TLS_KEY_ALGORITHM: CliArgument<'static> = CliArgument {
+    long: "tls_key_alg",
+    short: None,
+    help: "TLS key algorithm. Could be either \"rsa\" or \"pkcs8\"",
+};
+
 impl<'a> From<CliArgument<'a>> for Arg<'a, 'a> {
     fn from(arg: CliArgument<'a>) -> Arg<'a, 'a> {
         if arg.short.is_some() {
@@ -91,5 +97,8 @@ pub fn make_arguments() -> Vec<Arg<'static, 'static>> {
         Arg::from(TLS).required(false),
         Arg::from(TLS_CERTIFICATE).default_value("cert.pem"),
         Arg::from(TLS_KEY).default_value("key.rsa"),
+        Arg::from(TLS_KEY_ALGORITHM)
+            .default_value("rsa")
+            .validator(validator::is_valid_tls_key_alg),
     ]
 }

@@ -66,6 +66,7 @@ Configuration File | `-c` | `--config` | Specifies a configuration file. [Exampl
 TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
 TLS Ceritificate | N/A | `--tls_cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
 TLS Key | N/A | `--tls_key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
+TLS Key Algorithm | N/A | `--tls_key_alg` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
 
 ## References
 
@@ -82,10 +83,13 @@ When running with TLS support you will need:
 - A certificate
 - A RSA Private Key for such certificate
 
+A script to generate certificates and keys is available here [tls-cert.sh](./docs/tls-cert.sh).
+This script relies on `openssl`, so make sure you have it installed in your system.
+
 Run `http-server` as follows:
 
 ```sh
-http-server --tls --tls_cert <PATH TO YOUR CERTIFICATE> --tls_key <PATH TO YOUR KEY>
+http-server --tls --tls_cert <PATH TO YOUR CERTIFICATE> --tls_key <PATH TO YOUR KEY> --tls_key_alg pkcs8
 ```
 
 ## Release

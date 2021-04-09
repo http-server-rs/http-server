@@ -1,4 +1,4 @@
-#!bin/sh
+#!/bin/sh
 
 # Check if the user have OpenSSL in their system
 if ! [ -x "$(command -v openssl)" ]; then
@@ -11,9 +11,9 @@ openssl req \
   -new \
   -newkey rsa:3072 \
   -nodes \
-  -keyout localhost.pem \
+  -keyout localhost.key \
   -out localhost.csr \
-  -subj '/CN=localhost' -extensions EXT -config <( \
+  -subj '/CN=127.0.0.1' -extensions EXT -config <( \
   printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
 
 echo "Creating a self-signed certificate"
@@ -23,3 +23,11 @@ openssl x509 \
   -in localhost.csr \
   -signkey localhost.key \
   -out localhost.crt
+
+echo "Certificates are available on:"
+echo $PWA
+
+echo "Next steps are:"
+echo "Provide your certificate and key to the HTTP Server as follows"
+echo "http-server --tls --tls_cert $PWD/localhost.crt --tls_key $PWD/localhost.pem"
+echo "Note: Keep in mind that Certificate installation may differ depending on OS"

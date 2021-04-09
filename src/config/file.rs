@@ -45,6 +45,8 @@ impl ConfigFile {
 mod tests {
     use std::net::Ipv4Addr;
 
+    use crate::config::util::tls::PrivateKeyAlgorithm;
+
     use super::*;
 
     #[test]
@@ -78,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_config_with_ssl() {
+    fn parses_config_with_tls_using_rsa() {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
@@ -88,6 +90,7 @@ mod tests {
             [tls]
             cert = "cert_123.pem"
             key = "key_123.pem"
+            key_algorithm = "rsa"
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
@@ -95,6 +98,37 @@ mod tests {
         let tls = TlsConfigFile {
             cert: PathBuf::from_str("cert_123.pem").unwrap(),
             key: PathBuf::from_str("key_123.pem").unwrap(),
+            key_algorithm: PrivateKeyAlgorithm::Rsa,
+        };
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert_eq!(config.host, host);
+        assert_eq!(config.port, port);
+        assert_eq!(config.root_dir.unwrap(), root_dir);
+        assert_eq!(config.tls.unwrap(), tls);
+        assert!(config.verbose);
+    }
+
+    #[test]
+    fn parses_config_with_tls_using_pkcs8() {
+        let file_contents = r#"
+            host = "192.168.0.1"
+            port = 7878
+            verbose = true
+            root_dir = "~/Desktop"
+
+            [tls]
+            cert = "cert_123.pem"
+            key = "key_123.pem"
+            key_algorithm = "pkcs8"
+        "#;
+        let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
+        let port = 7878;
+        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
+        let tls = TlsConfigFile {
+            cert: PathBuf::from_str("cert_123.pem").unwrap(),
+            key: PathBuf::from_str("key_123.pem").unwrap(),
+            key_algorithm: PrivateKeyAlgorithm::Pkcs8,
         };
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 

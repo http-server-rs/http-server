@@ -52,7 +52,7 @@ impl Https {
         let mut cfg = ServerConfig::new(NoClientAuth::new());
 
         cfg.set_single_cert(cert, key)?;
-        cfg.set_protocols(&[b"h2".to_vec(), b"http:/1.1".to_vec()]);
+        cfg.set_protocols(&[b"h2".to_vec(), b"http/1.1".to_vec()]);
 
         Ok(Arc::new(cfg))
     }

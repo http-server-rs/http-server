@@ -5,6 +5,7 @@
 # Application Related #
 #######################
 /target
+/tmp
 
 # Compiled source #
 ###################

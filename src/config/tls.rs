@@ -3,27 +3,37 @@ use rustls::{Certificate, PrivateKey};
 use serde::Deserialize;
 use std::path::PathBuf;
 
-use super::util::tls::{load_cert, load_private_key};
+use super::util::tls::{load_cert, load_private_key, PrivateKeyAlgorithm};
 
 /// Configuration for TLS protocol serving with its certificate and private key
 #[derive(Clone, Debug)]
 pub struct TlsConfig {
     cert: Vec<Certificate>,
     key: PrivateKey,
+    key_algorithm: PrivateKeyAlgorithm,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct TlsConfigFile {
     pub cert: PathBuf,
     pub key: PathBuf,
+    pub key_algorithm: PrivateKeyAlgorithm,
 }
 
 impl TlsConfig {
-    pub fn new(cert_path: PathBuf, key_path: PathBuf) -> Result<Self> {
+    pub fn new(
+        cert_path: PathBuf,
+        key_path: PathBuf,
+        key_algorithm: PrivateKeyAlgorithm,
+    ) -> Result<Self> {
         let cert = load_cert(&cert_path)?;
-        let key = load_private_key(&key_path)?;
+        let key = load_private_key(&key_path, &key_algorithm)?;
 
-        Ok(TlsConfig { cert, key })
+        Ok(TlsConfig {
+            cert,
+            key,
+            key_algorithm,
+        })
     }
 
     /// Retrieve certificates and private key loaded on initialization

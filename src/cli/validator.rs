@@ -17,6 +17,17 @@ pub fn is_valid_port(v: String) -> Result<(), String> {
     Ok(())
 }
 
+pub fn is_valid_tls_key_alg(v: String) -> Result<(), String> {
+    if v != "rsa" && v != "pkcs8" {
+        return Err(format!(
+            "Invalid value provided for TLS key algorithm. \"{}\". Valid are \"rsa\" and \"pkcs8\"",
+            v
+        ));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -39,5 +50,20 @@ mod tests {
     #[test]
     fn invalidates_port() {
         assert!(is_valid_port("128785425".to_string()).is_err());
+    }
+
+    #[test]
+    fn validates_tls_algorithm_rsa() {
+        assert!(is_valid_tls_key_alg("rsa".to_string()).is_ok());
+    }
+
+    #[test]
+    fn validates_tls_algorithm_pkcs8() {
+        assert!(is_valid_tls_key_alg("pkcs8".to_string()).is_ok());
+    }
+
+    #[test]
+    fn invalidates_tls_algorithm() {
+        assert!(is_valid_tls_key_alg("github".to_string()).is_err());
     }
 }

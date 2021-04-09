@@ -10,7 +10,7 @@ use crate::cli::argument;
 
 pub mod file;
 pub mod tls;
-mod util;
+pub mod util;
 
 /// Server instance configuration used on initialization
 #[derive(Debug, Clone)]
@@ -86,8 +86,12 @@ impl TryFrom<ArgMatches<'static>> for Config {
             );
             let (cert_path, key_path) =
                 (PathBuf::from_str(cert_path)?, PathBuf::from_str(key_path)?);
+            let key_algorithm = matches
+                .value_of(argument::TLS_KEY_ALGORITHM.name())
+                .unwrap();
+            let key_algorithm = util::tls::PrivateKeyAlgorithm::from_str(key_algorithm)?;
 
-            Some(tls::TlsConfig::new(cert_path, key_path)?)
+            Some(tls::TlsConfig::new(cert_path, key_path, key_algorithm)?)
         } else {
             None
         };
@@ -113,7 +117,11 @@ impl TryFrom<file::ConfigFile> for Config {
         let verbose = file.verbose;
         let root_dir = file.root_dir.unwrap_or_default();
         let tls: Option<tls::TlsConfig> = if let Some(https_config) = file.tls {
-            Some(tls::TlsConfig::new(https_config.cert, https_config.key)?)
+            Some(tls::TlsConfig::new(
+                https_config.cert,
+                https_config.key,
+                https_config.key_algorithm,
+            )?)
         } else {
             None
         };
