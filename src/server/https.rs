@@ -1,41 +1,15 @@
 use anyhow::Result;
 use async_stream::stream;
-use core::task::{Context, Poll};
-use futures::{Stream, TryFutureExt};
+use futures::TryFutureExt;
 use hyper::server::accept::Accept;
 use hyper::server::Builder;
 use rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use std::io::Error;
 use std::net::SocketAddr;
-use std::pin::Pin;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
-
-pub struct HttpsAcceptor<'a> {
-    acceptor: Pin<Box<dyn Stream<Item = Result<TlsStream<TcpStream>, Error>> + 'a>>,
-}
-
-impl<'a> HttpsAcceptor<'a> {
-    pub fn new(
-        acceptor: Pin<Box<dyn Stream<Item = Result<TlsStream<TcpStream>, Error>> + 'a>>,
-    ) -> Self {
-        HttpsAcceptor { acceptor }
-    }
-}
-
-impl Accept for HttpsAcceptor<'_> {
-    type Conn = TlsStream<TcpStream>;
-    type Error = Error;
-
-    fn poll_accept(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-        Pin::new(&mut self.acceptor).poll_next(cx)
-    }
-}
 
 pub struct Https {
     cert: Vec<Certificate>,
@@ -57,7 +31,10 @@ impl Https {
         Ok(Arc::new(cfg))
     }
 
-    pub async fn make_server(&self, addr: SocketAddr) -> Result<Builder<HttpsAcceptor<'_>>> {
+    pub async fn make_server(
+        &self,
+        addr: SocketAddr,
+    ) -> Result<Builder<impl Accept<Conn = TlsStream<TcpStream>, Error = Error>>> {
         let tcp = TcpListener::bind(addr).await?;
         let tls_cfg = self.make_tls_cfg()?;
         let tls_acceptor = TlsAcceptor::from(tls_cfg);
@@ -75,7 +52,7 @@ impl Https {
             }
         };
 
-        let acceptor = HttpsAcceptor::new(Box::pin(incoming_tls_stream));
+        let acceptor = hyper::server::accept::from_stream(incoming_tls_stream);
         let server = hyper::server::Server::builder(acceptor);
 
         Ok(server)

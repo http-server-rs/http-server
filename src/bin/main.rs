@@ -6,9 +6,9 @@ async fn main() {
         Ok(_) => {
             println!("Server stopped");
         }
-        Err(e) => {
+        Err(error) => {
             eprintln!("An error ocurred executing the HTTP Server");
-            eprintln!("{}", e.to_string())
+            eprintln!("{}", error);
         }
     }
 }

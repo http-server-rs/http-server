@@ -1,4 +1,4 @@
-use anyhow::{Context, Error, Result};
+use anyhow::{ensure, Context, Error, Result};
 use rustls::internal::pemfile;
 use rustls::{Certificate, PrivateKey};
 use serde::Deserialize;
@@ -22,10 +22,7 @@ impl FromStr for PrivateKeyAlgorithm {
         match s {
             "rsa" => Ok(PrivateKeyAlgorithm::Rsa),
             "pkcs8" => Ok(PrivateKeyAlgorithm::Pkcs8),
-            _ => Err(Error::msg(format!(
-                "Invalid algorithm name provided for TLS key. {}",
-                s
-            ))),
+            _ => anyhow::bail!("Invalid algorithm name provided for TLS key. {}", s),
         }
     }
 }
@@ -45,10 +42,8 @@ pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
 }
 
 pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<PrivateKey> {
-    let file = File::open(path.to_path_buf()).context(format!(
-        "Unable to find the TLS keys on: {}",
-        path.to_str().unwrap()
-    ))?;
+    let file = File::open(path.to_path_buf())
+        .with_context(|| format!("Unable to find the TLS keys on: {}", path.to_str().unwrap()))?;
     let mut reader = BufReader::new(file);
     let keys = match kind {
         PrivateKeyAlgorithm::Rsa => pemfile::rsa_private_keys(&mut reader).map_err(|_| {
@@ -63,9 +58,7 @@ pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<Priva
         })?,
     };
 
-    if keys.len() != 1 {
-        return Err(Error::msg("Expected a single private key"));
-    }
+    ensure!(keys.len() == 1, "Expected a single private key");
 
     Ok(keys[0].clone())
 }

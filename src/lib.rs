@@ -32,7 +32,7 @@ pub async fn run() -> Result<()> {
     let cli = cli::build();
     let matches = cli.get_matches();
     let config = resolve_config(matches)?;
-    let server = Server::new(config).await;
+    let server = Server::new(config);
 
     server.run().await;
 

@@ -14,7 +14,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn new(config: Config) -> Server {
+    pub fn new(config: Config) -> Server {
         Server { config }
     }
 
