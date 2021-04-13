@@ -1,13 +1,13 @@
+mod handler;
+mod https;
+mod service;
+
 use anyhow::Error;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::SocketAddr;
 
 use crate::config::tls::TlsConfig;
 use crate::config::Config;
-
-mod handler;
-mod https;
-mod service;
 
 pub struct Server {
     config: Config,
@@ -32,19 +32,16 @@ impl Server {
     }
 
     pub async fn serve(&self, address: SocketAddr, handler: handler::Handler) {
-        let main_svc = make_service_fn(move |_| {
+        let server = hyper::Server::bind(&address).serve(make_service_fn(|_| {
             // Move a clone of `handler` into the `service_fn`.
             let handler = handler.clone();
 
             async {
                 Ok::<_, Error>(service_fn(move |req| {
-                    // Clone again to ensure that `handler` outlives this closure.
-                    handler.to_owned().handle_request(req)
+                    service::main_service(handler.to_owned(), req)
                 }))
             }
-        });
-
-        let server = hyper::Server::bind(&address).serve(main_svc);
+        }));
 
         if self.config.verbose() {
             println!("Server binded");
@@ -65,23 +62,23 @@ impl Server {
         let https_server_builder = https::Https::new(cert, key);
         let server = https_server_builder.make_server(address).await.unwrap();
 
-        let main_svc = make_service_fn(move |_| {
-            // Move a clone of `handler` into the `service_fn`.
-            let handler = handler.clone();
-
-            async {
-                Ok::<_, Error>(service_fn(move |req| {
-                    // Clone again to ensure that `handler` outlives this closure.
-                    handler.to_owned().handle_request(req)
-                }))
-            }
-        });
-
         if self.config.verbose() {
             println!("Server binded with TLS");
         }
 
-        if let Err(e) = server.serve(main_svc).await {
+        if let Err(e) = server
+            .serve(make_service_fn(|_| {
+                // Move a clone of `handler` into the `service_fn`.
+                let handler = handler.clone();
+
+                async {
+                    Ok::<_, Error>(service_fn(move |req| {
+                        service::main_service(handler.to_owned(), req)
+                    }))
+                }
+            }))
+            .await
+        {
             eprint!("Server Error: {}", e);
         }
     }
