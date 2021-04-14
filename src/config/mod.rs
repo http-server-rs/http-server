@@ -1,16 +1,14 @@
+pub mod file;
+pub mod tls;
+pub mod util;
+
 use anyhow::{Error, Result};
-use clap::ArgMatches;
 use std::convert::TryFrom;
 use std::env::current_dir;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
-use std::str::FromStr;
 
-use crate::cli::argument;
-
-pub mod file;
-pub mod tls;
-pub mod util;
+use crate::cli::Cli;
 
 /// Server instance configuration used on initialization
 #[derive(Debug, Clone)]
@@ -59,48 +57,27 @@ impl Default for Config {
     }
 }
 
-impl TryFrom<ArgMatches<'static>> for Config {
-    type Error = Error;
+impl TryFrom<Cli> for Config {
+    type Error = anyhow::Error;
 
-    fn try_from(matches: ArgMatches<'static>) -> Result<Self, Self::Error> {
-        let host = matches.value_of(argument::HOST.name()).unwrap();
-        let host = IpAddr::from_str(host)?;
+    fn try_from(cli_aguments: Cli) -> Result<Self, Self::Error> {
+        let verbose = cli_aguments.verbose;
 
-        let port = matches.value_of(argument::PORT.name()).unwrap();
-        let port = port.parse::<u16>()?;
-
-        let address = SocketAddr::new(host, port);
-
-        let verbose = matches.is_present(argument::VERBOSE.name());
-
-        let root_dir = if let Some(dir) = matches.value_of(argument::ROOT_DIR.name()) {
-            PathBuf::from_str(dir)?
-        } else {
-            current_dir().unwrap()
-        };
-
-        let tls: Option<tls::TlsConfig> = if matches.is_present(argument::TLS.name()) {
-            let (cert_path, key_path) = (
-                matches.value_of(argument::TLS_CERTIFICATE.name()).unwrap(),
-                matches.value_of(argument::TLS_KEY.name()).unwrap(),
-            );
-            let (cert_path, key_path) =
-                (PathBuf::from_str(cert_path)?, PathBuf::from_str(key_path)?);
-            let key_algorithm = matches
-                .value_of(argument::TLS_KEY_ALGORITHM.name())
-                .unwrap();
-            let key_algorithm = util::tls::PrivateKeyAlgorithm::from_str(key_algorithm)?;
-
-            Some(tls::TlsConfig::new(cert_path, key_path, key_algorithm)?)
+        let tls: Option<tls::TlsConfig> = if cli_aguments.tls {
+            Some(tls::TlsConfig::new(
+                cli_aguments.tls_cert,
+                cli_aguments.tls_key,
+                cli_aguments.tls_key_algorithm,
+            )?)
         } else {
             None
         };
 
         Ok(Config {
-            host,
-            port,
-            address,
-            root_dir,
+            host: cli_aguments.host,
+            port: cli_aguments.port,
+            address: SocketAddr::new(cli_aguments.host, cli_aguments.port),
+            root_dir: cli_aguments.root_dir,
             verbose,
             tls,
         })
@@ -111,10 +88,6 @@ impl TryFrom<file::ConfigFile> for Config {
     type Error = Error;
 
     fn try_from(file: file::ConfigFile) -> Result<Self, Self::Error> {
-        let host = file.host;
-        let port = file.port;
-        let address = SocketAddr::new(host, port);
-        let verbose = file.verbose;
         let root_dir = file.root_dir.unwrap_or_default();
         let tls: Option<tls::TlsConfig> = if let Some(https_config) = file.tls {
             Some(tls::TlsConfig::new(
@@ -127,10 +100,10 @@ impl TryFrom<file::ConfigFile> for Config {
         };
 
         Ok(Config {
-            host,
-            port,
-            address,
-            verbose,
+            host: file.host,
+            port: file.port,
+            address: SocketAddr::new(file.host, file.port),
+            verbose: file.verbose,
             root_dir,
             tls,
         })

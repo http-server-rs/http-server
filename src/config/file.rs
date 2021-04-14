@@ -3,7 +3,6 @@ use serde::Deserialize;
 use std::fs;
 use std::net::IpAddr;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use super::tls::TlsConfigFile;
 
@@ -17,13 +16,7 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn from_file(path: Option<PathBuf>) -> Result<Self> {
-        let file_path = if let Some(path) = path {
-            path
-        } else {
-            PathBuf::from_str("server.toml").unwrap()
-        };
-
+    pub fn from_file(file_path: PathBuf) -> Result<Self> {
         let file = fs::read_to_string(file_path)?;
         let config = ConfigFile::parse_toml(file.as_str())?;
 
@@ -44,6 +37,7 @@ impl ConfigFile {
 #[cfg(test)]
 mod tests {
     use std::net::Ipv4Addr;
+    use std::str::FromStr;
 
     use crate::config::util::tls::PrivateKeyAlgorithm;
 
