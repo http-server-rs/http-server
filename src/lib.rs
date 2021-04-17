@@ -22,12 +22,10 @@ fn resolve_config(cli_arguments: cli::Cli) -> Result<Config> {
     Config::try_from(cli_arguments).with_context(|| anyhow::Error::msg("OK"))
 }
 
-pub async fn run() -> Result<()> {
+pub fn make_server() -> Result<Server> {
     let cli_arguments = cli::Cli::from_args();
     let config = resolve_config(cli_arguments)?;
     let server = Server::new(config);
 
-    server.run().await;
-
-    Ok(())
+    Ok(server)
 }

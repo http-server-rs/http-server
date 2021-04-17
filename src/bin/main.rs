@@ -1,14 +1,8 @@
-use http_server::run;
+use http_server::make_server;
 
 #[tokio::main]
 async fn main() {
-    match run().await {
-        Ok(_) => {
-            println!("Server stopped");
-        }
-        Err(error) => {
-            eprintln!("An error ocurred executing the HTTP Server");
-            eprintln!("{}", error);
-        }
-    }
+    let server = make_server().unwrap();
+
+    server.run().await;
 }
