@@ -33,7 +33,7 @@ http-server --help
 ## Usage
 
 ```
-http-server [FLAGS] [OPTIONS] [root_dir]
+http-server [FLAGS] [OPTIONS] [root-dir]
 ```
 
 ### Flags
@@ -64,9 +64,9 @@ Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
 Port | `-p` | `--port` | Port to bind the server | `7878`
 Configuration File | `-c` | `--config` | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
 TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
-TLS Ceritificate | N/A | `--tls_cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
-TLS Key | N/A | `--tls_key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
-TLS Key Algorithm | N/A | `--tls_key_alg` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
+TLS Ceritificate | N/A | `--tls-cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
+TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
+TLS Key Algorithm | N/A | `--tls-key-tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
 
 ## References
 
@@ -89,7 +89,7 @@ This script relies on `openssl`, so make sure you have it installed in your syst
 Run `http-server` as follows:
 
 ```sh
-http-server --tls --tls_cert <PATH TO YOUR CERTIFICATE> --tls_key <PATH TO YOUR KEY> --tls_key_alg pkcs8
+http-server --tls --tls-cert <PATH TO YOUR CERTIFICATE> --tls-key <PATH TO YOUR KEY> --tls-key-algorithm pkcs8
 ```
 
 ## Release
