@@ -2,6 +2,21 @@
 
 <Empty>
 
+<a name="v0.2.0"></a>
+## v0.2.0 (2021-04-19)
+
+> Requires Rust: rustc 1.49.0 (e1884a8e3 2020-12-29)
+
+#### Features
+
+* Add support for HTTPS serving using TLS
+  * Support TLS certificates
+  * Support TLS keys using RSA or PKCS8 algorithm
+
+#### Improvements
+
+* Refactor CLI implementation to use _structopt_
+
 <a name="v0.1.0"></a>
 ## v0.1.0 (2021-04-02)
 

@@ -12,7 +12,6 @@ use crate::config::util::tls::PrivateKeyAlgorithm;
 )]
 pub struct Cli {
     /// Path to TOML configuration file.
-    /// https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml
     #[structopt(parse(from_os_str), short = "c", long = "config")]
     pub config: Option<PathBuf>,
     /// Host (IP) to bind the server
@@ -27,18 +26,16 @@ pub struct Cli {
     /// Turns on stdout/stderr logging
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
-    /// Enables HTTPS serving using TLS. Requires a Certificate and a Key
-    /// provided with the `tls_cert` and `tls_key` options
+    /// Enables HTTPS serving using TLS
     #[structopt(long = "tls")]
     pub tls: bool,
     /// Path to the TLS Certificate
-    #[structopt(long = "tls_cert", parse(from_os_str), default_value = "cert.pem")]
+    #[structopt(long = "tls-cert", parse(from_os_str), default_value = "cert.pem")]
     pub tls_cert: PathBuf,
     /// Path to the TLS Key
-    #[structopt(long = "tls_key", parse(from_os_str), default_value = "key.rsa")]
+    #[structopt(long = "tls-key", parse(from_os_str), default_value = "key.rsa")]
     pub tls_key: PathBuf,
-    /// Algorithm used to generate certificate key. Supports RSA (rsa) and
-    /// PKCS8 (pkcs8)
-    #[structopt(long = "tls_key_algorithm", default_value = "rsa")]
+    /// Algorithm used to generate certificate key
+    #[structopt(long = "tls-key-algorithm", default_value = "rsa")]
     pub tls_key_algorithm: PrivateKeyAlgorithm,
 }
