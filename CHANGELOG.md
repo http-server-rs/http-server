@@ -2,6 +2,17 @@
 
 <Empty>
 
+<a name="v0.2.2"></a>
+## v0.2.2 (2021-04-22)
+
+> Requires Rust: rustc 1.49.0 (e1884a8e3 2020-12-29)
+
+#### Fixes
+
+* Fix issue where the root_path is taken _as is_ from the CLI
+arguments resulting on `./` instead of the current working
+directory for the `FileExplorer`
+
 <a name="v0.2.1"></a>
 ## v0.2.1 (2021-04-22)
 
