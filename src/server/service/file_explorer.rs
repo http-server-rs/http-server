@@ -9,7 +9,7 @@ use hyper_staticfile::{resolve, ResolveResult, ResponseBuilder as FileResponseBu
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -234,7 +234,7 @@ impl<'a> FileExplorer<'a> {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size: FileExplorer::format_bytes(metadata.len() as f64),
-                entry_path: FileExplorer::make_dir_entry_link(&root_dir, entry.path()),
+                entry_path: FileExplorer::make_dir_entry_link(&root_dir, &entry.path()),
                 created_at,
                 updated_at,
             });
@@ -281,12 +281,12 @@ impl<'a> FileExplorer<'a> {
     ///
     /// This happens because links should behave relative to the `/` path
     /// which in this case is `http-server/src` instead of system's root path.
-    fn make_dir_entry_link(root_dir: &PathBuf, entry_path: PathBuf) -> String {
+    fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
         // format!("/{}", &entry_path[current_dir_path.len()..])
         let root_dir = root_dir.to_str().unwrap();
         let entry_path = entry_path.to_str().unwrap();
-
-        entry_path[root_dir.len() - 1..].to_string()
+        println!("{}\n{}", root_dir, entry_path);
+        entry_path[root_dir.len()..].to_string()
     }
 
     /// Calculates the format of the `Bytes` by converting `bytes` to the
@@ -349,7 +349,7 @@ mod tests {
 
         assert_eq!(
             "/src/server/service/file_explorer.rs",
-            FileExplorer::make_dir_entry_link(&root_dir, entry_path)
+            FileExplorer::make_dir_entry_link(&root_dir, &entry_path)
         );
     }
 }

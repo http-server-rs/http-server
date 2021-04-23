@@ -62,6 +62,11 @@ impl TryFrom<Cli> for Config {
 
     fn try_from(cli_aguments: Cli) -> Result<Self, Self::Error> {
         let verbose = cli_aguments.verbose;
+        let root_dir = if cli_aguments.root_dir.to_str().unwrap() == "./" {
+            current_dir().unwrap()
+        } else {
+            cli_aguments.root_dir.canonicalize().unwrap()
+        };
 
         let tls: Option<tls::TlsConfig> = if cli_aguments.tls {
             Some(tls::TlsConfig::new(
@@ -77,7 +82,7 @@ impl TryFrom<Cli> for Config {
             host: cli_aguments.host,
             port: cli_aguments.port,
             address: SocketAddr::new(cli_aguments.host, cli_aguments.port),
-            root_dir: cli_aguments.root_dir,
+            root_dir,
             verbose,
             tls,
         })
