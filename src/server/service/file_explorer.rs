@@ -209,7 +209,6 @@ impl<'a> FileExplorer<'a> {
     /// Creates a `DirectoryIndex` with the provided `root_dir` and `path`
     /// (HTTP Request URI)
     fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
-        let root_dir: &str = root_dir.to_str().unwrap();
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
@@ -235,11 +234,7 @@ impl<'a> FileExplorer<'a> {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size: FileExplorer::format_bytes(metadata.len() as f64),
-                entry_path: FileExplorer::make_entry_relative_path(
-                    root_dir,
-                    entry.path().to_str().unwrap(),
-                )
-                .to_string(),
+                entry_path: FileExplorer::make_dir_entry_link(&root_dir, entry.path()),
                 created_at,
                 updated_at,
             });
@@ -277,8 +272,21 @@ impl<'a> FileExplorer<'a> {
 
     /// Creates entry's relative path. Used by Handlebars template engine to
     /// provide navigation through `FileExplorer`
-    fn make_entry_relative_path<'b>(current_dir_path: &'b str, entry_path: &'b str) -> &'b str {
-        &entry_path[current_dir_path.len()..]
+    ///
+    /// If the root_dir is: `https-server/src`
+    /// The entry path is: `https-server/src/server/service/file_explorer.rs`
+    ///
+    /// Then the resulting path from this function is the absolute path to
+    /// the "entry path" in relation to the "root_dir" path.
+    ///
+    /// This happens because links should behave relative to the `/` path
+    /// which in this case is `http-server/src` instead of system's root path.
+    fn make_dir_entry_link(root_dir: &PathBuf, entry_path: PathBuf) -> String {
+        // format!("/{}", &entry_path[current_dir_path.len()..])
+        let root_dir = root_dir.to_str().unwrap();
+        let entry_path = entry_path.to_str().unwrap();
+
+        entry_path[root_dir.len() - 1..].to_string()
     }
 
     /// Calculates the format of the `Bytes` by converting `bytes` to the
@@ -317,7 +325,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn format_bytes() {
+    fn formats_bytes() {
         let byte_sizes = vec![1024., 1048576., 1073741824., 1099511627776.];
 
         let expect = vec![
@@ -330,5 +338,18 @@ mod tests {
         for (idx, size) in byte_sizes.into_iter().enumerate() {
             assert_eq!(FileExplorer::format_bytes(size), expect[idx]);
         }
+    }
+
+    #[test]
+    fn makes_dir_entry_link() {
+        let root_dir = PathBuf::from_str("/Users/bob/sources/http-server").unwrap();
+        let entry_path =
+            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/file_explorer.rs")
+                .unwrap();
+
+        assert_eq!(
+            "/src/server/service/file_explorer.rs",
+            FileExplorer::make_dir_entry_link(&root_dir, entry_path)
+        );
     }
 }

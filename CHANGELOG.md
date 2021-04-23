@@ -2,6 +2,16 @@
 
 <Empty>
 
+<a name="v0.2.1"></a>
+## v0.2.1 (2021-04-22)
+
+> Requires Rust: rustc 1.49.0 (e1884a8e3 2020-12-29)
+
+#### Fixes
+
+* Fix issue where `FileExplorer` entry link is not prefixed with `/` on some
+paths causing the link to be invalid.
+
 <a name="v0.2.0"></a>
 ## v0.2.0 (2021-04-19)
 
