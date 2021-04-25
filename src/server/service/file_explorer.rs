@@ -285,7 +285,7 @@ impl<'a> FileExplorer<'a> {
         // format!("/{}", &entry_path[current_dir_path.len()..])
         let root_dir = root_dir.to_str().unwrap();
         let entry_path = entry_path.to_str().unwrap();
-        println!("{}\n{}", root_dir, entry_path);
+
         entry_path[root_dir.len()..].to_string()
     }
 
