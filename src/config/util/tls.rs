@@ -7,7 +7,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub enum PrivateKeyAlgorithm {
     #[serde(rename = "rsa")]
     Rsa,

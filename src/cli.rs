@@ -1,10 +1,11 @@
 use std::net::IpAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 use crate::config::util::tls::PrivateKeyAlgorithm;
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, StructOpt, PartialEq, Eq)]
 #[structopt(
     name = "http-server",
     author = "Esteban Borai <estebanborai@gmail.com>",
@@ -38,4 +39,133 @@ pub struct Cli {
     /// Algorithm used to generate certificate key
     #[structopt(long = "tls-key-algorithm", default_value = "rsa")]
     pub tls_key_algorithm: PrivateKeyAlgorithm,
+    /// Enable Cross-Origin-Resource-Sharing for this HTTP Server allowing all requests
+    #[structopt(long = "cors")]
+    pub cors: bool,
+}
+
+impl Cli {
+    pub fn from_str_args(args: Vec<&str>) -> Self {
+        Cli::from_iter_safe(args.into_iter()).unwrap_or_else(|e| e.exit())
+    }
+}
+
+impl Default for Cli {
+    fn default() -> Self {
+        Cli {
+            config: None,
+            host: "127.0.0.1".parse().unwrap(),
+            port: 7878_u16,
+            root_dir: PathBuf::from_str("./").unwrap(),
+            verbose: false,
+            tls: false,
+            tls_cert: PathBuf::from_str("cert.pem").unwrap(),
+            tls_key: PathBuf::from_str("key.rsa").unwrap(),
+            tls_key_algorithm: PrivateKeyAlgorithm::Rsa,
+            cors: false,
+        }
+    }
+}
+
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn no_arguments() {
+        let from_args = Cli::from_str_args(vec![]);
+        let expect = Cli::default();
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_host() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--host", "0.0.0.0"]);
+        let mut expect = Cli::default();
+
+        expect.host = "0.0.0.0".parse().unwrap();
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_host_and_port() {
+        let from_args = Cli::from_str_args(vec![
+            "http-server",
+            "--host",
+            "192.168.0.1",
+            "--port",
+            "54200",
+        ]);
+        let mut expect = Cli::default();
+
+        expect.host = "192.168.0.1".parse().unwrap();
+        expect.port = 54200 as u16;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_root_dir() {
+        let from_args = Cli::from_str_args(vec!["http-server", "~/User/sources/http-server"]);
+        let mut expect = Cli::default();
+
+        expect.root_dir = PathBuf::from_str("~/User/sources/http-server").unwrap();
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_verbose() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--verbose"]);
+        let mut expect = Cli::default();
+
+        expect.verbose = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_tls_no_config() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--tls"]);
+        let mut expect = Cli::default();
+
+        expect.tls = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_tls_and_config() {
+        let from_args = Cli::from_str_args(vec![
+            "http-server",
+            "--tls",
+            "--tls-cert",
+            "~/secrets/cert",
+            "--tls-key",
+            "~/secrets/key",
+            "--tls-key-algorithm",
+            "rsa",
+        ]);
+        let mut expect = Cli::default();
+
+        expect.tls = true;
+        expect.tls_cert = PathBuf::from_str("~/secrets/cert").unwrap();
+        expect.tls_key = PathBuf::from_str("~/secrets/key").unwrap();
+        expect.tls_key_algorithm = PrivateKeyAlgorithm::Rsa;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_cors() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--cors"]);
+        let mut expect = Cli::default();
+
+        expect.cors = true;
+
+        assert_eq!(from_args, expect);
+    }
 }
