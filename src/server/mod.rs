@@ -22,7 +22,7 @@ impl Server {
 
     pub async fn run(self) {
         let address = self.config.address();
-        let handler = handler::Handler::from(self.config.clone());
+        let handler = handler::HttpHandler::from(self.config.clone());
         let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
 
         if self.config.tls().is_some() {
@@ -50,7 +50,7 @@ impl Server {
         }
     }
 
-    pub async fn serve(self, address: SocketAddr, handler: handler::Handler) {
+    pub async fn serve(self, address: SocketAddr, handler: handler::HttpHandler) {
         let server = hyper::Server::bind(&address).serve(make_service_fn(|_| {
             // Move a clone of `handler` into the `service_fn`.
             let handler = handler.clone();
@@ -74,7 +74,7 @@ impl Server {
     pub async fn serve_https(
         self,
         address: SocketAddr,
-        handler: handler::Handler,
+        handler: handler::HttpHandler,
         https_config: TlsConfig,
     ) {
         let (cert, key) = https_config.parts();

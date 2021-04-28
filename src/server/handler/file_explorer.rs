@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use chrono::{DateTime, Local};
 use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
-use http::StatusCode;
+use http::{Method, StatusCode};
 use hyper::{Body, Request, Response};
 use hyper_staticfile::{resolve, ResolveResult, ResponseBuilder as FileResponseBuilder};
 use serde::Serialize;
@@ -14,7 +14,30 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
+use crate::server::middleware::Handler;
+
+/// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`
+pub fn make_file_explorer_handler(file_explorer: Arc<FileExplorer>) -> Handler {
+    Box::new(move |request: Request<Body>| {
+        let file_explorer = Arc::clone(&file_explorer);
+
+        Box::pin(async move {
+            if request.method() == Method::GET {
+                return file_explorer.resolve(request).await;
+            }
+
+            HttpResponseBuilder::new()
+                .status(StatusCode::METHOD_NOT_ALLOWED)
+                .body(Body::empty())
+                .expect("Unable to build response")
+        })
+    })
+}
+
+/// Explorer's Handlebars template filename
 const EXPLORER_TEMPLATE: &str = "explorer";
+
+/// Byte size units
 const BYTE_SIZE_UNIT: [&str; 9] = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
 /// A Directory entry used to display a File Explorer's entry.
@@ -93,13 +116,13 @@ struct DirectoryIndex {
 /// If the matched file is not a supported MIME type, such file will be
 /// downloaded based on navigator preferences.
 #[derive(Clone)]
-pub struct FileExplorer<'a> {
+pub struct FileExplorer {
     root_dir: PathBuf,
     cache_headers: Option<u32>,
-    handlebars: Arc<Handlebars<'a>>,
+    handlebars: Arc<Handlebars<'static>>,
 }
 
-impl<'a> FileExplorer<'a> {
+impl<'a> FileExplorer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
     pub fn new(root_dir: PathBuf) -> Self {
         let handlebars = FileExplorer::make_handlebars_engine();
@@ -149,42 +172,42 @@ impl<'a> FileExplorer<'a> {
     ///
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
-    pub async fn resolve(&self, req: Request<Body>) -> Result<Response<Body>> {
+    pub async fn resolve(&self, req: Request<Body>) -> Response<Body> {
         match resolve(&self.root_dir, &req).await.unwrap() {
-            ResolveResult::MethodNotMatched => Ok(HttpResponseBuilder::new()
+            ResolveResult::MethodNotMatched => HttpResponseBuilder::new()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::empty())
-                .expect("Failed to build response")),
-            ResolveResult::UriNotMatched => Ok(HttpResponseBuilder::new()
+                .expect("Failed to build response"),
+            ResolveResult::UriNotMatched => HttpResponseBuilder::new()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::empty())
-                .expect("Failed to build response")),
+                .expect("Failed to build response"),
             ResolveResult::NotFound => {
                 if req.uri() == "/" {
-                    let directory_path = self.make_absolute_path_from_request(&req)?;
+                    let directory_path = self.make_absolute_path_from_request(&req).unwrap();
 
-                    return self.render_directory_index(directory_path).await;
+                    return self.render_directory_index(directory_path).await.unwrap();
                 }
 
-                Ok(HttpResponseBuilder::new()
+                HttpResponseBuilder::new()
                     .status(StatusCode::NOT_FOUND)
                     .body(Body::empty())
-                    .expect("Failed to build response"))
+                    .expect("Failed to build response")
             }
-            ResolveResult::PermissionDenied => Ok(HttpResponseBuilder::new()
+            ResolveResult::PermissionDenied => HttpResponseBuilder::new()
                 .status(StatusCode::FORBIDDEN)
                 .body(Body::empty())
-                .expect("Failed to build response")),
+                .expect("Failed to build response"),
             ResolveResult::IsDirectory => {
-                let directory_path = self.make_absolute_path_from_request(&req)?;
+                let directory_path = self.make_absolute_path_from_request(&req).unwrap();
 
-                return self.render_directory_index(directory_path).await;
+                return self.render_directory_index(directory_path).await.unwrap();
             }
-            ResolveResult::Found(file, metadata, mime) => Ok(FileResponseBuilder::new()
+            ResolveResult::Found(file, metadata, mime) => FileResponseBuilder::new()
                 .request(&req)
                 .cache_headers(self.cache_headers)
                 .build(ResolveResult::Found(file, metadata, mime))
-                .expect("Failed to build response")),
+                .expect("Failed to build response"),
         }
     }
 
