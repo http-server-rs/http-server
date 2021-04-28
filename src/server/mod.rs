@@ -1,5 +1,6 @@
 mod handler;
 mod https;
+mod middleware;
 mod service;
 
 use anyhow::Error;
