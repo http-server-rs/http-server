@@ -39,7 +39,7 @@ pub struct Cli {
     /// Algorithm used to generate certificate key
     #[structopt(long = "tls-key-algorithm", default_value = "rsa")]
     pub tls_key_algorithm: PrivateKeyAlgorithm,
-    /// Enable Cross-Origin-Resource-Sharing for this HTTP Server allowing all requests
+    /// Enable Cross-Origin Resource Sharing allowing any origin
     #[structopt(long = "cors")]
     pub cors: bool,
 }

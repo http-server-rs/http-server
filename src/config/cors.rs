@@ -1,4 +1,6 @@
+use anyhow::{Error, Result};
 use serde::Deserialize;
+use std::convert::TryFrom;
 use std::time::Duration;
 
 /// CORS (Cross Origin Resource Sharing) configuration for the HTTP/S
@@ -16,7 +18,7 @@ use std::time::Duration;
 /// Access-Control-Request-Method header
 ///
 /// Refer to CORS here: https://www.w3.org/wiki/CORS
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CorsConfig {
     /// The Access-Control-Allow-Credentials response header tells browsers
     /// whether to expose the response to frontend JavaScript code when the
@@ -27,7 +29,7 @@ pub struct CorsConfig {
     /// its value to false).
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
-    allow_credentials: Option<()>,
+    allow_credentials: bool,
     /// The Access-Control-Allow-Headers response header is used in response to a
     /// preflight request which includes the Access-Control-Request-Headers to
     /// indicate which HTTP headers can be used during the actual request.
@@ -101,7 +103,7 @@ impl CorsConfig {
                 "Content-Length".to_string(),
                 "Content-Type".to_string(),
             ]),
-            allow_credentials: None,
+            allow_credentials: false,
             max_age: Some(Duration::from_secs(43200)),
             expose_headers: None,
             request_headers: None,
@@ -116,7 +118,7 @@ impl Default for CorsConfig {
             allow_origin: None,
             allow_methods: None,
             allow_headers: None,
-            allow_credentials: None,
+            allow_credentials: false,
             max_age: None,
             expose_headers: None,
             request_headers: None,
@@ -131,33 +133,23 @@ pub struct CorsConfigBuilder {
 }
 
 impl CorsConfigBuilder {
-    pub fn allow_origin(mut self, origin: &str) -> Self {
-        self.config.allow_origin = Some(String::from(origin));
+    pub fn allow_origin(mut self, origin: String) -> Self {
+        self.config.allow_origin = Some(origin);
         self
     }
 
-    pub fn allow_methods(mut self, methods: Vec<&str>) -> Self {
-        let methods = methods
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<String>>();
-
+    pub fn allow_methods(mut self, methods: Vec<String>) -> Self {
         self.config.allow_methods = Some(methods);
         self
     }
 
-    pub fn allow_headers(mut self, headers: Vec<&str>) -> Self {
-        let headers = headers
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<String>>();
-
+    pub fn allow_headers(mut self, headers: Vec<String>) -> Self {
         self.config.allow_headers = Some(headers);
         self
     }
 
     pub fn allow_credentials(mut self) -> Self {
-        self.config.allow_credentials = Some(());
+        self.config.allow_credentials = true;
         self
     }
 
@@ -166,28 +158,18 @@ impl CorsConfigBuilder {
         self
     }
 
-    pub fn expose_headers(mut self, headers: Vec<&str>) -> Self {
-        let headers = headers
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<String>>();
-
+    pub fn expose_headers(mut self, headers: Vec<String>) -> Self {
         self.config.expose_headers = Some(headers);
         self
     }
 
-    pub fn request_headers(mut self, headers: Vec<&str>) -> Self {
-        let headers = headers
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<String>>();
-
+    pub fn request_headers(mut self, headers: Vec<String>) -> Self {
         self.config.request_headers = Some(headers);
         self
     }
 
-    pub fn request_method(mut self, method: &str) -> Self {
-        self.config.request_method = Some(String::from(method));
+    pub fn request_method(mut self, method: String) -> Self {
+        self.config.request_method = Some(method);
         self
     }
 
@@ -211,15 +193,66 @@ pub struct CorsConfigFile {
     pub request_method: Option<String>,
 }
 
+impl TryFrom<CorsConfigFile> for CorsConfig {
+    type Error = Error;
+
+    fn try_from(file_config: CorsConfigFile) -> Result<Self, Self::Error> {
+        let mut cors_config_builder = CorsConfig::builder();
+
+        if file_config.allow_credentials {
+            cors_config_builder = cors_config_builder.allow_credentials();
+        }
+
+        if let Some(allow_headers) = file_config.allow_headers {
+            cors_config_builder = cors_config_builder.allow_headers(allow_headers);
+        }
+
+        if let Some(allow_methods) = file_config.allow_methods {
+            cors_config_builder = cors_config_builder.allow_methods(allow_methods);
+        }
+
+        if let Some(allow_origin) = file_config.allow_origin {
+            cors_config_builder = cors_config_builder.allow_origin(allow_origin);
+        }
+
+        if let Some(expose_headers) = file_config.expose_headers {
+            cors_config_builder = cors_config_builder.expose_headers(expose_headers);
+        }
+
+        if let Some(max_age) = file_config.max_age {
+            cors_config_builder = cors_config_builder.max_age(Duration::from_secs_f64(max_age));
+        }
+
+        if let Some(request_headers) = file_config.request_headers {
+            cors_config_builder = cors_config_builder.request_headers(request_headers);
+        }
+
+        if let Some(request_method) = file_config.request_method {
+            cors_config_builder = cors_config_builder.request_method(request_method);
+        }
+
+        Ok(cors_config_builder.build())
+    }
+}
+
 mod tests {
     use super::*;
 
     #[test]
     fn creates_cors_config_with_builder() {
         let cors_config = CorsConfig::builder()
-            .allow_origin("http://example.com")
-            .allow_methods(vec!["GET", "POST", "PUT", "DELETE"])
-            .allow_headers(vec!["Content-Type", "Origin", "Content-Length"])
+            .allow_origin("http://example.com".to_string())
+            .allow_methods(vec![
+                "GET".to_string(),
+                "POST".to_string(),
+                "PUT".to_string(),
+                "DELETE".to_string(),
+            ])
+            .allow_headers(vec![
+                "Content-Type".to_string(),
+                "Origin".to_string(),
+                "Content-Length".to_string(),
+            ])
             .build();
 
         assert_eq!(
@@ -243,7 +276,7 @@ mod tests {
                 String::from("Content-Length"),
             ])
         );
-        assert_eq!(cors_config.allow_credentials, None);
+        assert_eq!(cors_config.allow_credentials, false);
         assert_eq!(cors_config.max_age, None);
         assert_eq!(cors_config.expose_headers, None);
         assert_eq!(cors_config.request_headers, None);
@@ -274,10 +307,51 @@ mod tests {
                 String::from("Content-Type"),
             ])
         );
-        assert_eq!(cors_config.allow_credentials, None);
+        assert_eq!(cors_config.allow_credentials, false);
         assert_eq!(cors_config.max_age, Some(Duration::from_secs(43200)));
         assert_eq!(cors_config.expose_headers, None);
         assert_eq!(cors_config.request_headers, None);
         assert_eq!(cors_config.request_method, None);
+    }
+
+    #[test]
+    fn creates_cors_config_from_file() {
+        let allow_headers = vec![
+            "content-type".to_string(),
+            "content-length".to_string(),
+            "request-id".to_string(),
+        ];
+        let allow_mehtods = vec!["GET".to_string(), "POST".to_string(), "PUT".to_string()];
+        let allow_origin = String::from("github.com");
+        let expose_headers = vec!["content-type".to_string(), "request-id".to_string()];
+        let max_age = 5400.;
+        let request_headers = vec![
+            "content-type".to_string(),
+            "content-length".to_string(),
+            "authorization".to_string(),
+        ];
+        let request_method = String::from("GET");
+        let file_config = CorsConfigFile {
+            allow_credentials: true,
+            allow_headers: Some(allow_headers.clone()),
+            allow_methods: Some(allow_mehtods.clone()),
+            allow_origin: Some(allow_origin.clone()),
+            expose_headers: Some(expose_headers.clone()),
+            max_age: Some(max_age),
+            request_headers: Some(request_headers.clone()),
+            request_method: Some(request_method.clone()),
+        };
+        let cors_config = CorsConfig {
+            allow_credentials: true,
+            allow_headers: Some(allow_headers),
+            allow_methods: Some(allow_mehtods),
+            allow_origin: Some(allow_origin),
+            expose_headers: Some(expose_headers),
+            max_age: Some(Duration::from_secs_f64(max_age)),
+            request_headers: Some(request_headers),
+            request_method: Some(request_method),
+        };
+
+        assert_eq!(cors_config, CorsConfig::try_from(file_config).unwrap());
     }
 }

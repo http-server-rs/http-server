@@ -11,6 +11,10 @@ use std::path::PathBuf;
 
 use crate::cli::Cli;
 
+use self::cors::CorsConfig;
+use self::file::ConfigFile;
+use self::tls::TlsConfig;
+
 /// Server instance configuration used on initialization
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -19,7 +23,8 @@ pub struct Config {
     port: u16,
     root_dir: PathBuf,
     verbose: bool,
-    tls: Option<tls::TlsConfig>,
+    tls: Option<TlsConfig>,
+    cors: Option<CorsConfig>,
 }
 
 impl Config {
@@ -35,8 +40,12 @@ impl Config {
         self.verbose
     }
 
-    pub fn tls(&self) -> Option<tls::TlsConfig> {
+    pub fn tls(&self) -> Option<TlsConfig> {
         self.tls.clone()
+    }
+
+    pub fn cors(&self) -> Option<CorsConfig> {
+        self.cors.clone()
     }
 }
 
@@ -54,6 +63,7 @@ impl Default for Config {
             root_dir,
             verbose: false,
             tls: None,
+            cors: None,
         }
     }
 }
@@ -69,12 +79,21 @@ impl TryFrom<Cli> for Config {
             cli_aguments.root_dir.canonicalize().unwrap()
         };
 
-        let tls: Option<tls::TlsConfig> = if cli_aguments.tls {
-            Some(tls::TlsConfig::new(
+        let tls: Option<TlsConfig> = if cli_aguments.tls {
+            Some(TlsConfig::new(
                 cli_aguments.tls_cert,
                 cli_aguments.tls_key,
                 cli_aguments.tls_key_algorithm,
             )?)
+        } else {
+            None
+        };
+
+        let cors: Option<CorsConfig> = if cli_aguments.cors {
+            // when CORS is specified from CLI the default
+            // configuration should allow any origin, method and
+            // headers
+            Some(CorsConfig::allow_all())
         } else {
             None
         };
@@ -86,22 +105,29 @@ impl TryFrom<Cli> for Config {
             root_dir,
             verbose,
             tls,
+            cors,
         })
     }
 }
 
-impl TryFrom<file::ConfigFile> for Config {
+impl TryFrom<ConfigFile> for Config {
     type Error = Error;
 
-    fn try_from(file: file::ConfigFile) -> Result<Self, Self::Error> {
+    fn try_from(file: ConfigFile) -> Result<Self, Self::Error> {
         let root_dir = file.root_dir.unwrap_or_default();
         let verbose = file.verbose.unwrap_or(false);
-        let tls: Option<tls::TlsConfig> = if let Some(https_config) = file.tls {
-            Some(tls::TlsConfig::new(
+        let tls: Option<TlsConfig> = if let Some(https_config) = file.tls {
+            Some(TlsConfig::new(
                 https_config.cert,
                 https_config.key,
                 https_config.key_algorithm,
             )?)
+        } else {
+            None
+        };
+
+        let cors = if let Some(cors_config_file) = file.cors {
+            Some(CorsConfig::try_from(cors_config_file)?)
         } else {
             None
         };
@@ -113,6 +139,7 @@ impl TryFrom<file::ConfigFile> for Config {
             verbose,
             root_dir,
             tls,
+            cors,
         })
     }
 }
