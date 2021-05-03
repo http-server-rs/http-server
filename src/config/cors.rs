@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use std::time::Duration;
 
 /// CORS (Cross Origin Resource Sharing) configuration for the HTTP/S
@@ -193,6 +194,21 @@ impl CorsConfigBuilder {
     pub fn build(self) -> CorsConfig {
         self.config
     }
+}
+
+/// CORS configuration definition for server configuration file.
+/// This struct maps the values from the server configuration file
+/// to a `CorsConfig` struct
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct CorsConfigFile {
+    pub allow_credentials: bool,
+    pub allow_headers: Option<Vec<String>>,
+    pub allow_methods: Option<Vec<String>>,
+    pub allow_origin: Option<String>,
+    pub expose_headers: Option<Vec<String>>,
+    pub max_age: Option<f64>,
+    pub request_headers: Option<Vec<String>>,
+    pub request_method: Option<String>,
 }
 
 mod tests {

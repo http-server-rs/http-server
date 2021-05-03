@@ -95,6 +95,7 @@ impl TryFrom<file::ConfigFile> for Config {
 
     fn try_from(file: file::ConfigFile) -> Result<Self, Self::Error> {
         let root_dir = file.root_dir.unwrap_or_default();
+        let verbose = file.verbose.unwrap_or(false);
         let tls: Option<tls::TlsConfig> = if let Some(https_config) = file.tls {
             Some(tls::TlsConfig::new(
                 https_config.cert,
@@ -109,7 +110,7 @@ impl TryFrom<file::ConfigFile> for Config {
             host: file.host,
             port: file.port,
             address: SocketAddr::new(file.host, file.port),
-            verbose: file.verbose,
+            verbose,
             root_dir,
             tls,
         })

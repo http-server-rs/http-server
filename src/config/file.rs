@@ -4,15 +4,17 @@ use std::fs;
 use std::net::IpAddr;
 use std::path::PathBuf;
 
+use super::cors::CorsConfigFile;
 use super::tls::TlsConfigFile;
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
-    pub verbose: bool,
+    pub verbose: Option<bool>,
     pub root_dir: Option<PathBuf>,
     pub tls: Option<TlsConfigFile>,
+    pub cors: Option<CorsConfigFile>,
 }
 
 impl ConfigFile {
@@ -59,7 +61,7 @@ mod tests {
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
         assert_eq!(config.root_dir.unwrap(), root_dir);
-        assert!(config.verbose);
+        assert_eq!(config.verbose, Some(true));
     }
 
     #[test]
@@ -78,7 +80,7 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
-            verbose = true
+            verbose = false
             root_dir = "~/Desktop"
 
             [tls]
@@ -100,7 +102,7 @@ mod tests {
         assert_eq!(config.port, port);
         assert_eq!(config.root_dir.unwrap(), root_dir);
         assert_eq!(config.tls.unwrap(), tls);
-        assert!(config.verbose);
+        assert_eq!(config.verbose, Some(false));
     }
 
     #[test]
@@ -108,7 +110,6 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
-            verbose = true
             root_dir = "~/Desktop"
 
             [tls]
@@ -130,6 +131,91 @@ mod tests {
         assert_eq!(config.port, port);
         assert_eq!(config.root_dir.unwrap(), root_dir);
         assert_eq!(config.tls.unwrap(), tls);
-        assert!(config.verbose);
+    }
+
+    #[test]
+    fn parses_basic_cors_config_from_file() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 8080
+
+            [cors]
+            allow_credentials = true
+            allow_headers = ["content-type", "authorization", "content-length"]
+            allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
+            allow_origin = "example.com"
+        "#;
+        let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
+        let port = 8080;
+        let cors = CorsConfigFile {
+            allow_credentials: true,
+            allow_headers: Some(vec![
+                "content-type".to_string(),
+                "authorization".to_string(),
+                "content-length".to_string(),
+            ]),
+            allow_methods: Some(vec![
+                "GET".to_string(),
+                "PATCH".to_string(),
+                "POST".to_string(),
+                "PUT".to_string(),
+                "DELETE".to_string(),
+            ]),
+            allow_origin: Some(String::from("example.com")),
+            expose_headers: None,
+            max_age: None,
+            request_headers: None,
+            request_method: None,
+        };
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert_eq!(config.host, host);
+        assert_eq!(config.port, port);
+        assert_eq!(config.cors.unwrap(), cors);
+    }
+
+    #[test]
+    fn parses_complex_cors_config_from_file() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 8080
+
+            [cors]
+            allow_credentials = true
+            allow_headers = ["content-type", "authorization", "content-length"]
+            allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
+            allow_origin = "example.com"
+            expose_headers = ["*", "authorization"]
+            max_age = 2800
+            request_headers = ["x-app-version"]
+            request_method = "GET"
+        "#;
+        let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
+        let port = 8080;
+        let cors = CorsConfigFile {
+            allow_credentials: true,
+            allow_headers: Some(vec![
+                "content-type".to_string(),
+                "authorization".to_string(),
+                "content-length".to_string(),
+            ]),
+            allow_methods: Some(vec![
+                "GET".to_string(),
+                "PATCH".to_string(),
+                "POST".to_string(),
+                "PUT".to_string(),
+                "DELETE".to_string(),
+            ]),
+            allow_origin: Some(String::from("example.com")),
+            expose_headers: Some(vec!["*".to_string(), "authorization".to_string()]),
+            max_age: Some(2800_f64),
+            request_headers: Some(vec!["x-app-version".to_string()]),
+            request_method: Some(String::from("GET")),
+        };
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert_eq!(config.host, host);
+        assert_eq!(config.port, port);
+        assert_eq!(config.cors.unwrap(), cors);
     }
 }
