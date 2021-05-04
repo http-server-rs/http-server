@@ -29,24 +29,24 @@ pub struct CorsConfig {
     /// its value to false).
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
-    allow_credentials: bool,
+    pub(crate) allow_credentials: bool,
     /// The Access-Control-Allow-Headers response header is used in response to a
     /// preflight request which includes the Access-Control-Request-Headers to
     /// indicate which HTTP headers can be used during the actual request.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
-    allow_headers: Option<Vec<String>>,
+    pub(crate) allow_headers: Option<Vec<String>>,
     /// The Access-Control-Allow-Methods response header specifies the method or
     /// methods allowed when accessing the resource in response to a preflight
     /// request.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
-    allow_methods: Option<Vec<String>>,
+    pub(crate) allow_methods: Option<Vec<String>>,
     /// The Access-Control-Allow-Origin response header indicates whether the
     /// response can be shared with requesting code from the given origin.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-    allow_origin: Option<String>,
+    pub(crate) allow_origin: Option<String>,
     /// The Access-Control-Expose-Headers response header allows a server to
     /// indicate which response headers should be made available to scripts
     /// running in the browser, in response to a cross-origin request.
@@ -56,14 +56,14 @@ pub struct CorsConfig {
     /// using the Access-Control-Expose-Headers header.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
-    expose_headers: Option<Vec<String>>,
+    pub(crate) expose_headers: Option<Vec<String>>,
     /// The Access-Control-Max-Age response header indicates how long the results
     /// of a preflight request (that is the information contained in the
     /// Access-Control-Allow-Methods and Access-Control-Allow-Headers headers)
     /// can be cached.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
-    max_age: Option<Duration>,
+    pub(crate) max_age: Option<u64>,
     /// The Access-Control-Request-Headers request header is used by browsers
     /// when issuing a preflight request, to let the server know which HTTP
     /// headers the client might send when the actual request is made (such as
@@ -71,13 +71,13 @@ pub struct CorsConfig {
     /// the complementary server side header of Access-Control-Allow-Headers.
     ///
     /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Headers
-    request_headers: Option<Vec<String>>,
+    pub(crate) request_headers: Option<Vec<String>>,
     /// The Access-Control-Request-Method request header is used by browsers when
     /// issuing a preflight request, to let the server know which HTTP method will
     /// be used when the actual request is made. This header is necessary as the
     /// preflight request is always an OPTIONS and doesn't use the same method as
     /// the actual request.
-    request_method: Option<String>,
+    pub(crate) request_method: Option<String>,
 }
 
 impl CorsConfig {
@@ -104,7 +104,7 @@ impl CorsConfig {
                 "Content-Type".to_string(),
             ]),
             allow_credentials: false,
-            max_age: Some(Duration::from_secs(43200)),
+            max_age: Some(43200),
             expose_headers: None,
             request_headers: None,
             request_method: None,
@@ -153,7 +153,7 @@ impl CorsConfigBuilder {
         self
     }
 
-    pub fn max_age(mut self, duration: Duration) -> Self {
+    pub fn max_age(mut self, duration: u64) -> Self {
         self.config.max_age = Some(duration);
         self
     }
@@ -188,7 +188,7 @@ pub struct CorsConfigFile {
     pub allow_methods: Option<Vec<String>>,
     pub allow_origin: Option<String>,
     pub expose_headers: Option<Vec<String>>,
-    pub max_age: Option<f64>,
+    pub max_age: Option<u64>,
     pub request_headers: Option<Vec<String>>,
     pub request_method: Option<String>,
 }
@@ -220,7 +220,7 @@ impl TryFrom<CorsConfigFile> for CorsConfig {
         }
 
         if let Some(max_age) = file_config.max_age {
-            cors_config_builder = cors_config_builder.max_age(Duration::from_secs_f64(max_age));
+            cors_config_builder = cors_config_builder.max_age(max_age);
         }
 
         if let Some(request_headers) = file_config.request_headers {
@@ -308,7 +308,7 @@ mod tests {
             ])
         );
         assert_eq!(cors_config.allow_credentials, false);
-        assert_eq!(cors_config.max_age, Some(Duration::from_secs(43200)));
+        assert_eq!(cors_config.max_age, Some(43200));
         assert_eq!(cors_config.expose_headers, None);
         assert_eq!(cors_config.request_headers, None);
         assert_eq!(cors_config.request_method, None);
@@ -324,7 +324,7 @@ mod tests {
         let allow_mehtods = vec!["GET".to_string(), "POST".to_string(), "PUT".to_string()];
         let allow_origin = String::from("github.com");
         let expose_headers = vec!["content-type".to_string(), "request-id".to_string()];
-        let max_age = 5400.;
+        let max_age = 5400;
         let request_headers = vec![
             "content-type".to_string(),
             "content-length".to_string(),
@@ -347,7 +347,7 @@ mod tests {
             allow_methods: Some(allow_mehtods),
             allow_origin: Some(allow_origin),
             expose_headers: Some(expose_headers),
-            max_age: Some(Duration::from_secs_f64(max_age)),
+            max_age: Some(max_age),
             request_headers: Some(request_headers),
             request_method: Some(request_method),
         };

@@ -208,7 +208,7 @@ mod tests {
             ]),
             allow_origin: Some(String::from("example.com")),
             expose_headers: Some(vec!["*".to_string(), "authorization".to_string()]),
-            max_age: Some(2800_f64),
+            max_age: Some(2800),
             request_headers: Some(vec!["x-app-version".to_string()]),
             request_method: Some(String::from("GET")),
         };

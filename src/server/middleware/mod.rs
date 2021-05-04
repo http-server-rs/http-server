@@ -1,8 +1,15 @@
+pub mod make_cors_middleware;
 pub mod with_cors_allow_all;
 
+use anyhow::Error;
 use futures::Future;
 use hyper::{Body, Request, Response};
+use std::convert::TryFrom;
 use std::pin::Pin;
+
+use crate::config::Config;
+
+use self::make_cors_middleware::make_cors_middleware;
 
 pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
 pub type MiddlewareAfter = Box<dyn Fn(&mut Response<Body>) + Send + Sync>;
@@ -57,6 +64,22 @@ impl Default for Middleware {
             before: Vec::new(),
             after: Vec::new(),
         }
+    }
+}
+
+impl TryFrom<Config> for Middleware {
+    type Error = Error;
+
+    fn try_from(config: Config) -> Result<Self, Self::Error> {
+        let mut middleware = Middleware::default();
+
+        if config.cors().is_some() {
+            let func = make_cors_middleware(config.clone());
+
+            middleware.after(func);
+        }
+
+        Ok(middleware)
     }
 }
 
