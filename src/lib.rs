@@ -19,7 +19,8 @@ fn resolve_config(cli_arguments: cli::Cli) -> Result<Config> {
     }
 
     // Otherwise configuration is build from CLI arguments
-    Config::try_from(cli_arguments).with_context(|| anyhow::Error::msg("OK"))
+    Config::try_from(cli_arguments)
+        .with_context(|| anyhow::Error::msg("Failed to parse arguments from stdin"))
 }
 
 pub fn make_server() -> Result<Server> {

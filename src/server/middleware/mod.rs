@@ -1,5 +1,4 @@
 pub mod make_cors_middleware;
-pub mod with_cors_allow_all;
 
 use anyhow::Error;
 use futures::Future;
@@ -27,6 +26,7 @@ pub struct Middleware {
 impl Middleware {
     /// Appends a middleware function to run before handling the
     /// HTTP Request
+    #[allow(dead_code)]
     pub fn before(&mut self, middleware: MiddlewareBefore) {
         self.before.push(middleware);
     }
@@ -74,7 +74,7 @@ impl TryFrom<Config> for Middleware {
         let mut middleware = Middleware::default();
 
         if config.cors().is_some() {
-            let func = make_cors_middleware(config.clone());
+            let func = make_cors_middleware(config);
 
             middleware.after(func);
         }

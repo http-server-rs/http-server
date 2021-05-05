@@ -1,7 +1,6 @@
 use anyhow::{Error, Result};
 use serde::Deserialize;
 use std::convert::TryFrom;
-use std::time::Duration;
 
 /// CORS (Cross Origin Resource Sharing) configuration for the HTTP/S
 /// server.
@@ -236,6 +235,7 @@ impl TryFrom<CorsConfigFile> for CorsConfig {
 }
 
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]

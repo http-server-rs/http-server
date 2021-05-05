@@ -3,19 +3,19 @@
 
 host = "127.0.0.1"
 port = 7878
-verbose = false
-root_dir = "./"
+# verbose = false
+# root_dir = "./"
 
 # [tls]
 # cert = "cert.pem"
 # key = "key.pem"
 
-[cors]
-allow_credentials = false
-allow_headers = ["content-type", "authorization", "content-length"]
-allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
-allow_origin = "example.com"
-expose_headers = ["*", "authorization"]
-max_age = 600
-request_headers = ["x-app-version"]
-request_method = "GET"
+# [cors]
+# allow_credentials = false
+# allow_headers = ["content-type", "authorization", "content-length"]
+# allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
+# allow_origin = "example.com"
+# expose_headers = ["*", "authorization"]
+# max_age = 600
+# request_headers = ["x-app-version"]
+# request_method = "GET"

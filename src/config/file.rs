@@ -1,8 +1,9 @@
 use anyhow::{Error, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use std::fs;
 use std::net::IpAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use super::cors::CorsConfigFile;
 use super::tls::TlsConfigFile;
@@ -12,6 +13,8 @@ pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
     pub verbose: Option<bool>,
+    #[serde(default = "current_working_dir")]
+    #[serde(deserialize_with = "canonicalize_some")]
     pub root_dir: Option<PathBuf>,
     pub tls: Option<TlsConfigFile>,
     pub cors: Option<CorsConfigFile>,
@@ -36,6 +39,21 @@ impl ConfigFile {
     }
 }
 
+fn canonicalize_some<'de, D>(deserializer: D) -> Result<Option<PathBuf>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: &str = Deserialize::deserialize(deserializer)?;
+    let path = PathBuf::from_str(value).unwrap();
+    let canon = fs::canonicalize(path).unwrap();
+
+    Ok(Some(canon))
+}
+
+fn current_working_dir() -> Option<PathBuf> {
+    std::env::current_dir().ok()
+}
+
 #[cfg(test)]
 mod tests {
     use std::net::Ipv4Addr;
@@ -51,17 +69,19 @@ mod tests {
             host = "192.168.0.1"
             port = 7878
             verbose = true
-            root_dir = "~/Desktop"
+            root_dir = "./fixtures"
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
-        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
         let config = ConfigFile::parse_toml(file_contents).unwrap();
+        let mut root_dir = PathBuf::from(std::env::current_dir().unwrap());
+
+        root_dir.push("./fixtures");
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
-        assert_eq!(config.root_dir.unwrap(), root_dir);
         assert_eq!(config.verbose, Some(true));
+        assert_eq!(config.root_dir, Some(root_dir));
     }
 
     #[test]
@@ -81,7 +101,6 @@ mod tests {
             host = "192.168.0.1"
             port = 7878
             verbose = false
-            root_dir = "~/Desktop"
 
             [tls]
             cert = "cert_123.pem"
@@ -90,7 +109,7 @@ mod tests {
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
-        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
+        let root_dir = Some(std::env::current_dir().unwrap());
         let tls = TlsConfigFile {
             cert: PathBuf::from_str("cert_123.pem").unwrap(),
             key: PathBuf::from_str("key_123.pem").unwrap(),
@@ -100,7 +119,7 @@ mod tests {
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
-        assert_eq!(config.root_dir.unwrap(), root_dir);
+        assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.tls.unwrap(), tls);
         assert_eq!(config.verbose, Some(false));
     }
@@ -110,7 +129,6 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
-            root_dir = "~/Desktop"
 
             [tls]
             cert = "cert_123.pem"
@@ -119,7 +137,7 @@ mod tests {
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
-        let root_dir = PathBuf::from_str("~/Desktop").unwrap();
+        let root_dir = Some(std::env::current_dir().unwrap());
         let tls = TlsConfigFile {
             cert: PathBuf::from_str("cert_123.pem").unwrap(),
             key: PathBuf::from_str("key_123.pem").unwrap(),
@@ -129,7 +147,7 @@ mod tests {
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
-        assert_eq!(config.root_dir.unwrap(), root_dir);
+        assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.tls.unwrap(), tls);
     }
 
@@ -168,9 +186,11 @@ mod tests {
             request_method: None,
         };
         let config = ConfigFile::parse_toml(file_contents).unwrap();
+        let root_dir = Some(std::env::current_dir().unwrap());
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
+        assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.cors.unwrap(), cors);
     }
 
@@ -192,6 +212,7 @@ mod tests {
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let port = 8080;
+        let root_dir = Some(std::env::current_dir().unwrap());
         let cors = CorsConfigFile {
             allow_credentials: true,
             allow_headers: Some(vec![
@@ -216,6 +237,7 @@ mod tests {
 
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
+        assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.cors.unwrap(), cors);
     }
 }

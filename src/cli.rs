@@ -68,8 +68,7 @@ impl Default for Cli {
 }
 
 mod tests {
-    use std::str::FromStr;
-
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]
