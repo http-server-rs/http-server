@@ -46,6 +46,7 @@ http-server --help
 
 Name | Short | Long | Description
 --- | --- | --- | ---
+Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sharing allowing any origin
 Help | N/A | `--help` | Prints help information
 Version | `-V` | `--version` | Prints version information
 Verbose | `-v` | `--verbose` | Prints output to console
@@ -73,7 +74,7 @@ TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate cer
 The following are some relevant details on features supported by this HTTP Server
 solution that may be of the interest of the user.
 
-### TLS Reference
+### TLS (HTTPS)
 
 The TLS solution supported for this HTTP Server is built with [rustls](https://github.com/ctz/rustls)
 crate along with [hyper-rustls](https://github.com/ctz/hyper-rustls).
@@ -90,6 +91,34 @@ Run `http-server` as follows:
 
 ```sh
 http-server --tls --tls-cert <PATH TO YOUR CERTIFICATE> --tls-key <PATH TO YOUR KEY> --tls-key-algorithm pkcs8
+```
+
+### Cross-Origin Resource Sharing (CORS)
+
+This HTTP Server brings support to CORS headers _out of the box_.
+Based on the headers you want to provide to your HTTP Responses, 2
+different methods for CORS configuration are available.
+
+By providing the `--cors` option to the `http-server`, CORS headers
+will be appended to every HTTP Response, allowing any origin.
+
+For more complex configurations, like specifying an origin, a set of allowed
+HTTP methods and more, you should specify the configuration via the configuration
+TOML file.
+
+The following example shows all the options available, these options are
+mapped to the server configuration during initialization.
+
+```toml
+[cors]
+allow_credentials = false
+allow_headers = ["content-type", "authorization", "content-length"]
+allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
+allow_origin = "example.com"
+expose_headers = ["*", "authorization"]
+max_age = 600
+request_headers = ["x-app-version"]
+request_method = "GET"
 ```
 
 ## Release

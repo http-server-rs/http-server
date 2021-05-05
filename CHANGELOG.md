@@ -9,6 +9,13 @@
 
 #### Features
 
+* A `Middleware` is implemented bringing the capabilities to act on
+`hyper::Request<Body>` before executing the main handler (a.k.a File Explorer)
+and to act on the `hyper::Response<Body>` after executing the main handler.
+This helps implementing future features which relies on acting on different
+stages of the HTTP/S request lifecycle such as logging, authentication, caching
+and so on.
+
 * Support for Cross-Origin Resource Sharing
 
 * Using the `--cors` flag when running the HTTP Server will now provide a
@@ -31,10 +38,13 @@ request_method = "GET"
 #### Improvements
 
 * Codebase refactor for `server` module, introducing middleware support for
-services to programatically build a server instance from the provided `Config`
+services to programmatically build a server instance from the provided `Config`
 
 * Replace `full` feature flags on `tokio` and `hyper` with sepecific features,
 to reduce crate load on compile time. This improve build times and crate size.
+
+* Improved tests coverage by implementing tests for CLI arguments and config
+file parsing
 
 #### Fixes
 
@@ -45,6 +55,9 @@ directory for the `FileExplorer`
 * Fix issue where loading config without `root_dir` defined panics
 and uses the current working directory as default `root_dir` as is
 done for CLI
+
+* Fix issue where errors returned by any internal service are not
+logged to stderr
 
 <a name="v0.2.2"></a>
 ## v0.2.2 (2021-04-22)
