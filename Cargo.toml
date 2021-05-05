@@ -19,10 +19,10 @@ chrono = "0.4"
 futures = "0.3"
 http = "0.2"
 handlebars = "3"
-hyper = { version = "0.14", features = ["full"] }
+hyper = { version = "0.14", features = ["http1", "server", "tcp"] }
 hyper-staticfile = "0.6"
 rustls = "0.19"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 tokio-rustls = "0.22"
 toml = "0.5"
 serde = { version = "1", features = ["derive"] }
