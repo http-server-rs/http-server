@@ -16,7 +16,6 @@ use self::file::ConfigFile;
 use self::tls::TlsConfig;
 
 /// Server instance configuration used on initialization
-#[derive(Debug, Clone)]
 pub struct Config {
     address: SocketAddr,
     host: IpAddr,
@@ -28,6 +27,14 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn host(&self) -> IpAddr {
+        self.host
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
     pub fn address(&self) -> SocketAddr {
         self.address
     }

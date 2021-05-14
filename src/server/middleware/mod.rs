@@ -5,15 +5,16 @@ use futures::Future;
 use hyper::{Body, Request, Response};
 use std::convert::TryFrom;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use crate::config::Config;
 
 use self::make_cors_middleware::make_cors_middleware;
 
 pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
-pub type MiddlewareAfter = Box<dyn Fn(&mut Response<Body>) + Send + Sync>;
+pub type MiddlewareAfter = Box<dyn Fn(Arc<Request<Body>>, &mut Response<Body>) + Send + Sync>;
 pub type Handler = Box<
-    dyn Fn(Request<Body>) -> Pin<Box<dyn Future<Output = Response<Body>> + Send + Sync>>
+    dyn Fn(Arc<Request<Body>>) -> Pin<Box<dyn Future<Output = Response<Body>> + Send + Sync>>
         + Send
         + Sync,
 >;
@@ -48,10 +49,11 @@ impl Middleware {
             fx(&mut request);
         }
 
-        let mut response = handler(request).await;
+        let request = Arc::new(request);
+        let mut response = handler(Arc::clone(&request)).await;
 
         for fx in self.after.iter() {
-            fx(&mut response);
+            fx(Arc::clone(&request), &mut response);
         }
 
         response
@@ -67,77 +69,18 @@ impl Default for Middleware {
     }
 }
 
-impl TryFrom<Config> for Middleware {
+impl TryFrom<Arc<Config>> for Middleware {
     type Error = Error;
 
-    fn try_from(config: Config) -> Result<Self, Self::Error> {
+    fn try_from(config: Arc<Config>) -> Result<Self, Self::Error> {
         let mut middleware = Middleware::default();
 
-        if config.cors().is_some() {
-            let func = make_cors_middleware(config);
+        if let Some(cors_config) = config.cors() {
+            let cors_middleware = make_cors_middleware(cors_config);
 
-            middleware.after(func);
+            middleware.after(cors_middleware);
         }
 
         Ok(middleware)
     }
 }
-
-// mod tests {
-//     use std::str::FromStr;
-
-//     use super::*;
-
-//     fn fake_handler(_: Request<Body>) -> Pin<Box<dyn Future<Output = Response<Body>>>> {
-//         let response = Response::builder()
-//             .status(hyper::StatusCode::OK)
-//             .body(Body::empty())
-//             .unwrap();
-
-//         Box::pin(futures::future::ready(response))
-//     }
-
-//     #[tokio::test]
-//     async fn runs_chain_after() {
-//         // Create a new `ResponseTransformer` we can use to
-//         // transform our `Response`
-//         let mut middleware_chain = Middleware::default();
-
-//         // Create a `Response` for demo purposes
-//         let request = Request::builder().body(Body::empty()).unwrap();
-
-//         // Append the `with_cors` transformer to the `ResponseTransformer`
-//         middleware_chain.after(Box::new(with_cors_allow_all::with_cors_allow_all));
-
-//         // Process the response to have desired transformations
-//         let response = middleware_chain
-//             .handle(request, Box::new(fake_handler))
-//             .await;
-//         let response_headers = response.headers();
-
-//         assert_eq!(
-//             response_headers
-//                 .get(hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN)
-//                 .unwrap()
-//                 .to_str()
-//                 .unwrap(),
-//             "*"
-//         );
-//         assert_eq!(
-//             response_headers
-//                 .get(hyper::header::ACCESS_CONTROL_ALLOW_METHODS)
-//                 .unwrap()
-//                 .to_str()
-//                 .unwrap(),
-//             "GET, POST, PUT, PATCH, DELETE"
-//         );
-//         assert_eq!(
-//             response_headers
-//                 .get(hyper::header::ACCESS_CONTROL_ALLOW_HEADERS)
-//                 .unwrap()
-//                 .to_str()
-//                 .unwrap(),
-//             "Content-Type, Content-Length, Origin"
-//         );
-//     }
-// }

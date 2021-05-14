@@ -5,7 +5,7 @@ use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::{Method, StatusCode};
 use hyper::{Body, Request, Response};
-use hyper_staticfile::{resolve, ResolveResult, ResponseBuilder as FileResponseBuilder};
+use hyper_staticfile::{resolve_path, ResolveResult, ResponseBuilder as FileResponseBuilder};
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
@@ -18,13 +18,14 @@ use crate::server::middleware::Handler;
 
 /// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`
 pub fn make_file_explorer_handler(file_explorer: Arc<FileExplorer>) -> Handler {
-    Box::new(move |request: Request<Body>| {
+    Box::new(move |request: Arc<Request<Body>>| {
         let file_explorer = Arc::clone(&file_explorer);
+        let req_path = request.uri().to_string();
 
         Box::pin(async move {
             if request.method() == Method::GET {
                 return file_explorer
-                    .resolve(request)
+                    .resolve(req_path)
                     .await
                     .map_err(|e| {
                         HttpResponseBuilder::new()
@@ -181,8 +182,11 @@ impl<'a> FileExplorer {
     ///
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
-    pub async fn resolve(&self, req: Request<Body>) -> Result<Response<Body>> {
-        match resolve(&self.root_dir, &req).await.unwrap() {
+    pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
+        match resolve_path(&self.root_dir, req_path.as_str())
+            .await
+            .unwrap()
+        {
             ResolveResult::MethodNotMatched => Ok(HttpResponseBuilder::new()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::empty())
@@ -192,8 +196,10 @@ impl<'a> FileExplorer {
                 .body(Body::empty())
                 .expect("Failed to build response")),
             ResolveResult::NotFound => {
-                if req.uri() == "/" {
-                    let directory_path = self.make_absolute_path_from_request(&req).unwrap();
+                if req_path == "/" {
+                    let directory_path = self
+                        .make_absolute_path_from_req_path(req_path.as_str())
+                        .unwrap();
 
                     return self.render_directory_index(directory_path).await;
                 }
@@ -208,12 +214,13 @@ impl<'a> FileExplorer {
                 .body(Body::empty())
                 .expect("Failed to build response")),
             ResolveResult::IsDirectory => {
-                let directory_path = self.make_absolute_path_from_request(&req).unwrap();
+                let directory_path = self
+                    .make_absolute_path_from_req_path(req_path.as_str())
+                    .unwrap();
 
                 return self.render_directory_index(directory_path).await;
             }
             ResolveResult::Found(file, metadata, mime) => Ok(FileResponseBuilder::new()
-                .request(&req)
                 .cache_headers(self.cache_headers)
                 .build(ResolveResult::Found(file, metadata, mime))
                 .expect("Failed to build response")),
@@ -281,9 +288,8 @@ impl<'a> FileExplorer {
 
     /// Creates an absolute path by appending the HTTP Request URI to the
     /// `root_dir`
-    fn make_absolute_path_from_request(&self, req: &Request<Body>) -> Result<PathBuf> {
+    fn make_absolute_path_from_req_path(&self, req_path: &str) -> Result<PathBuf> {
         let mut root_dir = self.root_dir.clone();
-        let req_path = req.uri().to_string();
         let req_path = if req_path.starts_with('/') {
             let path = req_path[1..req_path.len()].to_string();
 
@@ -294,7 +300,7 @@ impl<'a> FileExplorer {
 
             PathBuf::from_str(path.as_str())?
         } else {
-            PathBuf::from_str(req_path.as_str())?
+            PathBuf::from_str(req_path)?
         };
 
         root_dir.push(req_path);

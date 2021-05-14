@@ -2,7 +2,8 @@ mod file_explorer;
 
 use anyhow::Result;
 use hyper::{Body, Request, Response};
-use std::{convert::TryFrom, sync::Arc};
+use std::convert::TryFrom;
+use std::sync::Arc;
 
 use crate::Config;
 
@@ -26,8 +27,8 @@ impl HttpHandler {
     }
 }
 
-impl From<Config> for HttpHandler {
-    fn from(config: Config) -> Self {
+impl From<Arc<Config>> for HttpHandler {
+    fn from(config: Arc<Config>) -> Self {
         let file_explorer = Arc::new(FileExplorer::new(config.root_dir()));
         let middleware = Middleware::try_from(config).unwrap();
         let middleware = Arc::new(middleware);

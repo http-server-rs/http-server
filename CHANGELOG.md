@@ -2,6 +2,56 @@
 
 <Empty>
 
+<a name="v0.3.2"></a>
+## v0.3.2 (2021-06-08)
+
+> Requires Rust: rustc 1.49.0 (e1884a8e3 2020-12-29)
+
+#### Features
+
+* Add crate logo by @PalyZambrano
+
+#### Improvements
+
+* Avoid clonning server instance by using Arc<Server> over `Server.clone()`
+
+Currently when creating a server instance and spawing a Tokio task
+the server instance is cloned (`Server` derive-implements the "Clone" trait).
+
+Instead the same instance is used and a single Arc<Server> is handled to the
+concurrent Tokio task.
+
+This reduces repetition and memory consumption and also keeps the Server
+instance unique and consistent through threads.
+
+* Resolve static file serving with `resolve_path` instead of `resolve` from
+`hyper_staticfile`. This makes file serving more conventional and also
+versatile, by relying on the Request URI instead of the whole `hyper::Request`
+instance.
+
+* `FileExplorer` middleware now consumes an `Arc<hyper::Request<Body>>` instead
+of taking ownership of the `hyper::Request<Body>` instance
+
+* Less transformations are required for a `Request` instance in order to serve
+a static file.
+
+* `HttpHandler` now is built over an `Arc<Config>` instead of consuming the
+`Config` instance. Previously the `Config` instance uses to implement the `Clone`
+trait, now an `Arc<Config>` is used in its place making the `Config` struct
+easier to mantain an extensible.
+
+* `MiddlewareAfter` now supports the `hyper::Request<Body>` as well, this brings
+support to read from the `hyper::Request<Body>` on middleware after execution.
+
+<a name="v0.3.1"></a>
+## v0.3.1 (2021-05-31)
+
+> Requires Rust: rustc 1.49.0 (e1884a8e3 2020-12-29)
+
+#### Fixes
+
+* Fix crate binary name to be "http-server" instead of "main"
+
 <a name="v0.3.0"></a>
 ## v0.3.0 (2021-05-09)
 
