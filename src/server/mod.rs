@@ -6,41 +6,50 @@ mod service;
 use anyhow::Error;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use crate::config::tls::TlsConfig;
 use crate::config::Config;
 
-#[derive(Debug, Clone)]
 pub struct Server {
-    config: Config,
+    config: Arc<Config>,
 }
 
 impl Server {
     pub fn new(config: Config) -> Server {
+        let config = Arc::new(config);
+
         Server { config }
     }
 
     pub async fn run(self) {
-        let address = self.config.address();
-        let handler = handler::HttpHandler::from(self.config.clone());
+        let config = Arc::clone(&self.config);
+        let address = config.address();
+        let handler = handler::HttpHandler::from(Arc::clone(&config));
+        let server = Arc::new(self);
         let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
 
-        if self.config.tls().is_some() {
+        if config.tls().is_some() {
+            let https_config = config.tls().unwrap();
             let handler = handler.clone();
-            let https_config = self.config.tls().unwrap();
-            let host = self.config.address().ip();
-            let port = self.config.address().port() + 1;
+            let host = config.address().ip();
+            let port = config.address().port() + 1;
             let address = SocketAddr::new(host, port);
-            let server = self.clone();
+            let server = Arc::clone(&server);
             let task = tokio::spawn(async move {
+                let server = Arc::clone(&server);
+
                 server.serve_https(address, handler, https_config).await;
             });
 
             server_instances.push(task);
         }
 
+        let server = Arc::clone(&server);
         let task = tokio::spawn(async move {
-            self.serve(address, handler).await;
+            let server = Arc::clone(&server);
+
+            server.serve(address, handler).await;
         });
 
         server_instances.push(task);
@@ -50,7 +59,7 @@ impl Server {
         }
     }
 
-    pub async fn serve(self, address: SocketAddr, handler: handler::HttpHandler) {
+    pub async fn serve(&self, address: SocketAddr, handler: handler::HttpHandler) {
         let server = hyper::Server::bind(&address).serve(make_service_fn(|_| {
             // Move a clone of `handler` into the `service_fn`.
             let handler = handler.clone();
@@ -72,7 +81,7 @@ impl Server {
     }
 
     pub async fn serve_https(
-        self,
+        &self,
         address: SocketAddr,
         handler: handler::HttpHandler,
         https_config: TlsConfig,

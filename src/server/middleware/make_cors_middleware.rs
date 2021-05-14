@@ -1,7 +1,7 @@
 use hyper::header::{self, HeaderName, HeaderValue};
 use hyper::{Body, Response};
 
-use crate::config::Config;
+use crate::config::cors::CorsConfig;
 
 use super::MiddlewareAfter;
 
@@ -19,8 +19,7 @@ use super::MiddlewareAfter;
 /// `make_cors_middlware` should only be called when a `CorsConfig` is defined.
 ///
 /// Also panics if any CORS header value is not a valid UTF-8 string
-pub fn make_cors_middleware(config: Config) -> MiddlewareAfter {
-    let cors_config = config.cors().unwrap();
+pub fn make_cors_middleware(cors_config: CorsConfig) -> MiddlewareAfter {
     let mut cors_headers: Vec<(HeaderName, HeaderValue)> = Vec::new();
 
     if cors_config.allow_credentials {
@@ -87,7 +86,7 @@ pub fn make_cors_middleware(config: Config) -> MiddlewareAfter {
         ));
     }
 
-    Box::new(move |response: &mut Response<Body>| {
+    Box::new(move |_: _, response: &mut Response<Body>| {
         let headers = response.headers_mut();
 
         cors_headers.iter().for_each(|(header, value)| {
