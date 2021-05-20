@@ -85,10 +85,9 @@ impl TryFrom<Arc<Config>> for Middleware {
         }
 
         if config.verbose() {
-            let (before, after) = make_logger_middleware(config.clone());
+            let logger_middleware = make_logger_middleware(config.clone());
 
-            middleware.before(before);
-            middleware.after(after);
+            middleware.after(logger_middleware);
         }
 
         Ok(middleware)
