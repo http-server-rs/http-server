@@ -1,4 +1,7 @@
 <div>
+  <div align="center" style="display: block; text-align: center;">
+    <img src="./assets/logo.svg" height="120" width="120" />
+  </div>
   <h1 align="center">http-server</h1>
   <h4 align="center">Simple and configurable command-line HTTP server</h4>
 </div>
