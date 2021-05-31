@@ -42,6 +42,9 @@ pub struct Cli {
     /// Enable Cross-Origin Resource Sharing allowing any origin
     #[structopt(long = "cors")]
     pub cors: bool,
+    /// Enable logging with default configuration
+    #[structopt(long = "logger")]
+    pub logger: bool,
 }
 
 impl Cli {
@@ -63,6 +66,7 @@ impl Default for Cli {
             tls_key: PathBuf::from_str("key.rsa").unwrap(),
             tls_key_algorithm: PrivateKeyAlgorithm::Rsa,
             cors: false,
+            logger: false,
         }
     }
 }
@@ -164,6 +168,16 @@ mod tests {
         let mut expect = Cli::default();
 
         expect.cors = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_logger() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--logger"]);
+        let mut expect = Cli::default();
+
+        expect.logger = true;
 
         assert_eq!(from_args, expect);
     }
