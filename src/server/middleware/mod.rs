@@ -84,11 +84,11 @@ impl TryFrom<Arc<Config>> for Middleware {
             middleware.after(cors_middleware);
         }
 
-        if config.verbose() {
-            let logger_middleware = make_logger_middleware(config.clone());
+        // if config.verbose() {
+        //     let logger_middleware = make_logger_middleware(config.clone());
 
-            middleware.after(logger_middleware);
-        }
+        //     middleware.after(logger_middleware);
+        // }
 
         Ok(middleware)
     }
