@@ -1,4 +1,4 @@
-use http_server::make_server;
+use http_server_lib::make_server;
 use std::process::exit;
 
 #[tokio::main]

@@ -12,6 +12,14 @@ readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "http_server_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "http-server"
+path = "src/bin/main.rs"
+
 [dependencies]
 anyhow = "1"
 async-stream = "0.3"
