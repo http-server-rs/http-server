@@ -1,5 +1,6 @@
 pub mod cors;
 pub mod file;
+pub mod logging;
 pub mod tls;
 pub mod util;
 
@@ -13,6 +14,7 @@ use crate::cli::Cli;
 
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
+use self::logging::LoggingConfig;
 use self::tls::TlsConfig;
 
 /// Server instance configuration used on initialization
@@ -24,6 +26,7 @@ pub struct Config {
     verbose: bool,
     tls: Option<TlsConfig>,
     cors: Option<CorsConfig>,
+    logging: Option<LoggingConfig>,
 }
 
 impl Config {
@@ -71,6 +74,7 @@ impl Default for Config {
             verbose: false,
             tls: None,
             cors: None,
+            logging: None,
         }
     }
 }
@@ -113,6 +117,7 @@ impl TryFrom<Cli> for Config {
             verbose,
             tls,
             cors,
+            logging: None,
         })
     }
 }
@@ -147,6 +152,7 @@ impl TryFrom<ConfigFile> for Config {
             root_dir,
             tls,
             cors,
+            logging: None,
         })
     }
 }

@@ -20,5 +20,5 @@ port = 7878
 # request_headers = ["x-app-version"]
 # request_method = "GET"
 
-# [logger]
-# pattern = "$date $time $res_status $delay $req_ip $req_method $req_path"
+# [logging]
+# pattern = "$datetime $res_status $delay $req_ip $req_method $req_path"
