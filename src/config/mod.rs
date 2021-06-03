@@ -1,6 +1,6 @@
 pub mod cors;
 pub mod file;
-pub mod logging;
+pub mod logger;
 pub mod tls;
 pub mod util;
 
@@ -14,7 +14,7 @@ use crate::cli::Cli;
 
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
-use self::logging::LoggingConfig;
+use self::logger::LoggerConfig;
 use self::tls::TlsConfig;
 
 /// Server instance configuration used on initialization
@@ -26,7 +26,7 @@ pub struct Config {
     verbose: bool,
     tls: Option<TlsConfig>,
     cors: Option<CorsConfig>,
-    logging: Option<LoggingConfig>,
+    logger: Option<LoggerConfig>,
 }
 
 impl Config {
@@ -57,6 +57,10 @@ impl Config {
     pub fn cors(&self) -> Option<CorsConfig> {
         self.cors.clone()
     }
+
+    pub fn logger(&self) -> Option<LoggerConfig> {
+        self.logger.clone()
+    }
 }
 
 impl Default for Config {
@@ -74,7 +78,7 @@ impl Default for Config {
             verbose: false,
             tls: None,
             cors: None,
-            logging: None,
+            logger: None,
         }
     }
 }
@@ -109,6 +113,12 @@ impl TryFrom<Cli> for Config {
             None
         };
 
+        let logger: Option<LoggerConfig> = if cli_aguments.logger {
+            Some(LoggerConfig::default())
+        } else {
+            None
+        };
+
         Ok(Config {
             host: cli_aguments.host,
             port: cli_aguments.port,
@@ -117,7 +127,7 @@ impl TryFrom<Cli> for Config {
             verbose,
             tls,
             cors,
-            logging: None,
+            logger,
         })
     }
 }
@@ -152,7 +162,7 @@ impl TryFrom<ConfigFile> for Config {
             root_dir,
             tls,
             cors,
-            logging: None,
+            logger: None,
         })
     }
 }

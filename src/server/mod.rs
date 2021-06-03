@@ -29,8 +29,7 @@ impl Server {
         let server = Arc::new(self);
         let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
 
-        if config.tls().is_some() {
-            let https_config = config.tls().unwrap();
+        if let Some(https_config) = config.tls().clone() {
             let handler = handler.clone();
             let host = config.address().ip();
             let port = config.address().port() + 1;

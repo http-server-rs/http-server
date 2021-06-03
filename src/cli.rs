@@ -42,7 +42,7 @@ pub struct Cli {
     /// Enable Cross-Origin Resource Sharing allowing any origin
     #[structopt(long = "cors")]
     pub cors: bool,
-    /// Enable logging with default configuration
+    /// Enable HTTP server logger with default configuration
     #[structopt(long = "logger")]
     pub logger: bool,
 }

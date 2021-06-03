@@ -15,6 +15,8 @@ impl FromStr for OutputPattern {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        OutputPattern::from_str(s)
+        Ok(OutputPattern {
+            tokens: vec![Token::DateTime()],
+        })
     }
 }
