@@ -1,5 +1,7 @@
 use anyhow::{Error, Result};
+use hyper::{Body, Request, Response};
 use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
@@ -28,11 +30,11 @@ impl FromStr for Token {
 }
 
 #[derive(Clone, Debug)]
-pub struct OutputPattern {
+pub struct Pattern {
     tokens: Vec<Token>,
 }
 
-impl FromStr for OutputPattern {
+impl FromStr for Pattern {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
@@ -41,7 +43,17 @@ impl FromStr for OutputPattern {
             .map(|part| Token::from_str(part))
             .collect::<Result<Vec<Token>>>()?;
 
-        Ok(OutputPattern { tokens })
+        Ok(Pattern { tokens })
+    }
+}
+
+impl Pattern {
+    pub fn output_string(
+        &self,
+        request: Arc<Request<Body>>,
+        response: &mut Response<Body>,
+    ) -> String {
+        String::default()
     }
 }
 
@@ -54,7 +66,7 @@ mod tests {
 
     #[test]
     fn extract_tokens_from_str_pattern() {
-        let output_pattern = OutputPattern::from_str(DEFAULT_STRING_PATTERN).unwrap();
+        let pattern = Pattern::from_str(DEFAULT_STRING_PATTERN).unwrap();
         let expected_tokens = vec![
             Token::DateTime,
             Token::HttpResponseStatus,
@@ -64,17 +76,16 @@ mod tests {
             Token::HttpRequestURI,
         ];
 
-        assert_eq!(output_pattern.tokens, expected_tokens);
+        assert_eq!(pattern.tokens, expected_tokens);
     }
 
     #[test]
     fn finds_wrong_tokens_in_str_pattern() {
-        let output_pattern =
-            OutputPattern::from_str("$datetime $foo $res_delay $req_ip $req_method $req_uri");
+        let pattern = Pattern::from_str("$datetime $foo $res_delay $req_ip $req_method $req_uri");
 
-        assert!(output_pattern.is_err());
+        assert!(pattern.is_err());
         assert_eq!(
-            output_pattern.err().unwrap().to_string(),
+            pattern.err().unwrap().to_string(),
             String::from("Invalid token provided $foo")
         );
     }
