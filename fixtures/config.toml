@@ -21,4 +21,4 @@ port = 7878
 # request_method = "GET"
 
 # [logger]
-# pattern = "$datetime $res_status $delay $req_ip $req_method $req_path"
+# pattern = "$datetime $res_status $res_delay $req_ip $req_method $req_uri"
