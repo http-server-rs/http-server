@@ -2,6 +2,7 @@ mod addon;
 mod cli;
 mod config;
 mod server;
+mod utils;
 
 use anyhow::{Context, Result};
 use std::convert::TryFrom;
