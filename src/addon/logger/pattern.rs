@@ -1,7 +1,10 @@
 use anyhow::{Error, Result};
 use hyper::{Body, Request, Response};
 use std::str::FromStr;
+use std::string::ToString;
 use std::sync::Arc;
+
+use crate::addon::logger::print::{self, Print};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
@@ -11,6 +14,23 @@ pub enum Token {
     HttpRequestIP,
     HttpRequestMethod,
     HttpRequestURI,
+}
+
+impl Token {
+    pub fn printer(&self) -> Box<dyn Print> {
+        match self {
+            Token::DateTime => Box::new(print::datetime::DateTime),
+            Token::HttpResponseStatus => Box::new(print::res_status::HttpResponseStatus),
+            Token::HttpResponseDelay => Box::new(print::res_delay::HttpResponseDelay),
+            // Token::HttpRequestIP => print::datetime::DateTime,
+            // Token::HttpRequestMethod => print::datetime::DateTime,
+            // Token::HttpRequestURI => print::datetime::DateTime,
+            _ => {
+                println!("Todo!");
+                Box::new(print::datetime::DateTime)
+            }
+        }
+    }
 }
 
 impl FromStr for Token {
@@ -29,21 +49,41 @@ impl FromStr for Token {
     }
 }
 
+impl ToString for Token {
+    fn to_string(&self) -> String {
+        let string = match self {
+            &Token::DateTime => "$datetime",
+            &Token::HttpResponseStatus => "$res_status",
+            &Token::HttpResponseDelay => "$res_delay",
+            &Token::HttpRequestIP => "$req_ip",
+            &Token::HttpRequestMethod => "$req_method",
+            &Token::HttpRequestURI => "$req_uri",
+        };
+
+        String::from(string)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Pattern {
     tokens: Vec<Token>,
+    logging_format: String,
 }
 
 impl FromStr for Pattern {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
+        let logging_format = s.to_string();
         let tokens = s
             .split(" ")
             .map(|part| Token::from_str(part))
             .collect::<Result<Vec<Token>>>()?;
 
-        Ok(Pattern { tokens })
+        Ok(Pattern {
+            tokens,
+            logging_format,
+        })
     }
 }
 
@@ -53,7 +93,23 @@ impl Pattern {
         request: Arc<Request<Body>>,
         response: &mut Response<Body>,
     ) -> String {
-        String::default()
+        let mut logging_format = self.logging_format.clone();
+
+        for token in self.tokens.iter() {
+            let printer = token.printer();
+            let printer_output = printer.print(Arc::clone(&request), response);
+
+            logging_format = self.digest(logging_format, token, printer_output);
+        }
+
+        logging_format
+    }
+
+    fn digest(&self, logging_format: String, token: &Token, printer_output: String) -> String {
+        let token_string = token.to_string();
+        let next = logging_format.replace(&token_string, &printer_output);
+
+        next
     }
 }
 

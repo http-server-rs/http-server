@@ -1,5 +1,6 @@
 mod log;
 mod pattern;
+mod print;
 
 use anyhow::Result;
 use hyper::{Body, Request, Response};
