@@ -16,24 +16,32 @@ const YELLOW_FOREGROUND: &str = "\x1B[01;93m";
 const ORANGE_FOREGROUND: &str = "\x1B[01;91m";
 const GREY_FOREGROUND: &str = "\x1B[01;90m";
 const WHITE_FOREGROUND: &str = "\x1B[01;89m";
-const RESET_FOREGROUND: &str = "\x1B[0m";
+const RESET: &str = "\x1B[0m";
+
+pub fn blue_background(value: &str) -> String {
+    format!("{}{}{}", BLUE_BACKGROUND, value, RESET)
+}
+
+pub fn red_background(value: &str) -> String {
+    format!("{}{}{}", RED_BACKGROUND, value, RESET)
+}
 
 pub fn green_background(value: &str) -> String {
-    format!("{}{}{}", GREEN_BACKGROUND, value, RESET_FOREGROUND)
+    format!("{}{}{}", GREEN_BACKGROUND, value, RESET)
 }
 
 pub fn yellow_background(value: &str) -> String {
-    format!("{}{}{}", YELLOW_BACKGROUND, value, RESET_FOREGROUND)
+    format!("{}{}{}", YELLOW_BACKGROUND, value, RESET)
 }
 
 pub fn green_text(value: &str) -> String {
-    format!("{}{}{}", GREEN_FOREGROUND, value, RESET_FOREGROUND)
+    format!("{}{}{}", GREEN_FOREGROUND, value, RESET)
 }
 
 pub fn blue_text(value: &str) -> String {
-    format!("{}{}{}", BLUE_FOREGROUND, value, RESET_FOREGROUND)
+    format!("{}{}{}", BLUE_FOREGROUND, value, RESET)
 }
 
 pub fn yellow_text(value: &str) -> String {
-    format!("{}{}{}", YELLOW_FOREGROUND, value, RESET_FOREGROUND)
+    format!("{}{}{}", YELLOW_FOREGROUND, value, RESET)
 }

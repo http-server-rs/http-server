@@ -3,7 +3,8 @@ use std::sync::Arc;
 
 use crate::addon::logger::Logger;
 
-const DEFAULT_LOG_PATTERN: &str = "$datetime $res_status $res_delay $req_ip $req_method $req_uri";
+const DEFAULT_LOG_PATTERN: &str =
+    "$datetime $res_status $res_delay $req_ip $req_method $req_uri \n";
 
 /// Configuration for HTTP server logger
 #[derive(Clone)]

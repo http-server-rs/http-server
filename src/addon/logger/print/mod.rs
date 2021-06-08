@@ -1,4 +1,7 @@
 pub mod datetime;
+pub mod req_ip;
+pub mod req_method;
+pub mod req_uri;
 pub mod res_delay;
 pub mod res_status;
 

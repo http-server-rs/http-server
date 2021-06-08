@@ -22,13 +22,9 @@ impl Token {
             Token::DateTime => Box::new(print::datetime::DateTime),
             Token::HttpResponseStatus => Box::new(print::res_status::HttpResponseStatus),
             Token::HttpResponseDelay => Box::new(print::res_delay::HttpResponseDelay),
-            // Token::HttpRequestIP => print::datetime::DateTime,
-            // Token::HttpRequestMethod => print::datetime::DateTime,
-            // Token::HttpRequestURI => print::datetime::DateTime,
-            _ => {
-                println!("Todo!");
-                Box::new(print::datetime::DateTime)
-            }
+            Token::HttpRequestIP => Box::new(print::req_ip::HttpRequestIP),
+            Token::HttpRequestMethod => Box::new(print::req_method::HttpRequestMethod),
+            Token::HttpRequestURI => Box::new(print::req_uri::HttpRequestURI),
         }
     }
 }
@@ -77,6 +73,7 @@ impl FromStr for Pattern {
         let logging_format = s.to_string();
         let tokens = s
             .split(" ")
+            .filter(|chunk| chunk.starts_with("$"))
             .map(|part| Token::from_str(part))
             .collect::<Result<Vec<Token>>>()?;
 
@@ -144,5 +141,20 @@ mod tests {
             pattern.err().unwrap().to_string(),
             String::from("Invalid token provided $foo")
         );
+    }
+
+    #[test]
+    fn support_different_characters_in_pattern() {
+        let pattern =
+            Pattern::from_str(">> $datetime $res_delay IP: $req_ip $req_method $req_uri \n");
+        let expected_tokens = vec![
+            Token::DateTime,
+            Token::HttpResponseDelay,
+            Token::HttpRequestIP,
+            Token::HttpRequestMethod,
+            Token::HttpRequestURI,
+        ];
+
+        assert_eq!(pattern.unwrap().tokens, expected_tokens);
     }
 }
