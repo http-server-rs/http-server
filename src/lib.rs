@@ -1,3 +1,4 @@
+mod addon;
 mod cli;
 mod config;
 mod server;

@@ -5,15 +5,15 @@ use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::{Method, StatusCode};
 use hyper::{Body, Request, Response};
-use hyper_staticfile::{resolve_path, ResolveResult, ResponseBuilder as FileResponseBuilder};
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
+use crate::addon::static_file::http::{make_http_file_response, CacheControlDirective};
+use crate::addon::static_file::{Entry, ScopedFileSystem};
 use crate::server::middleware::Handler;
 
 /// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`
@@ -130,17 +130,20 @@ pub struct FileExplorer {
     root_dir: PathBuf,
     cache_headers: Option<u32>,
     handlebars: Arc<Handlebars<'static>>,
+    scoped_file_system: ScopedFileSystem,
 }
 
 impl<'a> FileExplorer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
     pub fn new(root_dir: PathBuf) -> Self {
         let handlebars = FileExplorer::make_handlebars_engine();
+        let scoped_file_system = ScopedFileSystem::new(root_dir.clone()).unwrap();
 
         FileExplorer {
             root_dir,
             cache_headers: None,
             handlebars,
+            scoped_file_system,
         }
     }
 
@@ -183,48 +186,21 @@ impl<'a> FileExplorer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        match resolve_path(&self.root_dir, req_path.as_str())
-            .await
-            .unwrap()
-        {
-            ResolveResult::MethodNotMatched => Ok(HttpResponseBuilder::new()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::empty())
-                .expect("Failed to build response")),
-            ResolveResult::UriNotMatched => Ok(HttpResponseBuilder::new()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::empty())
-                .expect("Failed to build response")),
-            ResolveResult::NotFound => {
-                if req_path == "/" {
-                    let directory_path = self
-                        .make_absolute_path_from_req_path(req_path.as_str())
-                        .unwrap();
+        let path = PathBuf::from(req_path);
 
-                    return self.render_directory_index(directory_path).await;
+        if let Ok(entry) = self.scoped_file_system.resolve(path).await {
+            return match entry {
+                Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
+                Entry::File(file) => {
+                    make_http_file_response(file, CacheControlDirective::MaxAge(2500)).await
                 }
-
-                Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::NOT_FOUND)
-                    .body(Body::empty())
-                    .expect("Failed to build response"))
-            }
-            ResolveResult::PermissionDenied => Ok(HttpResponseBuilder::new()
-                .status(StatusCode::FORBIDDEN)
-                .body(Body::empty())
-                .expect("Failed to build response")),
-            ResolveResult::IsDirectory => {
-                let directory_path = self
-                    .make_absolute_path_from_req_path(req_path.as_str())
-                    .unwrap();
-
-                return self.render_directory_index(directory_path).await;
-            }
-            ResolveResult::Found(file, metadata, mime) => Ok(FileResponseBuilder::new()
-                .cache_headers(self.cache_headers)
-                .build(ResolveResult::Found(file, metadata, mime))
-                .expect("Failed to build response")),
+            };
         }
+
+        Ok(HttpResponseBuilder::new()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::empty())
+            .expect("Failed to build response"))
     }
 
     /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`
@@ -240,6 +216,7 @@ impl<'a> FileExplorer {
         let body = Body::from(html);
 
         Ok(HttpResponseBuilder::new()
+            .header(http::header::CONTENT_TYPE, "text/html")
             .status(StatusCode::OK)
             .body(body)
             .expect("Failed to build response"))
@@ -284,28 +261,6 @@ impl<'a> FileExplorer {
         Ok(DirectoryIndex {
             entries: directory_entries,
         })
-    }
-
-    /// Creates an absolute path by appending the HTTP Request URI to the
-    /// `root_dir`
-    fn make_absolute_path_from_req_path(&self, req_path: &str) -> Result<PathBuf> {
-        let mut root_dir = self.root_dir.clone();
-        let req_path = if req_path.starts_with('/') {
-            let path = req_path[1..req_path.len()].to_string();
-
-            if path.ends_with('/') {
-                return PathBuf::from_str(path[..path.len() - 1].to_string().as_str())
-                    .context("Unable to buid path");
-            }
-
-            PathBuf::from_str(path.as_str())?
-        } else {
-            PathBuf::from_str(req_path)?
-        };
-
-        root_dir.push(req_path);
-
-        Ok(root_dir)
     }
 
     /// Creates entry's relative path. Used by Handlebars template engine to
@@ -358,6 +313,7 @@ impl<'a> FileExplorer {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
     use std::vec;
 
     use super::*;

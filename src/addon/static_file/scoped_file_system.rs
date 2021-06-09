@@ -1,0 +1,282 @@
+//! FileSystem wrapper to navigate safely around the children of a root
+//! directory.
+//!
+//! The `ScopedFileSystem` provides read capabilities on a single directory
+//! and its children, either files and directories will be accessed by this
+//! `ScopedFileSystem` instance.
+//!
+//! The `Entry` is a wrapper on OS file system entries such as `File` and
+//! `Directory`. Both `File` and `Directory` are primitive types for
+//! `ScopedFileSystem`
+use anyhow::Context;
+use anyhow::Result;
+use std::env::current_dir;
+use std::path::{Component, Path, PathBuf};
+use tokio::fs::OpenOptions;
+
+use super::file::File;
+
+/// Representation of a OS ScopedFileSystem directory providing the path
+/// (`PathBuf`)
+#[derive(Debug)]
+pub struct Directory {
+    path: PathBuf,
+}
+
+impl Directory {
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
+/// Any OS filesystem entry recognized by `ScopedFileSystem` is treated as a
+/// `Entry` both `File` and `Directory` are possible values with full support by
+/// `ScopedFileSystem`
+#[derive(Debug)]
+pub enum Entry {
+    File(File),
+    Directory(Directory),
+}
+
+/// `ScopedFileSystem` to resolve and serve static files relative to an specific
+/// file system directory
+#[derive(Clone)]
+pub struct ScopedFileSystem {
+    pub root: PathBuf,
+}
+
+impl ScopedFileSystem {
+    /// Creates a new instance of `ScopedFileSystem` using the provided PathBuf
+    /// as the root directory to serve files from.
+    ///
+    /// Provided paths will resolve relartive to the provided `root` directory.
+    pub fn new(root: PathBuf) -> Result<Self> {
+        let root_string = root.to_str().unwrap();
+        let mut cwd = current_dir().context(
+            "Failed to gather current working directory when instancing a new ScopedFileSystem",
+        )?;
+
+        if root_string == "/"
+            || root_string.is_empty()
+            || root_string.starts_with('/')
+            || root_string.starts_with('\\')
+        {
+            // if the provided string is either "/" or "", the root directory
+            // will be the current working directory (CWD)
+            return Ok(ScopedFileSystem { root: cwd });
+        }
+
+        cwd.push(root_string);
+
+        Ok(ScopedFileSystem { root: cwd })
+    }
+
+    /// Resolves the provided path against the root directory of this
+    /// `ScopedFileSystem` instance.
+    ///
+    /// A relative path is built using `build_relative_path` and then is opened
+    /// to retrieve a `Entry`.
+    pub async fn resolve(&self, path: PathBuf) -> Result<Entry> {
+        let entry_path = self.build_relative_path(path);
+
+        ScopedFileSystem::open(entry_path).await
+    }
+
+    /// Builds a path relative to `ScopedFileSystem`'s `root` path with the
+    /// provided path.
+    fn build_relative_path(&self, path: PathBuf) -> PathBuf {
+        let mut root = self.root.clone();
+
+        root.extend(&ScopedFileSystem::normalize_path(&path));
+
+        root
+    }
+
+    /// Normalizes paths
+    ///
+    /// ```ignore
+    /// docs/collegue/cs50/lectures/../code/voting_excecise
+    /// ```
+    ///
+    /// Will be normalized to be:
+    ///
+    /// ```ignore
+    /// docs/collegue/cs50/code/voting_excecise
+    /// ```
+    fn normalize_path(path: &Path) -> PathBuf {
+        path.components()
+            .fold(PathBuf::new(), |mut result, p| match p {
+                Component::ParentDir => {
+                    result.pop();
+                    result
+                }
+                Component::Normal(os_string) => {
+                    result.push(os_string);
+                    result
+                }
+                _ => result,
+            })
+    }
+
+    async fn open(path: PathBuf) -> Result<Entry> {
+        let mut open_options = OpenOptions::new();
+        open_options.read(true);
+
+        let entry_path: PathBuf = path.clone();
+        let file = open_options.open(path).await?;
+        let metadata = file.metadata().await?;
+
+        if metadata.is_dir() {
+            return Ok(Entry::Directory(Directory { path: entry_path }));
+        }
+
+        Ok(Entry::File(File::new(entry_path, file, metadata)))
+    }
+}
+
+mod tests {
+    #[allow(unused_imports)]
+    use super::*;
+
+    #[test]
+    fn creates_new_sfs() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("assets")).unwrap();
+        let mut expect = current_dir().unwrap();
+
+        expect.push("assets");
+
+        assert_eq!(sfs.root, expect);
+    }
+
+    #[test]
+    fn builds_a_relative_path_to_root_from_provided_path() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let mut root_path = sfs.root.clone();
+        let file_path = PathBuf::from(".github/ISSUE_TEMPLATE/feature-request.md");
+
+        root_path.push(file_path);
+
+        let resolved_path =
+            sfs.build_relative_path(PathBuf::from(".github/ISSUE_TEMPLATE/feature-request.md"));
+
+        assert_eq!(root_path, resolved_path);
+    }
+
+    #[test]
+    fn builds_a_relative_path_to_root_from_forward_slash() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_path = sfs.build_relative_path(PathBuf::from("/"));
+
+        assert_eq!(sfs.root, resolved_path);
+    }
+
+    #[test]
+    fn builds_a_relative_path_to_root_from_backwards() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_path = sfs.build_relative_path(PathBuf::from("../../"));
+
+        assert_eq!(sfs.root, resolved_path);
+    }
+
+    #[test]
+    fn builds_an_invalid_path_if_an_arbitrary_path_is_provided() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_path =
+            sfs.build_relative_path(PathBuf::from("unexistent_dir/confidential/recipe.txt"));
+
+        assert_ne!(sfs.root, resolved_path);
+    }
+
+    #[test]
+    fn serves_cwd_whenever_the_path_begins_with_slash() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("/assets")).unwrap();
+        let expect = current_dir().unwrap();
+
+        assert_eq!(sfs.root, expect);
+    }
+
+    #[test]
+    fn creates_sfs_with_cwd_using_forward_slash() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("/")).unwrap();
+        let cwd = current_dir().unwrap();
+
+        assert_eq!(sfs.root, cwd);
+    }
+
+    #[test]
+    fn creates_sfs_with_cwd_using_empty_string() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let cwd = current_dir().unwrap();
+
+        assert_eq!(sfs.root, cwd);
+    }
+
+    #[test]
+    fn creates_sfs_with_cwd_using_dot() {
+        let sfs = ScopedFileSystem::new(PathBuf::from(".")).unwrap();
+        let cwd = current_dir().unwrap();
+
+        assert_eq!(sfs.root, cwd);
+    }
+
+    #[test]
+    fn normalizes_an_arbitrary_path() {
+        let arbitrary_path = PathBuf::from("docs/collegue/cs50/lectures/../code/voting_excecise");
+        let normalized = ScopedFileSystem::normalize_path(&arbitrary_path.clone());
+
+        assert_eq!(
+            normalized.to_str().unwrap(),
+            "docs/collegue/cs50/code/voting_excecise"
+        );
+    }
+
+    #[tokio::test]
+    async fn resolves_a_file() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_entry = sfs.resolve(PathBuf::from("assets/logo.svg")).await.unwrap();
+
+        if let Entry::File(file) = resolved_entry {
+            assert_eq!(file.metadata.is_file(), true);
+        } else {
+            panic!("Found a directory instead of a file in the provied path");
+        }
+    }
+
+    #[tokio::test]
+    async fn detect_directory_paths() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_entry = sfs.resolve(PathBuf::from("assets/")).await.unwrap();
+
+        assert!(matches!(resolved_entry, Entry::Directory(_)));
+    }
+
+    #[tokio::test]
+    async fn detect_directory_paths_without_postfixed_slash() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_entry = sfs.resolve(PathBuf::from("assets")).await.unwrap();
+
+        assert!(matches!(resolved_entry, Entry::Directory(_)));
+    }
+
+    #[tokio::test]
+    async fn returns_error_if_file_doesnt_exists() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_entry = sfs
+            .resolve(PathBuf::from("assets/unexistent_file.doc"))
+            .await;
+
+        assert_eq!(resolved_entry.is_err(), true);
+    }
+
+    #[tokio::test]
+    async fn resolves_root_to_instance_root_dir() {
+        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
+        let resolved_entry = sfs.resolve(PathBuf::from("/")).await.unwrap();
+
+        if let Entry::Directory(dir) = resolved_entry {
+            assert_eq!(dir.path, sfs.root);
+        } else {
+            panic!("Expected a directory, but a file was received instead");
+        }
+    }
+}
