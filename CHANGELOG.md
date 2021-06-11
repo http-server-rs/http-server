@@ -2,6 +2,16 @@
 
 <Empty>
 
+<a name="v0.3.4"></a>
+## v0.3.4 (2021-06-11)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Fixes
+
+* Remove the `root` directory path replacement when an empty string or a root
+path (`/`) is provided.
+
 <a name="v0.3.3"></a>
 ## v0.3.3 (2021-06-10)
 
