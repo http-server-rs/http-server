@@ -2,6 +2,23 @@
 
 <Empty>
 
+<a name="v0.3.3"></a>
+## v0.3.3 (2021-06-10)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Improvements
+
+* Implement static file serving addon
+
+Introduce the Addon concept to write application logic out of the
+server implementation itself and aim to a modularized architecture.
+
+Implements a static file serving addon to support sending files to
+the client. The static file serving addon also provides a scoped
+file system abstraction which securely resolve files in the file system
+tree.
+
 <a name="v0.3.2"></a>
 ## v0.3.2 (2021-06-08)
 
