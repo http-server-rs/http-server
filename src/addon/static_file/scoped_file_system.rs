@@ -8,9 +8,7 @@
 //! The `Entry` is a wrapper on OS file system entries such as `File` and
 //! `Directory`. Both `File` and `Directory` are primitive types for
 //! `ScopedFileSystem`
-use anyhow::Context;
 use anyhow::Result;
-use std::env::current_dir;
 use std::path::{Component, Path, PathBuf};
 use tokio::fs::OpenOptions;
 
@@ -51,24 +49,7 @@ impl ScopedFileSystem {
     ///
     /// Provided paths will resolve relartive to the provided `root` directory.
     pub fn new(root: PathBuf) -> Result<Self> {
-        let root_string = root.to_str().unwrap();
-        let mut cwd = current_dir().context(
-            "Failed to gather current working directory when instancing a new ScopedFileSystem",
-        )?;
-
-        if root_string == "/"
-            || root_string.is_empty()
-            || root_string.starts_with('/')
-            || root_string.starts_with('\\')
-        {
-            // if the provided string is either "/" or "", the root directory
-            // will be the current working directory (CWD)
-            return Ok(ScopedFileSystem { root: cwd });
-        }
-
-        cwd.push(root_string);
-
-        Ok(ScopedFileSystem { root: cwd })
+        Ok(ScopedFileSystem { root })
     }
 
     /// Resolves the provided path against the root directory of this
@@ -139,16 +120,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn creates_new_sfs() {
-        let sfs = ScopedFileSystem::new(PathBuf::from("assets")).unwrap();
-        let mut expect = current_dir().unwrap();
-
-        expect.push("assets");
-
-        assert_eq!(sfs.root, expect);
-    }
-
-    #[test]
     fn builds_a_relative_path_to_root_from_provided_path() {
         let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
         let mut root_path = sfs.root.clone();
@@ -185,38 +156,6 @@ mod tests {
             sfs.build_relative_path(PathBuf::from("unexistent_dir/confidential/recipe.txt"));
 
         assert_ne!(sfs.root, resolved_path);
-    }
-
-    #[test]
-    fn serves_cwd_whenever_the_path_begins_with_slash() {
-        let sfs = ScopedFileSystem::new(PathBuf::from("/assets")).unwrap();
-        let expect = current_dir().unwrap();
-
-        assert_eq!(sfs.root, expect);
-    }
-
-    #[test]
-    fn creates_sfs_with_cwd_using_forward_slash() {
-        let sfs = ScopedFileSystem::new(PathBuf::from("/")).unwrap();
-        let cwd = current_dir().unwrap();
-
-        assert_eq!(sfs.root, cwd);
-    }
-
-    #[test]
-    fn creates_sfs_with_cwd_using_empty_string() {
-        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
-        let cwd = current_dir().unwrap();
-
-        assert_eq!(sfs.root, cwd);
-    }
-
-    #[test]
-    fn creates_sfs_with_cwd_using_dot() {
-        let sfs = ScopedFileSystem::new(PathBuf::from(".")).unwrap();
-        let cwd = current_dir().unwrap();
-
-        assert_eq!(sfs.root, cwd);
     }
 
     #[test]
@@ -266,17 +205,5 @@ mod tests {
             .await;
 
         assert_eq!(resolved_entry.is_err(), true);
-    }
-
-    #[tokio::test]
-    async fn resolves_root_to_instance_root_dir() {
-        let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
-        let resolved_entry = sfs.resolve(PathBuf::from("/")).await.unwrap();
-
-        if let Entry::Directory(dir) = resolved_entry {
-            assert_eq!(dir.path, sfs.root);
-        } else {
-            panic!("Expected a directory, but a file was received instead");
-        }
     }
 }
