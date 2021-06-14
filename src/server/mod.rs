@@ -5,7 +5,8 @@ mod service;
 
 use anyhow::Error;
 use hyper::service::{make_service_fn, service_fn};
-use std::net::SocketAddr;
+use std::net::{Ipv4Addr, SocketAddr};
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::config::tls::TlsConfig;
@@ -75,7 +76,17 @@ impl Server {
             server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
         if self.config.verbose() {
-            println!("Serving HTTP: {}", address.to_string());
+            println!("Serving HTTP: http://{}", address.to_string());
+
+            if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
+                if let Ok(ip) = local_ip_address::local_ip() {
+                    println!(
+                        "Local Network IP: http://{}:{}",
+                        ip.to_string(),
+                        self.config.port()
+                    );
+                }
+            }
         }
 
         if let Err(e) = server_with_graceful_shutdown.await {
