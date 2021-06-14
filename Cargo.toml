@@ -37,6 +37,7 @@ flate2 = "1.0"
 http = "0.2"
 handlebars = "3"
 hyper = { version = "0.14", features = ["http1", "server", "stream", "tcp"] }
+local-ip-address = "0.4"
 mime_guess = "2"
 rustls = "0.19"
 tokio = { version = "1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
