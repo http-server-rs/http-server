@@ -134,7 +134,7 @@ impl TryFrom<ConfigFile> for Config {
         };
 
         let cors = if let Some(cors_config_file) = file.cors {
-            Some(CorsConfig::try_from(cors_config_file)?)
+            Some(cors_config_file)
         } else {
             None
         };

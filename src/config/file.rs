@@ -5,7 +5,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use super::cors::CorsConfigFile;
+use super::cors::CorsConfig;
 use super::tls::TlsConfigFile;
 
 #[derive(Debug, Deserialize)]
@@ -17,7 +17,7 @@ pub struct ConfigFile {
     #[serde(deserialize_with = "canonicalize_some")]
     pub root_dir: Option<PathBuf>,
     pub tls: Option<TlsConfigFile>,
-    pub cors: Option<CorsConfigFile>,
+    pub cors: Option<CorsConfig>,
 }
 
 impl ConfigFile {
@@ -165,7 +165,7 @@ mod tests {
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let port = 8080;
-        let cors = CorsConfigFile {
+        let cors = CorsConfig {
             allow_credentials: true,
             allow_headers: Some(vec![
                 "content-type".to_string(),
@@ -213,7 +213,7 @@ mod tests {
         let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let port = 8080;
         let root_dir = Some(std::env::current_dir().unwrap());
-        let cors = CorsConfigFile {
+        let cors = CorsConfig {
             allow_credentials: true,
             allow_headers: Some(vec![
                 "content-type".to_string(),

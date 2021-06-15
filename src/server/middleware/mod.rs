@@ -1,6 +1,6 @@
-pub mod make_cors_middleware;
+pub mod cors;
 
-use anyhow::Error;
+use anyhow::{Error, Result};
 use futures::Future;
 use hyper::{Body, Request, Response};
 use std::convert::TryFrom;
@@ -9,10 +9,17 @@ use std::sync::Arc;
 
 use crate::config::Config;
 
-use self::make_cors_middleware::make_cors_middleware;
+use self::cors::make_cors_middleware;
 
 pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
-pub type MiddlewareAfter = Box<dyn Fn(Arc<Request<Body>>, &mut Response<Body>) + Send + Sync>;
+pub type MiddlewareAfter = Box<
+    dyn Fn(
+            Arc<Request<Body>>,
+            &mut Response<Body>,
+        ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + Sync>>
+        + Send
+        + Sync,
+>;
 pub type Handler = Box<
     dyn Fn(Arc<Request<Body>>) -> Pin<Box<dyn Future<Output = Response<Body>> + Send + Sync>>
         + Send
@@ -53,7 +60,9 @@ impl Middleware {
         let mut response = handler(Arc::clone(&request)).await;
 
         for fx in self.after.iter() {
-            fx(Arc::clone(&request), &mut response);
+            if let Err(error) = fx(Arc::clone(&request), &mut response).await {
+                eprintln!("{:?}", error);
+            }
         }
 
         response
