@@ -133,12 +133,6 @@ impl TryFrom<ConfigFile> for Config {
             None
         };
 
-        let cors = if let Some(cors_config_file) = file.cors {
-            Some(cors_config_file)
-        } else {
-            None
-        };
-
         Ok(Config {
             host: file.host,
             port: file.port,
@@ -146,7 +140,7 @@ impl TryFrom<ConfigFile> for Config {
             verbose,
             root_dir,
             tls,
-            cors,
+            cors: file.cors,
         })
     }
 }

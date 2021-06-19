@@ -6,6 +6,7 @@ use hyper::{Body, Request, Response};
 use std::convert::TryFrom;
 use std::pin::Pin;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use crate::config::Config;
 
@@ -15,7 +16,7 @@ pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
 pub type MiddlewareAfter = Box<
     dyn Fn(
             Arc<Request<Body>>,
-            &mut Response<Body>,
+            Arc<Mutex<Response<Body>>>,
         ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + Sync>>
         + Send
         + Sync,
@@ -57,15 +58,18 @@ impl Middleware {
         }
 
         let request = Arc::new(request);
-        let mut response = handler(Arc::clone(&request)).await;
+        let response = handler(Arc::clone(&request)).await;
+        let response = Arc::new(Mutex::new(response));
 
         for fx in self.after.iter() {
-            if let Err(error) = fx(Arc::clone(&request), &mut response).await {
+            if let Err(error) = fx(Arc::clone(&request), Arc::clone(&response)).await {
                 eprintln!("{:?}", error);
             }
         }
 
-        response
+        Arc::try_unwrap(response)
+            .expect("There's one or more reference/s being hold by a middleware chain.")
+            .into_inner()
     }
 }
 

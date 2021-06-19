@@ -1,7 +1,7 @@
-use std::convert::TryFrom;
-
-use futures::future;
 use hyper::{Body, Response};
+use std::convert::TryFrom;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use crate::addon::cors::Cors;
 use crate::config::cors::CorsConfig;
@@ -26,13 +26,20 @@ pub fn make_cors_middleware(cors_config: CorsConfig) -> MiddlewareAfter {
     let cors = Cors::try_from(cors_config).unwrap();
     let cors_headers = cors.make_http_headers();
 
-    Box::new(move |_: _, response: &mut Response<Body>| {
-        let headers = response.headers_mut();
+    Box::new(move |_: _, response: Arc<Mutex<Response<Body>>>| {
+        let cors_headers = cors_headers.clone();
+        let response = Arc::clone(&response);
 
-        cors_headers.iter().for_each(|(header, value)| {
-            headers.append(header, value.to_owned());
-        });
+        Box::pin(async move {
+            let mut response = response.lock().await;
 
-        Box::pin(future::ok(()))
+            let headers = response.headers_mut();
+
+            cors_headers.iter().for_each(|(header, value)| {
+                headers.append(header, value.to_owned());
+            });
+
+            Ok(())
+        })
     })
 }
