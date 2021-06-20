@@ -1,7 +1,8 @@
 mod file_explorer;
 
 use anyhow::Result;
-use hyper::{Body, Request, Response};
+use http::{Request, Response};
+use hyper::Body;
 use std::convert::TryFrom;
 use std::sync::Arc;
 

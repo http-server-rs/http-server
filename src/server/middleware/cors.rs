@@ -1,4 +1,5 @@
-use hyper::{Body, Response};
+use http::{Request, Response};
+use hyper::Body;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -26,20 +27,22 @@ pub fn make_cors_middleware(cors_config: CorsConfig) -> MiddlewareAfter {
     let cors = Cors::try_from(cors_config).unwrap();
     let cors_headers = cors.make_http_headers();
 
-    Box::new(move |_: _, response: Arc<Mutex<Response<Body>>>| {
-        let cors_headers = cors_headers.clone();
-        let response = Arc::clone(&response);
+    Box::new(
+        move |_: Arc<Request<Body>>, response: Arc<Mutex<Response<Body>>>| {
+            let cors_headers = cors_headers.clone();
+            let response = Arc::clone(&response);
 
-        Box::pin(async move {
-            let mut response = response.lock().await;
+            Box::pin(async move {
+                let mut response = response.lock().await;
 
-            let headers = response.headers_mut();
+                let headers = response.headers_mut();
 
-            cors_headers.iter().for_each(|(header, value)| {
-                headers.append(header, value.to_owned());
-            });
+                cors_headers.iter().for_each(|(header, value)| {
+                    headers.append(header, value.to_owned());
+                });
 
-            Ok(())
-        })
-    })
+                Ok(())
+            })
+        },
+    )
 }

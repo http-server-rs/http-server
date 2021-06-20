@@ -5,6 +5,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::compression::CompressionConfig;
 use super::cors::CorsConfig;
 use super::tls::TlsConfigFile;
 
@@ -18,6 +19,7 @@ pub struct ConfigFile {
     pub root_dir: Option<PathBuf>,
     pub tls: Option<TlsConfigFile>,
     pub cors: Option<CorsConfig>,
+    pub compression: Option<CompressionConfig>,
 }
 
 impl ConfigFile {
@@ -82,6 +84,7 @@ mod tests {
         assert_eq!(config.port, port);
         assert_eq!(config.verbose, Some(true));
         assert_eq!(config.root_dir, Some(root_dir));
+        assert_eq!(config.compression, None);
     }
 
     #[test]
@@ -239,5 +242,19 @@ mod tests {
         assert_eq!(config.port, port);
         assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.cors.unwrap(), cors);
+    }
+
+    #[test]
+    fn parses_config_with_gzip_compression() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 7878
+
+            [compression]
+            gzip = true
+        "#;
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert!(config.compression.unwrap().gzip);
     }
 }
