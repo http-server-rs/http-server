@@ -1,8 +1,10 @@
 pub mod cors;
+pub mod gzip;
 
 use anyhow::{Error, Result};
 use futures::Future;
-use hyper::{Body, Request, Response};
+use http::{Request, Response};
+use hyper::Body;
 use std::convert::TryFrom;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -11,6 +13,7 @@ use tokio::sync::Mutex;
 use crate::config::Config;
 
 use self::cors::make_cors_middleware;
+use self::gzip::make_gzip_compression_middleware;
 
 pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
 pub type MiddlewareAfter = Box<
@@ -92,6 +95,12 @@ impl TryFrom<Arc<Config>> for Middleware {
             let cors_middleware = make_cors_middleware(cors_config);
 
             middleware.after(cors_middleware);
+        }
+
+        if let Some(compression_config) = config.compression() {
+            if compression_config.gzip {
+                middleware.after(make_gzip_compression_middleware());
+            }
         }
 
         Ok(middleware)

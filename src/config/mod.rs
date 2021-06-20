@@ -1,3 +1,4 @@
+pub mod compression;
 pub mod cors;
 pub mod file;
 pub mod tls;
@@ -11,6 +12,7 @@ use std::path::PathBuf;
 
 use crate::cli::Cli;
 
+use self::compression::CompressionConfig;
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
 use self::tls::TlsConfig;
@@ -24,6 +26,7 @@ pub struct Config {
     verbose: bool,
     tls: Option<TlsConfig>,
     cors: Option<CorsConfig>,
+    compression: Option<CompressionConfig>,
 }
 
 impl Config {
@@ -54,6 +57,10 @@ impl Config {
     pub fn cors(&self) -> Option<CorsConfig> {
         self.cors.clone()
     }
+
+    pub fn compression(&self) -> Option<CompressionConfig> {
+        self.compression.clone()
+    }
 }
 
 impl Default for Config {
@@ -71,6 +78,7 @@ impl Default for Config {
             verbose: false,
             tls: None,
             cors: None,
+            compression: None,
         }
     }
 }
@@ -78,25 +86,25 @@ impl Default for Config {
 impl TryFrom<Cli> for Config {
     type Error = anyhow::Error;
 
-    fn try_from(cli_aguments: Cli) -> Result<Self, Self::Error> {
-        let verbose = cli_aguments.verbose;
-        let root_dir = if cli_aguments.root_dir.to_str().unwrap() == "./" {
+    fn try_from(cli_arguments: Cli) -> Result<Self, Self::Error> {
+        let verbose = cli_arguments.verbose;
+        let root_dir = if cli_arguments.root_dir.to_str().unwrap() == "./" {
             current_dir().unwrap()
         } else {
-            cli_aguments.root_dir.canonicalize().unwrap()
+            cli_arguments.root_dir.canonicalize().unwrap()
         };
 
-        let tls: Option<TlsConfig> = if cli_aguments.tls {
+        let tls: Option<TlsConfig> = if cli_arguments.tls {
             Some(TlsConfig::new(
-                cli_aguments.tls_cert,
-                cli_aguments.tls_key,
-                cli_aguments.tls_key_algorithm,
+                cli_arguments.tls_cert,
+                cli_arguments.tls_key,
+                cli_arguments.tls_key_algorithm,
             )?)
         } else {
             None
         };
 
-        let cors: Option<CorsConfig> = if cli_aguments.cors {
+        let cors: Option<CorsConfig> = if cli_arguments.cors {
             // when CORS is specified from CLI the default
             // configuration should allow any origin, method and
             // headers
@@ -105,14 +113,21 @@ impl TryFrom<Cli> for Config {
             None
         };
 
+        let compression: Option<CompressionConfig> = if cli_arguments.gzip {
+            Some(CompressionConfig { gzip: true })
+        } else {
+            None
+        };
+
         Ok(Config {
-            host: cli_aguments.host,
-            port: cli_aguments.port,
-            address: SocketAddr::new(cli_aguments.host, cli_aguments.port),
+            host: cli_arguments.host,
+            port: cli_arguments.port,
+            address: SocketAddr::new(cli_arguments.host, cli_arguments.port),
             root_dir,
             verbose,
             tls,
             cors,
+            compression,
         })
     }
 }
@@ -141,6 +156,7 @@ impl TryFrom<ConfigFile> for Config {
             root_dir,
             tls,
             cors: file.cors,
+            compression: file.compression,
         })
     }
 }

@@ -33,6 +33,7 @@ async-stream = "0.3"
 chrono = "0.4"
 dhat = { version = "0.2", optional = true }
 futures = "0.3"
+flate2 = "1.0"
 http = "0.2"
 handlebars = "3"
 hyper = { version = "0.14", features = ["http1", "server", "stream", "tcp"] }

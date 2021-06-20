@@ -3,6 +3,7 @@
 
 host = "127.0.0.1"
 port = 7878
+
 # verbose = false
 # root_dir = "./"
 
@@ -19,3 +20,6 @@ port = 7878
 # max_age = 600
 # request_headers = ["x-app-version"]
 # request_method = "GET"
+
+# [compression]
+# gzip = true

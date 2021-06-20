@@ -42,6 +42,9 @@ pub struct Cli {
     /// Enable Cross-Origin Resource Sharing allowing any origin
     #[structopt(long = "cors")]
     pub cors: bool,
+    /// Enable GZip compression for HTTP Responses
+    #[structopt(long = "gzip")]
+    pub gzip: bool,
 }
 
 impl Cli {
@@ -63,6 +66,7 @@ impl Default for Cli {
             tls_key: PathBuf::from_str("key.rsa").unwrap(),
             tls_key_algorithm: PrivateKeyAlgorithm::Rsa,
             cors: false,
+            gzip: false,
         }
     }
 }
@@ -164,6 +168,16 @@ mod tests {
         let mut expect = Cli::default();
 
         expect.cors = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_gzip() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--gzip"]);
+        let mut expect = Cli::default();
+
+        expect.gzip = true;
 
         assert_eq!(from_args, expect);
     }

@@ -1,5 +1,6 @@
 use anyhow::Result;
-use hyper::{Body, Request, Response};
+use http::{Request, Response};
+use hyper::Body;
 
 use super::handler::HttpHandler;
 
