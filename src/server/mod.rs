@@ -71,11 +71,14 @@ impl Server {
             }
         }));
 
+        let server_with_graceful_shutdown =
+            server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
+
         if self.config.verbose() {
             println!("Serving HTTP: {}", address.to_string());
         }
 
-        if let Err(e) = server.await {
+        if let Err(e) = server_with_graceful_shutdown.await {
             eprint!("Server Error: {}", e);
         }
     }

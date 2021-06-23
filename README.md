@@ -14,6 +14,7 @@
   ![Clippy](https://github.com/EstebanBorai/http-server/workflows/clippy/badge.svg)
   ![Formatter](https://github.com/EstebanBorai/http-server/workflows/fmt/badge.svg)
   ![Tests](https://github.com/EstebanBorai/http-server/workflows/test/badge.svg)
+  ![Benchs](https://github.com/EstebanBorai/http-server/workflows/bench/badge.svg)
 
 </div>
 

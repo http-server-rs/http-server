@@ -1,4 +1,4 @@
-name: test
+name: bench
 on:
   pull_request:
   push:
@@ -20,8 +20,8 @@ jobs:
             ./target
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cargo-test
+            ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-bench
 
-      - name: Run "./scripts/test.sh"
-        run: ./scripts/test.sh
+      - name: Run "./scripts/bench.sh"
+        run: ./scripts/bench.sh
