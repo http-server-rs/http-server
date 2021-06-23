@@ -20,18 +20,35 @@ path = "src/lib.rs"
 name = "http-server"
 path = "src/bin/main.rs"
 
+[[bench]]
+name = "file_explorer"
+harness = false
+
+[features]
+dhat-profiling = ["dhat"]
+
 [dependencies]
 anyhow = "1"
 async-stream = "0.3"
 chrono = "0.4"
+dhat = { version = "0.2", optional = true }
 futures = "0.3"
 http = "0.2"
 handlebars = "3"
 hyper = { version = "0.14", features = ["http1", "server", "stream", "tcp"] }
 mime_guess = "2"
 rustls = "0.19"
-tokio = { version = "1", features = ["fs", "rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tokio-rustls = "0.22"
 toml = "0.5"
 serde = { version = "1", features = ["derive"] }
 structopt = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
+hyper = { version = "0.14", features = ["client"] }
+tokio = { version = "1", features = ["full"] }
+lazy_static = "1.4"
+
+[profile.release]
+debug = 1
