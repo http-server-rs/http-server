@@ -12,8 +12,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use crate::addon::static_file::http::{make_http_file_response, CacheControlDirective};
-use crate::addon::static_file::{Entry, ScopedFileSystem};
+use crate::addon::file_server::http::{make_http_file_response, CacheControlDirective};
+use crate::addon::file_server::{Entry, ScopedFileSystem};
 use crate::server::middleware::Handler;
 
 /// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`

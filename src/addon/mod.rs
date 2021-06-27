@@ -1,2 +1,2 @@
 pub mod cors;
-pub mod static_file;
+pub mod file_server;
