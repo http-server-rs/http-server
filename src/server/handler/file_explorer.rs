@@ -3,12 +3,13 @@ use chrono::prelude::*;
 use chrono::{DateTime, Local};
 use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
-use http::{Method, StatusCode};
+use http::{Method, StatusCode, Uri};
 use hyper::{Body, Request, Response};
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -161,6 +162,20 @@ impl<'a> FileExplorer {
         Arc::new(handlebars)
     }
 
+    /// Retrieves the path from the URI and removes the query params
+    fn sanitize_path(req_uri: &str) -> Result<PathBuf> {
+        let uri = Uri::from_str(req_uri)?;
+        let uri_parts = uri.into_parts();
+
+        if let Some(path_and_query) = uri_parts.path_and_query {
+            let path = path_and_query.path();
+
+            return Ok(PathBuf::from_str(path)?);
+        }
+
+        Ok(PathBuf::from_str("/")?)
+    }
+
     /// Resolves a HTTP Request to a file or directory.
     ///
     /// If the method of the HTTP Request is not `GET`, then responds with
@@ -186,21 +201,20 @@ impl<'a> FileExplorer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        let path = PathBuf::from(req_path);
+        let path = FileExplorer::sanitize_path(req_path.as_str())?;
 
-        if let Ok(entry) = self.scoped_file_system.resolve(path).await {
-            return match entry {
+        return match self.scoped_file_system.resolve(path).await {
+            Ok(entry) => match entry {
                 Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
                 Entry::File(file) => {
                     make_http_file_response(file, CacheControlDirective::MaxAge(2500)).await
                 }
-            };
-        }
-
-        Ok(HttpResponseBuilder::new()
-            .status(StatusCode::BAD_REQUEST)
-            .body(Body::empty())
-            .expect("Failed to build response"))
+            },
+            Err(err) => Ok(HttpResponseBuilder::new()
+                .status(StatusCode::BAD_REQUEST)
+                .body(Body::from(err.to_string()))
+                .expect("Failed to build response")),
+        };
     }
 
     /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`
@@ -345,5 +359,29 @@ mod tests {
             "/src/server/service/file_explorer.rs",
             FileExplorer::make_dir_entry_link(&root_dir, &entry_path)
         );
+    }
+
+    #[test]
+    fn sanitize_req_uri_path() {
+        let have = vec![
+            "/index.html",
+            "/index.html?foo=1234",
+            "/foo/index.html?bar=baz",
+            "/foo/bar/baz.html?day=6&month=27&year=2021",
+        ];
+
+        let want = vec![
+            "/index.html",
+            "/index.html",
+            "/foo/index.html",
+            "/foo/bar/baz.html",
+        ];
+
+        for (idx, req_uri) in have.iter().enumerate() {
+            let sanitized_path = FileExplorer::sanitize_path(req_uri).unwrap();
+            let wanted_path = PathBuf::from_str(want[idx]).unwrap();
+
+            assert_eq!(sanitized_path, wanted_path);
+        }
     }
 }
