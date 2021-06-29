@@ -2,7 +2,7 @@
 
 echo "Initializing test"
 
-cargo run --features dhat-profiling &
+cargo run --features dhat-profiling -- $1 &
 cargo_run_pid=$!
 
 while ! nc -z 0.0.0.0 7878; do

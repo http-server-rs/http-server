@@ -2,7 +2,7 @@
 
 echo "Initializing benchmarks"
 
-cargo run &
+cargo run -- $1 &
 cargo_run_pid=$!
 
 while ! nc -z 0.0.0.0 7878; do
