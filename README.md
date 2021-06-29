@@ -51,6 +51,7 @@ http-server --help
 Name | Short | Long | Description
 --- | --- | --- | ---
 Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sharing allowing any origin
+GZip Compression | N/A | `--gzip` | Enable GZip compression for responses
 Help | N/A | `--help` | Prints help information
 Version | `-V` | `--version` | Prints version information
 Verbose | `-v` | `--verbose` | Prints output to console
@@ -77,6 +78,16 @@ TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate cer
 
 The following are some relevant details on features supported by this HTTP Server
 solution that may be of the interest of the user.
+
+### Compression
+
+Compression with GZip encoding is supported, to enable it you must provide the `compression`
+section to the server configuration file.
+
+```toml
+[compression]
+gzip = true
+```
 
 ### TLS (HTTPS)
 
