@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test:
+  bench:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,5 +23,11 @@ jobs:
             ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo-bench
 
-      - name: Run "./scripts/bench.sh"
+      - name: "Bench de-facto"
         run: ./scripts/bench.sh
+
+      - name: "Bench w/ Cross-Origin-Resource-Sharing"
+        run: ./scripts/bench.sh --cors
+
+      - name: "Bench w/ GZip Compression"
+        run: ./scripts/bench.sh --gzip
