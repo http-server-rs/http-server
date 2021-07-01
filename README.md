@@ -34,6 +34,25 @@ Check for the installation to be successful.
 http-server --help
 ```
 
+## Configuration
+
+When running the server with no options or flags provided, a set of default
+configurations will be set, you can always change this behavior by either
+creating your own config with the [Configuration TOML](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) file
+or by providing CLI arguments described in the [usage](#usage) section.
+
+Name | Description | Default
+--- | --- | ---
+Host | Address to bind the server | `127.0.0.1`
+Port | Port to bind the server | `7878`
+Root Directory | The directory to serve files from | `CWD`
+File Explorer UI | A File Explorer UI for the directory configured as the _Root Directory_ | Enabled
+Configuration File | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | Disabled
+HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/EstebanBorai/http-server#tls-https) reference | Disabled
+CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/EstebanBorai/http-server#cross-origin-resource-sharing-cors) reference | Disabled
+Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/EstebanBorai/http-server#compression) reference | Disabled
+Verbose | Print server details when running. This doesn't include any logging capabilities. | Disabled
+
 ## Usage
 
 ```
@@ -81,12 +100,39 @@ solution that may be of the interest of the user.
 
 ### Compression
 
-Compression with GZip encoding is supported, to enable it you must provide the `compression`
-section to the server configuration file.
+Even when compression is supported, by default the server will not compress any
+HTTP response contents.
+
+You must specify the compression configuration you want to use, as of today
+the server only supports compression with the GZip algorithm, but `brotli` is
+also planed to be supported, that's why theres two ways to configure this
+server to use compression.
+
+The following MIME types will be skipped from compression:
+
+- `application/gzip`
+- `application/octet-stream`
+- `application/wasm`
+- `application/zip`
+- `image/*`
+- `video/*`
+
+#### The Configuration File's Compression Section
+
+As suppport for other compression algorithms is planned to be provided in the
+future, the configuration file already supports compression settings.
 
 ```toml
 [compression]
 gzip = true
+```
+
+#### The `--gzip` flag
+
+Provide the `--gzip` argument to the server when executing it.
+
+```bash
+http-server --gzip
 ```
 
 ### TLS (HTTPS)

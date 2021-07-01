@@ -2,6 +2,26 @@
 
 <Empty>
 
+<a name="v0.4.0"></a>
+## v0.4.0 (2021-06-30)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Features
+
+* GZip Compression for HTTP response body
+* Local IP Address is printed when the server is binded to `0.0.0.0`.
+
+#### Improvements
+
+* The `static_file` was renamed to `file_server` for  a more accurate name
+* Benchmarks for de-facto configuration, CORS and GZip as part of CI
+* DHAT (Dynamic Heap Allocatio Tool) Profiling supported as part of CI
+
+#### Fixes
+
+* URI with query parameters are now supported
+
 <a name="v0.3.4"></a>
 ## v0.3.4 (2021-06-11)
 
