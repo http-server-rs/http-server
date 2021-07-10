@@ -1,0 +1,39 @@
+name: test suites
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test_suites:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache .cargo and target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo
+            ./target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-test
+
+      - name: Run "defacto" test suite
+        env:
+          SUITE: 'defacto'
+        run: ./scripts/test_suite.sh
+
+      - name: Run "cors" test suite
+        env:
+          SUITE: 'cors'
+        run: ./scripts/test_suite.sh --cors
+
+      - name: Run "gzip" test suite
+        env:
+          SUITE: 'gzip'
+        run: ./scripts/test_suite.sh --gzip

@@ -3,8 +3,8 @@ use chrono::prelude::*;
 use chrono::{DateTime, Local};
 use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
-use http::{Method, StatusCode, Uri};
-use hyper::{Body, Request, Response};
+use http::{StatusCode, Uri};
+use hyper::{Body, Method, Request, Response};
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
@@ -13,19 +13,20 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use crate::addon::file_server::http::{make_http_file_response, CacheControlDirective};
-use crate::addon::file_server::{Entry, ScopedFileSystem};
 use crate::server::middleware::Handler;
 
+use super::http::{make_http_file_response, CacheControlDirective};
+use super::{Entry, ScopedFileSystem};
+
 /// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`
-pub fn make_file_explorer_handler(file_explorer: Arc<FileExplorer>) -> Handler {
+pub fn make_file_server_handler(handler: Arc<FileServerHandler>) -> Handler {
     Box::new(move |request: Arc<Request<Body>>| {
-        let file_explorer = Arc::clone(&file_explorer);
+        let handler = Arc::clone(&handler);
         let req_path = request.uri().to_string();
 
         Box::pin(async move {
             if request.method() == Method::GET {
-                return file_explorer
+                return handler
                     .resolve(req_path)
                     .await
                     .map_err(|e| {
@@ -127,20 +128,20 @@ struct DirectoryIndex {
 /// If the matched file is not a supported MIME type, such file will be
 /// downloaded based on navigator preferences.
 #[derive(Clone)]
-pub struct FileExplorer {
+pub struct FileServerHandler {
     root_dir: PathBuf,
     cache_headers: Option<u32>,
     handlebars: Arc<Handlebars<'static>>,
     scoped_file_system: ScopedFileSystem,
 }
 
-impl<'a> FileExplorer {
+impl<'a> FileServerHandler {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
     pub fn new(root_dir: PathBuf) -> Self {
-        let handlebars = FileExplorer::make_handlebars_engine();
+        let handlebars = FileServerHandler::make_handlebars_engine();
         let scoped_file_system = ScopedFileSystem::new(root_dir.clone()).unwrap();
 
-        FileExplorer {
+        FileServerHandler {
             root_dir,
             cache_headers: None,
             handlebars,
@@ -152,7 +153,7 @@ impl<'a> FileExplorer {
     fn make_handlebars_engine() -> Arc<Handlebars<'a>> {
         let mut handlebars = Handlebars::new();
 
-        let template = std::include_bytes!("../template/explorer.hbs");
+        let template = std::include_bytes!("./template/explorer.hbs");
         let template = std::str::from_utf8(template).unwrap();
 
         handlebars
@@ -201,7 +202,9 @@ impl<'a> FileExplorer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        let path = FileExplorer::sanitize_path(req_path.as_str())?;
+        use std::io::ErrorKind;
+
+        let path = FileServerHandler::sanitize_path(req_path.as_str())?;
 
         return match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
@@ -210,10 +213,16 @@ impl<'a> FileExplorer {
                     make_http_file_response(file, CacheControlDirective::MaxAge(2500)).await
                 }
             },
-            Err(err) => Ok(HttpResponseBuilder::new()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::from(err.to_string()))
-                .expect("Failed to build response")),
+            Err(err) => match err.kind() {
+                ErrorKind::NotFound => Ok(HttpResponseBuilder::new()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(Body::from(err.to_string()))
+                    .expect("Failed to build response")),
+                _ => Ok(HttpResponseBuilder::new()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(Body::from(err.to_string()))
+                    .expect("Failed to build response")),
+            },
         };
     }
 
@@ -221,7 +230,7 @@ impl<'a> FileExplorer {
     /// is used to build the Handlebars "Explorer" template using the Handlebars
     /// engine and builds an HTTP Response containing such file
     async fn render_directory_index(&self, path: PathBuf) -> Result<Response<Body>> {
-        let directory_index = FileExplorer::index_directory(self.root_dir.clone(), path)?;
+        let directory_index = FileServerHandler::index_directory(self.root_dir.clone(), path)?;
         let html = self
             .handlebars
             .render(EXPLORER_TEMPLATE, &directory_index)
@@ -246,12 +255,12 @@ impl<'a> FileExplorer {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
             let created_at = if let Ok(time) = metadata.created() {
-                FileExplorer::format_system_date(time)
+                FileServerHandler::format_system_date(time)
             } else {
                 String::default()
             };
             let updated_at = if let Ok(time) = metadata.modified() {
-                FileExplorer::format_system_date(time)
+                FileServerHandler::format_system_date(time)
             } else {
                 String::default()
             };
@@ -263,8 +272,8 @@ impl<'a> FileExplorer {
                     .context("Unable to gather file name into a String")?
                     .to_string(),
                 is_dir: metadata.is_dir(),
-                size: FileExplorer::format_bytes(metadata.len() as f64),
-                entry_path: FileExplorer::make_dir_entry_link(&root_dir, &entry.path()),
+                size: FileServerHandler::format_bytes(metadata.len() as f64),
+                entry_path: FileServerHandler::make_dir_entry_link(&root_dir, &entry.path()),
                 created_at,
                 updated_at,
             });
@@ -344,7 +353,7 @@ mod tests {
         ];
 
         for (idx, size) in byte_sizes.into_iter().enumerate() {
-            assert_eq!(FileExplorer::format_bytes(size), expect[idx]);
+            assert_eq!(FileServerHandler::format_bytes(size), expect[idx]);
         }
     }
 
@@ -357,7 +366,7 @@ mod tests {
 
         assert_eq!(
             "/src/server/service/file_explorer.rs",
-            FileExplorer::make_dir_entry_link(&root_dir, &entry_path)
+            FileServerHandler::make_dir_entry_link(&root_dir, &entry_path)
         );
     }
 
@@ -378,7 +387,7 @@ mod tests {
         ];
 
         for (idx, req_uri) in have.iter().enumerate() {
-            let sanitized_path = FileExplorer::sanitize_path(req_uri).unwrap();
+            let sanitized_path = FileServerHandler::sanitize_path(req_uri).unwrap();
             let wanted_path = PathBuf::from_str(want[idx]).unwrap();
 
             assert_eq!(sanitized_path, wanted_path);

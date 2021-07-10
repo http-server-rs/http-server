@@ -57,7 +57,7 @@ impl ScopedFileSystem {
     ///
     /// A relative path is built using `build_relative_path` and then is opened
     /// to retrieve a `Entry`.
-    pub async fn resolve(&self, path: PathBuf) -> Result<Entry> {
+    pub async fn resolve(&self, path: PathBuf) -> std::io::Result<Entry> {
         let entry_path = self.build_relative_path(path);
 
         ScopedFileSystem::open(entry_path).await
@@ -99,7 +99,7 @@ impl ScopedFileSystem {
             })
     }
 
-    async fn open(path: PathBuf) -> Result<Entry> {
+    async fn open(path: PathBuf) -> std::io::Result<Entry> {
         let mut open_options = OpenOptions::new();
         open_options.read(true);
 

@@ -53,3 +53,7 @@ Thumbs.db
 # Editor Files #
 ################
 /.vscode
+
+# Tests #
+#########
+dhat-heap.json
