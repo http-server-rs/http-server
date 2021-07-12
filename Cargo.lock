@@ -550,6 +550,7 @@ dependencies = [
  "mime_guess",
  "rustls",
  "serde",
+ "serde_json",
  "structopt",
  "tokio",
  "tokio-rustls",

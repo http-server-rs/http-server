@@ -1,7 +1,7 @@
 pub mod cors;
 pub mod gzip;
 
-use anyhow::{Error, Result};
+use anyhow::Error;
 use futures::Future;
 use http::{Request, Response};
 use hyper::Body;
@@ -15,15 +15,34 @@ use crate::config::Config;
 use self::cors::make_cors_middleware;
 use self::gzip::make_gzip_compression_middleware;
 
-pub type MiddlewareBefore = Box<dyn Fn(&mut Request<Body>) + Send + Sync>;
+/// Middleware chain `Result` which specifies the `Err` variant as a
+/// HTTP response.
+pub type Result = std::result::Result<(), Response<Body>>;
+
+/// Middleware chain to execute before the main handler digests the
+/// HTTP request. No HTTP response is available at this point.
+pub type MiddlewareBefore = Box<
+    dyn Fn(&mut Request<Body>) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>> + Send + Sync,
+>;
+
+/// Middleware chain to execute after the main handler digests the
+/// HTTP request. The HTTP response is created by the handler and
+/// consumed by every middleware after chain.
 pub type MiddlewareAfter = Box<
     dyn Fn(
             Arc<Request<Body>>,
             Arc<Mutex<Response<Body>>>,
-        ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + Sync>>
+        ) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>>
         + Send
         + Sync,
 >;
+
+/// The main handler for the HTTP request, a HTTP response is created
+/// as a result of this handler.
+///
+/// This handler will be executed against the HTTP request after every
+/// "Middleware Before" chain is executed but before any "Middleware After"
+/// chain is executed
 pub type Handler = Box<
     dyn Fn(Arc<Request<Body>>) -> Pin<Box<dyn Future<Output = Response<Body>> + Send + Sync>>
         + Send
@@ -57,7 +76,9 @@ impl Middleware {
     /// with the HTTP Response from the handler
     pub async fn handle(&self, mut request: Request<Body>, handler: Handler) -> Response<Body> {
         for fx in self.before.iter() {
-            fx(&mut request);
+            if let Err(err) = fx(&mut request).await {
+                return err;
+            }
         }
 
         let request = Arc::new(request);
@@ -65,8 +86,8 @@ impl Middleware {
         let response = Arc::new(Mutex::new(response));
 
         for fx in self.after.iter() {
-            if let Err(error) = fx(Arc::clone(&request), Arc::clone(&response)).await {
-                eprintln!("{:?}", error);
+            if let Err(err) = fx(Arc::clone(&request), Arc::clone(&response)).await {
+                return err;
             }
         }
 
@@ -88,7 +109,7 @@ impl Default for Middleware {
 impl TryFrom<Arc<Config>> for Middleware {
     type Error = Error;
 
-    fn try_from(config: Arc<Config>) -> Result<Self, Self::Error> {
+    fn try_from(config: Arc<Config>) -> std::result::Result<Self, Self::Error> {
         let mut middleware = Middleware::default();
 
         if let Some(cors_config) = config.cors() {
