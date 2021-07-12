@@ -2,6 +2,16 @@
 
 <Empty>
 
+<a name="v0.4.1"></a>
+## v0.4.1 (2021-07-12)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Fixes
+
+* Respond with 404 when a file is not found
+* Respond with 500 when middleware fails
+
 <a name="v0.4.0"></a>
 ## v0.4.0 (2021-06-30)
 
