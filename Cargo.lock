@@ -78,6 +78,12 @@ dependencies = [
 
 [[package]]
 name = "base64"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
+
+[[package]]
+name = "base64"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
@@ -521,6 +527,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-auth-basic"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83d878aa36815a67b36c5eb0228fbaad723eee94351c017873012217cad19307"
+dependencies = [
+ "base64 0.12.3",
+]
+
+[[package]]
 name = "http-body"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -544,6 +559,7 @@ dependencies = [
  "futures",
  "handlebars",
  "http",
+ "http-auth-basic",
  "hyper",
  "lazy_static",
  "local-ip-address",
@@ -1092,7 +1108,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
 dependencies = [
- "base64",
+ "base64 0.13.0",
  "log",
  "ring",
  "sct",

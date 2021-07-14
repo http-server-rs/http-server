@@ -1,3 +1,4 @@
+pub mod basic_auth;
 pub mod compression;
 pub mod cors;
 pub mod file;
@@ -12,6 +13,7 @@ use std::path::PathBuf;
 
 use crate::cli::Cli;
 
+use self::basic_auth::BasicAuthConfig;
 use self::compression::CompressionConfig;
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
@@ -27,6 +29,7 @@ pub struct Config {
     tls: Option<TlsConfig>,
     cors: Option<CorsConfig>,
     compression: Option<CompressionConfig>,
+    basic_auth: Option<BasicAuthConfig>,
 }
 
 impl Config {
@@ -61,6 +64,10 @@ impl Config {
     pub fn compression(&self) -> Option<CompressionConfig> {
         self.compression.clone()
     }
+
+    pub fn basic_auth(&self) -> Option<BasicAuthConfig> {
+        self.basic_auth.clone()
+    }
 }
 
 impl Default for Config {
@@ -79,6 +86,7 @@ impl Default for Config {
             tls: None,
             cors: None,
             compression: None,
+            basic_auth: None,
         }
     }
 }
@@ -119,6 +127,16 @@ impl TryFrom<Cli> for Config {
             None
         };
 
+        let basic_auth: Option<BasicAuthConfig> =
+            if cli_arguments.username.is_some() && cli_arguments.password.is_some() {
+                Some(BasicAuthConfig::new(
+                    cli_arguments.username.unwrap(),
+                    cli_arguments.password.unwrap(),
+                ))
+            } else {
+                None
+            };
+
         Ok(Config {
             host: cli_arguments.host,
             port: cli_arguments.port,
@@ -128,6 +146,7 @@ impl TryFrom<Cli> for Config {
             tls,
             cors,
             compression,
+            basic_auth,
         })
     }
 }
@@ -157,6 +176,7 @@ impl TryFrom<ConfigFile> for Config {
             tls,
             cors: file.cors,
             compression: file.compression,
+            basic_auth: file.basic_auth,
         })
     }
 }
