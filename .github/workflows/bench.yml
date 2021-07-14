@@ -31,3 +31,6 @@ jobs:
 
       - name: "Bench w/ GZip Compression"
         run: ./scripts/bench.sh --gzip
+
+      - name: "Bench w/ Basic Authentication"
+        run: ./scripts/bench.sh '--username "john" --password "appleseed"'

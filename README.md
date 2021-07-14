@@ -52,6 +52,7 @@ HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](http
 CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/EstebanBorai/http-server#cross-origin-resource-sharing-cors) reference | Disabled
 Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/EstebanBorai/http-server#compression) reference | Disabled
 Verbose | Print server details when running. This doesn't include any logging capabilities. | Disabled
+Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/EstebanBorai/http-server#basic-authentication)  | Disabled
 
 ## Usage
 
@@ -92,6 +93,8 @@ TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate a
 TLS Ceritificate | N/A | `--tls-cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
 TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
 TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
+Username | N/A | `--username` | Specify the username to validate using basic authentication | N/A
+Password | N/A | `--password` | Specify the password to validate using basic authentication. **Depends on `--username`** | N/A
 
 ## References
 
@@ -180,6 +183,20 @@ expose_headers = ["*", "authorization"]
 max_age = 600
 request_headers = ["x-app-version"]
 request_method = "GET"
+```
+
+### Basic Authentication
+
+Basic Authentication is supported to deny requests when credentials are invalid.
+You must provide the allowed `username` and `password` either by using the CLI
+options `--username` along with the desired username and `--password` along with
+the desired password, or by specifying such values through the configuration
+TOML file.
+
+```toml
+[basic_auth]
+username = "John"
+password = "Appleseed"
 ```
 
 ## Release

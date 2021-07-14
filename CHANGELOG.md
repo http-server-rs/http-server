@@ -2,6 +2,20 @@
 
 <Empty>
 
+<a name="v0.5.0"></a>
+## v0.5.0 (2021-07-13)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Features
+
+* Support Basic Authorization using the `--username` and `--password` options
+
+#### Improvements
+
+* Middleware chains support early return in case of errors. This is introduced
+to support denying unauthorized HTTP requests when Basic Authorization is active
+
 <a name="v0.4.1"></a>
 ## v0.4.1 (2021-07-12)
 

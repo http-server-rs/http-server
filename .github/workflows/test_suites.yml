@@ -40,5 +40,5 @@ jobs:
 
       - name: Run "basic_auth" test suite
         env:
-          SUITE: 'basic-auth'
-        run: ./scripts/test_suite.sh --username "john" --password "appleseed"
+          SUITE: 'basic_auth'
+        run: ./scripts/test_suite.sh '--username john --password appleseed'
