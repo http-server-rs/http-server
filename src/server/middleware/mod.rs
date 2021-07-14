@@ -1,9 +1,9 @@
+pub mod basic_auth;
 pub mod cors;
 pub mod gzip;
 
 use anyhow::Error;
 use futures::Future;
-use http::{Request, Response};
 use hyper::Body;
 use std::convert::TryFrom;
 use std::pin::Pin;
@@ -12,27 +12,30 @@ use tokio::sync::Mutex;
 
 use crate::config::Config;
 
+use self::basic_auth::make_basic_auth_middleware;
 use self::cors::make_cors_middleware;
 use self::gzip::make_gzip_compression_middleware;
 
+/// Middleware HTTP Response which expands to a `Arc<Mutex<http::Request<T>>>`
+pub type Request<T> = Arc<Mutex<http::Request<T>>>;
+
+/// Middleware HTTP Response which expands to a `Arc<Mutex<http::Response<T>>>`
+pub type Response<T> = Arc<Mutex<http::Response<T>>>;
+
 /// Middleware chain `Result` which specifies the `Err` variant as a
 /// HTTP response.
-pub type Result = std::result::Result<(), Response<Body>>;
+pub type Result = std::result::Result<(), http::Response<Body>>;
 
 /// Middleware chain to execute before the main handler digests the
 /// HTTP request. No HTTP response is available at this point.
-pub type MiddlewareBefore = Box<
-    dyn Fn(&mut Request<Body>) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>> + Send + Sync,
->;
+pub type MiddlewareBefore =
+    Box<dyn Fn(Request<Body>) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>> + Send + Sync>;
 
 /// Middleware chain to execute after the main handler digests the
 /// HTTP request. The HTTP response is created by the handler and
 /// consumed by every middleware after chain.
 pub type MiddlewareAfter = Box<
-    dyn Fn(
-            Arc<Request<Body>>,
-            Arc<Mutex<Response<Body>>>,
-        ) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>>
+    dyn Fn(Request<Body>, Response<Body>) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>>
         + Send
         + Sync,
 >;
@@ -44,7 +47,7 @@ pub type MiddlewareAfter = Box<
 /// "Middleware Before" chain is executed but before any "Middleware After"
 /// chain is executed
 pub type Handler = Box<
-    dyn Fn(Arc<Request<Body>>) -> Pin<Box<dyn Future<Output = Response<Body>> + Send + Sync>>
+    dyn Fn(Request<Body>) -> Pin<Box<dyn Future<Output = http::Response<Body>> + Send + Sync>>
         + Send
         + Sync,
 >;
@@ -74,14 +77,19 @@ impl Middleware {
     /// Then performs the handler operations on the HTTP Request
     /// and finally executes the functions on the "after" chain
     /// with the HTTP Response from the handler
-    pub async fn handle(&self, mut request: Request<Body>, handler: Handler) -> Response<Body> {
+    pub async fn handle(
+        &self,
+        request: http::Request<Body>,
+        handler: Handler,
+    ) -> http::Response<Body> {
+        let request = Arc::new(Mutex::new(request));
+
         for fx in self.before.iter() {
-            if let Err(err) = fx(&mut request).await {
+            if let Err(err) = fx(Arc::clone(&request)).await {
                 return err;
             }
         }
 
-        let request = Arc::new(request);
         let response = handler(Arc::clone(&request)).await;
         let response = Arc::new(Mutex::new(response));
 
@@ -111,6 +119,12 @@ impl TryFrom<Arc<Config>> for Middleware {
 
     fn try_from(config: Arc<Config>) -> std::result::Result<Self, Self::Error> {
         let mut middleware = Middleware::default();
+
+        if let Some(basic_auth_config) = config.basic_auth() {
+            let basic_auth_middleware = make_basic_auth_middleware(basic_auth_config);
+
+            middleware.before(basic_auth_middleware);
+        }
 
         if let Some(cors_config) = config.cors() {
             let cors_middleware = make_cors_middleware(cors_config);

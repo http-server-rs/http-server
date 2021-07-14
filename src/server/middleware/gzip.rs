@@ -10,7 +10,7 @@ use super::MiddlewareAfter;
 
 pub fn make_gzip_compression_middleware() -> MiddlewareAfter {
     Box::new(
-        move |request: Arc<Request<Body>>, response: Arc<Mutex<Response<Body>>>| {
+        move |request: Arc<Mutex<Request<Body>>>, response: Arc<Mutex<Response<Body>>>| {
             Box::pin(async move {
                 compress_http_response(request, response)
                     .await

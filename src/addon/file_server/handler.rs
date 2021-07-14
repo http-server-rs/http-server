@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::SystemTime;
+use tokio::sync::Mutex;
 
 use crate::server::middleware::Handler;
 
@@ -20,12 +21,17 @@ use super::{Entry, ScopedFileSystem};
 
 /// Creates a `middleware::Handler` which makes use of the provided `FileExplorer`
 pub fn make_file_server_handler(handler: Arc<FileServerHandler>) -> Handler {
-    Box::new(move |request: Arc<Request<Body>>| {
+    Box::new(move |request: Arc<Mutex<Request<Body>>>| {
         let handler = Arc::clone(&handler);
-        let req_path = request.uri().to_string();
+        let request = Arc::clone(&request);
 
         Box::pin(async move {
-            if request.method() == Method::GET {
+            let request = Arc::clone(&request);
+            let request_lock = request.lock().await;
+            let req_path = request_lock.uri().to_string();
+            let req_method = request_lock.method();
+
+            if req_method == Method::GET {
                 return handler
                     .resolve(req_path)
                     .await

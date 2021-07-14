@@ -28,7 +28,7 @@ pub fn make_cors_middleware(cors_config: CorsConfig) -> MiddlewareAfter {
     let cors_headers = cors.make_http_headers();
 
     Box::new(
-        move |_: Arc<Request<Body>>, response: Arc<Mutex<Response<Body>>>| {
+        move |_: Arc<Mutex<Request<Body>>>, response: Arc<Mutex<Response<Body>>>| {
             let cors_headers = cors_headers.clone();
             let response = Arc::clone(&response);
 

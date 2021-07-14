@@ -18,8 +18,13 @@ const IGNORED_CONTENT_TYPE: [&str; 6] = [
     "video",
 ];
 
-pub fn is_encoding_accepted(request: Arc<Request<Body>>) -> Result<bool> {
-    if let Some(accept_encoding) = request.headers().get(http::header::ACCEPT_ENCODING) {
+pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> Result<bool> {
+    if let Some(accept_encoding) = request
+        .lock()
+        .await
+        .headers()
+        .get(http::header::ACCEPT_ENCODING)
+    {
         let accept_encoding = accept_encoding.to_str()?;
 
         return Ok(accept_encoding
@@ -51,10 +56,10 @@ pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Body>>>) 
 }
 
 pub async fn should_compress(
-    request: Arc<Request<Body>>,
+    request: Arc<Mutex<Request<Body>>>,
     response: Arc<Mutex<Response<Body>>>,
 ) -> Result<bool> {
-    Ok(is_encoding_accepted(request)?
+    Ok(is_encoding_accepted(request).await?
         && is_compressable_content_type(Arc::clone(&response)).await?)
 }
 
@@ -68,7 +73,7 @@ pub fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
 }
 
 pub async fn compress_http_response(
-    request: Arc<Request<Body>>,
+    request: Arc<Mutex<Request<Body>>>,
     response: Arc<Mutex<Response<Body>>>,
 ) -> Result<()> {
     if let Ok(compressable) = should_compress(Arc::clone(&request), Arc::clone(&response)).await {
@@ -112,9 +117,11 @@ pub async fn compress_http_response(
 
 mod tests {
     use http::response::Builder as HttpResponseBuilder;
-    use hyper::{Body, Request, Response};
+    use hyper::{Body, Request};
     use std::sync::Arc;
     use tokio::sync::Mutex;
+
+    use crate::server::middleware;
 
     #[allow(unused_imports)]
     use super::*;
@@ -122,7 +129,7 @@ mod tests {
     #[allow(dead_code)]
     fn make_gzip_request_response(
         accept_encoding_gzip: bool,
-    ) -> (Arc<Request<Body>>, Arc<Mutex<Response<Body>>>) {
+    ) -> (middleware::Request<Body>, middleware::Response<Body>) {
         let file = std::include_bytes!("../../../assets/test_file.hbs");
         let request = if accept_encoding_gzip {
             let mut req = Request::new(Body::empty());
@@ -132,9 +139,9 @@ mod tests {
                 HeaderValue::from_str("gzip, deflate").unwrap(),
             );
 
-            Arc::new(req)
+            Arc::new(Mutex::new(req))
         } else {
-            Arc::new(Request::new(Body::empty()))
+            Arc::new(Mutex::new(Request::new(Body::empty())))
         };
         let response_builder =
             HttpResponseBuilder::new().header(http::header::CONTENT_TYPE, "text/html");
