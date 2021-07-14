@@ -45,6 +45,12 @@ pub struct Cli {
     /// Enable GZip compression for HTTP Responses
     #[structopt(long = "gzip")]
     pub gzip: bool,
+    /// Specifies username for basic authentication
+    #[structopt(long = "username")]
+    pub username: Option<String>,
+    /// Specifies password for basic authentication
+    #[structopt(long = "password")]
+    pub password: Option<String>,
 }
 
 impl Cli {
@@ -67,6 +73,8 @@ impl Default for Cli {
             tls_key_algorithm: PrivateKeyAlgorithm::Rsa,
             cors: false,
             gzip: false,
+            username: None,
+            password: None,
         }
     }
 }
@@ -178,6 +186,45 @@ mod tests {
         let mut expect = Cli::default();
 
         expect.gzip = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_basic_auth() {
+        let from_args = Cli::from_str_args(vec![
+            "http-server",
+            "--username",
+            "John",
+            "--password",
+            "Appleseed",
+        ]);
+        let mut expect = Cli::default();
+
+        expect.username = Some(String::from("John"));
+        expect.password = Some(String::from("Appleseed"));
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_username_but_not_password() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--username", "John"]);
+        let mut expect = Cli::default();
+
+        expect.username = Some(String::from("John"));
+        expect.password = None;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_password_but_not_username() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--password", "Appleseed"]);
+        let mut expect = Cli::default();
+
+        expect.username = None;
+        expect.password = Some(String::from("Appleseed"));
 
         assert_eq!(from_args, expect);
     }

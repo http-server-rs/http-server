@@ -5,6 +5,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::basic_auth::BasicAuthConfig;
 use super::compression::CompressionConfig;
 use super::cors::CorsConfig;
 use super::tls::TlsConfigFile;
@@ -20,6 +21,7 @@ pub struct ConfigFile {
     pub tls: Option<TlsConfigFile>,
     pub cors: Option<CorsConfig>,
     pub compression: Option<CompressionConfig>,
+    pub basic_auth: Option<BasicAuthConfig>,
 }
 
 impl ConfigFile {
@@ -256,5 +258,25 @@ mod tests {
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 
         assert!(config.compression.unwrap().gzip);
+    }
+
+    #[test]
+    fn parses_config_with_basic_auth() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 7878
+
+            [basic_auth]
+            username = "johnappleseed"
+            password = "john::likes::apples!"
+        "#;
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert!(config.basic_auth.is_some());
+
+        let basic_auth = config.basic_auth.unwrap();
+
+        assert_eq!(basic_auth.username, String::from("johnappleseed"));
+        assert_eq!(basic_auth.password, String::from("john::likes::apples!"));
     }
 }
