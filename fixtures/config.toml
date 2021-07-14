@@ -23,3 +23,7 @@ port = 7878
 
 # [compression]
 # gzip = true
+
+# [basic_auth]
+# username = "John"
+# password = "Appleseed"
