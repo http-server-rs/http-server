@@ -2,6 +2,16 @@
 
 <Empty>
 
+<a name="v0.5.1"></a>
+## v0.5.1 (2021-07-19)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Fixes
+
+* Fix missing HTML "charset" `meta` tag causing weird renders on Windows 10
+machines. Thanks to @ttys3 for the contribution! [PR25](https://github.com/EstebanBorai/http-server/pull/25)
+
 <a name="v0.5.0"></a>
 ## v0.5.0 (2021-07-13)
 
