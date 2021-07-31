@@ -7,7 +7,3 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
-reviewers:
-  - EstebanBorai
-assignes:
-  - EstebanBorai
