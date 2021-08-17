@@ -2,6 +2,15 @@
 
 <Empty>
 
+<a name="v0.5.3"></a>
+## v0.5.3 (2021-08-16)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Fixes
+
+* Dependencies update
+
 <a name="v0.5.2"></a>
 ## v0.5.2 (2021-08-9)
 
