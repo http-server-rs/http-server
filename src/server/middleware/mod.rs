@@ -10,6 +10,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+use super::handler::Handler;
 use crate::config::Config;
 
 use self::basic_auth::make_basic_auth_middleware;
@@ -36,18 +37,6 @@ pub type MiddlewareBefore =
 /// consumed by every middleware after chain.
 pub type MiddlewareAfter = Box<
     dyn Fn(Request<Body>, Response<Body>) -> Pin<Box<dyn Future<Output = Result> + Send + Sync>>
-        + Send
-        + Sync,
->;
-
-/// The main handler for the HTTP request, a HTTP response is created
-/// as a result of this handler.
-///
-/// This handler will be executed against the HTTP request after every
-/// "Middleware Before" chain is executed but before any "Middleware After"
-/// chain is executed
-pub type Handler = Box<
-    dyn Fn(Request<Body>) -> Pin<Box<dyn Future<Output = http::Response<Body>> + Send + Sync>>
         + Send
         + Sync,
 >;
