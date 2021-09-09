@@ -2,6 +2,21 @@
 
 <Empty>
 
+<a name="v0.5.4"></a>
+## v0.5.4 (2021-09-09)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Feature
+
+* Disengage `FileServer` implementation from `FileServerHandler`
+
+> This will open space for incomming addons/capabilities
+
+#### Fixes
+
+* Dependencies update
+
 <a name="v0.5.3"></a>
 ## v0.5.3 (2021-08-16)
 
