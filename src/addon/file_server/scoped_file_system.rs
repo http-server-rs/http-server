@@ -101,10 +101,8 @@ impl ScopedFileSystem {
 
     async fn open(path: PathBuf) -> std::io::Result<Entry> {
         let mut open_options = OpenOptions::new();
-        open_options.read(true);
-
         let entry_path: PathBuf = path.clone();
-        let file = open_options.open(path).await?;
+        let file = open_options.read(true).open(path).await?;
         let metadata = file.metadata().await?;
 
         if metadata.is_dir() {

@@ -112,6 +112,10 @@ impl<'a> FileServer {
                     .status(StatusCode::NOT_FOUND)
                     .body(Body::from(err.to_string()))
                     .expect("Failed to build response")),
+                ErrorKind::PermissionDenied => Ok(HttpResponseBuilder::new()
+                    .status(StatusCode::FORBIDDEN)
+                    .body(Body::from(err.to_string()))
+                    .expect("Failed to build response")),
                 _ => Ok(HttpResponseBuilder::new()
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from(err.to_string()))
