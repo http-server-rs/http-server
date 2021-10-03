@@ -210,7 +210,7 @@ git tag -a <version> -m <message>
 **Example**
 
 ```sh
-git tag -a  v0.1.0 -m "First release"
+git tag -a v0.1.0 -m "First release"
 ```
 
 > Tags must follow semver conventions
