@@ -7,7 +7,22 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Builds for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name:
+          - linux
+          - macos
+          - windows
+
+        include:
+          - name: linux
+            os: ubuntu-latest
+          - name: windows
+            os: windows-latest
+          - name: macos
+            os: macos-latest
 
     steps:
       - uses: actions/checkout@v2

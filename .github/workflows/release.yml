@@ -35,6 +35,7 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+
       - run: cargo login ${CRATES_IO_TOKEN}
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
