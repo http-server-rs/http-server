@@ -2,6 +2,19 @@
 
 <Empty>
 
+<a name="v0.5.5"></a>
+## v0.5.5 (2021-10-03)
+
+> Requires Rust: rustc 1.52.1 (9bc8c42bb 2021-05-09)
+
+#### Feature
+
+* Implements support for uploading artifacts when publishing
+
+#### Fixes
+
+* Dependencies update
+
 <a name="v0.5.4"></a>
 ## v0.5.4 (2021-09-09)
 
