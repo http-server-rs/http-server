@@ -1,9 +1,9 @@
-name: Upload Artifacts
+name: upload_artifacts
 
 on:
   release:
     types:
-      - published
+      - created
 
 jobs:
   build:
