@@ -1,0 +1,66 @@
+name: Upload Artifacts
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    name: Setup workflows for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        name:
+          - linux
+          - macos
+          - windows
+
+      include:
+        - name: linux
+          os: ubuntu-latest
+          artifact_name: http-server
+          asset_name: http-server
+
+        - name: macos
+          os: macos-linux
+          artifact_name: http-server
+          asset_name: http-server
+
+        - name: windows
+          os: windows-latest
+          artifact_name: http-server
+          asset_name: http-server.exe
+
+    steps:
+      - name: Checkout project files
+        uses: actions/checkout@v2
+
+      - name: Cache .cargo and target
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo
+            ./target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-build
+
+      - name: Builds artifacts for {{ matrix.os }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --locked
+
+      - name: Upload release artifacts
+        uses: actions/github-script@v5
+        env:
+          ARTIFACT_NAME: ${{ matrix.artifact_name }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+        with:
+          script: |
+            const script = require('./.github/workflows/scripts/upload-artifacts.js');
+            console.log(script({ github, context }));
