@@ -3,7 +3,7 @@ use async_stream::stream;
 use futures::TryFutureExt;
 use hyper::server::accept::Accept;
 use hyper::server::Builder;
-use rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
+use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::io::Error;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -22,13 +22,14 @@ impl Https {
     }
 
     fn make_tls_cfg(&self) -> Result<Arc<ServerConfig>> {
-        let (cert, key) = (self.cert.clone(), self.key.clone());
-        let mut cfg = ServerConfig::new(NoClientAuth::new());
+        let (certs, private_key) = (self.cert.clone(), self.key.clone());
+        let config = ServerConfig::builder()
+            .with_safe_defaults()
+            .with_no_client_auth()
+            .with_single_cert(certs, private_key)
+            .map_err(|err| anyhow::Error::new(err))?;
 
-        cfg.set_single_cert(cert, key)?;
-        cfg.set_protocols(&[b"h2".to_vec(), b"http/1.1".to_vec()]);
-
-        Ok(Arc::new(cfg))
+        Ok(Arc::new(config))
     }
 
     pub async fn make_server(
