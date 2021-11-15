@@ -317,9 +317,9 @@ dependencies = [
 
 [[package]]
 name = "dhat"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "831575a3f71e26e99f5a290b7f8cba0f19222fbf9917855db226e1a665b97bc7"
+checksum = "4685e5f213847f016a29d207b91c9cb873abaf6a5f9a033cfacf213c80816bd4"
 dependencies = [
  "backtrace",
  "lazy_static",
@@ -548,7 +548,7 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "0.5.6"
+version = "0.5.4"
 dependencies = [
  "anyhow",
  "async-stream",
