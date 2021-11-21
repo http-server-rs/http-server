@@ -104,7 +104,7 @@ impl<'a> FileServer {
             Ok(entry) => match entry {
                 Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
                 Entry::File(file) => {
-                    make_http_file_response(file, CacheControlDirective::MaxAge(2500)).await
+                    make_http_file_response(*file, CacheControlDirective::MaxAge(2500)).await
                 }
             },
             Err(err) => match err.kind() {

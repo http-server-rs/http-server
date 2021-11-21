@@ -32,7 +32,7 @@ impl Directory {
 /// `ScopedFileSystem`
 #[derive(Debug)]
 pub enum Entry {
-    File(File),
+    File(Box<File>),
     Directory(Directory),
 }
 
@@ -109,7 +109,7 @@ impl ScopedFileSystem {
             return Ok(Entry::Directory(Directory { path: entry_path }));
         }
 
-        Ok(Entry::File(File::new(entry_path, file, metadata)))
+        Ok(Entry::File(Box::new(File::new(entry_path, file, metadata))))
     }
 }
 
