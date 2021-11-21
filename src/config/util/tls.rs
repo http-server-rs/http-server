@@ -40,7 +40,7 @@ pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
         .fill_buf()
         .context("Failed to read cerficate bytes.")?;
 
-    ensure!(bytes.len() == 0, "The provided certificate is empty");
+    ensure!(bytes.is_empty(), "The provided certificate is empty");
 
     let mut reader = Reader::init(bytes);
 

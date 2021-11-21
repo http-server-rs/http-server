@@ -41,6 +41,7 @@ pub type MiddlewareAfter = Box<
         + Sync,
 >;
 
+#[derive(Default)]
 pub struct Middleware {
     before: Vec<MiddlewareBefore>,
     after: Vec<MiddlewareAfter>,
@@ -91,15 +92,6 @@ impl Middleware {
         Arc::try_unwrap(response)
             .expect("There's one or more reference/s being hold by a middleware chain.")
             .into_inner()
-    }
-}
-
-impl Default for Middleware {
-    fn default() -> Self {
-        Middleware {
-            before: Vec::new(),
-            after: Vec::new(),
-        }
     }
 }
 

@@ -77,15 +77,11 @@ impl Server {
             server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
         if self.config.verbose() {
-            println!("Serving HTTP: http://{}", address.to_string());
+            println!("Serving HTTP: http://{}", address);
 
             if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
                 if let Ok(ip) = local_ip_address::local_ip() {
-                    println!(
-                        "Local Network IP: http://{}:{}",
-                        ip.to_string(),
-                        self.config.port()
-                    );
+                    println!("Local Network IP: http://{}:{}", ip, self.config.port());
                 }
             }
         }
@@ -106,7 +102,7 @@ impl Server {
         let server = https_server_builder.make_server(address).await.unwrap();
 
         if self.config.verbose() {
-            println!("Serving HTTPS: {}", address.to_string());
+            println!("Serving HTTPS: {}", address);
         }
 
         if let Err(e) = server

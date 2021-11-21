@@ -19,7 +19,7 @@ use crate::config::cors::CorsConfig;
 /// Access-Control-Request-Method header
 ///
 /// Refer to CORS here: https://www.w3.org/wiki/CORS
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Cors {
     /// The Access-Control-Allow-Credentials response header tells browsers
     /// whether to expose the response to frontend JavaScript code when the
@@ -157,21 +157,6 @@ impl Cors {
         }
 
         cors_headers
-    }
-}
-
-impl Default for Cors {
-    fn default() -> Self {
-        Cors {
-            allow_origin: None,
-            allow_methods: None,
-            allow_headers: None,
-            allow_credentials: false,
-            max_age: None,
-            expose_headers: None,
-            request_headers: None,
-            request_method: None,
-        }
     }
 }
 

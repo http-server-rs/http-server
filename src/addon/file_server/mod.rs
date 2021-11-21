@@ -149,7 +149,7 @@ impl<'a> FileServer {
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
-        for entry in entries.into_iter() {
+        for entry in entries {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
             let created_at = if let Ok(time) = metadata.created() {

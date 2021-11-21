@@ -37,7 +37,7 @@ impl ConfigFile {
             Ok(config) => Ok(config),
             Err(err) => Err(Error::msg(format!(
                 "Failed to parse config from file. {}",
-                err.to_string()
+                err
             ))),
         }
     }

@@ -27,7 +27,7 @@ impl Https {
             .with_safe_defaults()
             .with_no_client_auth()
             .with_single_cert(certs, private_key)
-            .map_err(|err| anyhow::Error::new(err))?;
+            .map_err(anyhow::Error::new)?;
 
         Ok(Arc::new(config))
     }

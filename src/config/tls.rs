@@ -10,6 +10,7 @@ use super::util::tls::{load_cert, load_private_key, PrivateKeyAlgorithm};
 pub struct TlsConfig {
     cert: Vec<Certificate>,
     key: PrivateKey,
+    #[allow(dead_code)]
     key_algorithm: PrivateKeyAlgorithm,
 }
 
