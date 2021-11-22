@@ -28,7 +28,7 @@ harness = false
 dhat-profiling = ["dhat"]
 
 [dependencies]
-anyhow = "1.0.45"
+anyhow = "1.0.48"
 async-stream = "0.3.2"
 chrono = "0.4.19"
 dhat = { version = "0.2.2", optional = true }
