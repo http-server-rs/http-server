@@ -317,9 +317,9 @@ dependencies = [
 
 [[package]]
 name = "dhat"
-version = "0.2.2"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "831575a3f71e26e99f5a290b7f8cba0f19222fbf9917855db226e1a665b97bc7"
+checksum = "42c9f82890824583b2cfc03d524616ff7119d27b74bd1e74799c122d509df288"
 dependencies = [
  "backtrace",
  "lazy_static",
