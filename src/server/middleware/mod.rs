@@ -1,6 +1,7 @@
 pub mod basic_auth;
 pub mod cors;
 pub mod gzip;
+pub mod logger;
 
 use anyhow::Error;
 use futures::Future;
@@ -16,6 +17,7 @@ use crate::config::Config;
 use self::basic_auth::make_basic_auth_middleware;
 use self::cors::make_cors_middleware;
 use self::gzip::make_gzip_compression_middleware;
+use self::logger::make_logger_middleware;
 
 /// Middleware HTTP Response which expands to a `Arc<Mutex<http::Request<T>>>`
 pub type Request<T> = Arc<Mutex<http::Request<T>>>;
@@ -118,6 +120,8 @@ impl TryFrom<Arc<Config>> for Middleware {
                 middleware.after(make_gzip_compression_middleware());
             }
         }
+
+        middleware.after(make_logger_middleware());
 
         Ok(middleware)
     }
