@@ -51,6 +51,9 @@ pub struct Cli {
     /// Specifies password for basic authentication
     #[structopt(long = "password")]
     pub password: Option<String>,
+    /// Prints HTTP request and response details to stdout
+    #[structopt(long = "logger")]
+    pub logger: bool,
 }
 
 impl Cli {
@@ -75,6 +78,7 @@ impl Default for Cli {
             gzip: false,
             username: None,
             password: None,
+            logger: false,
         }
     }
 }
@@ -225,6 +229,16 @@ mod tests {
 
         expect.username = None;
         expect.password = Some(String::from("Appleseed"));
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_logger() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--logger"]);
+        let mut expect = Cli::default();
+
+        expect.logger = true;
 
         assert_eq!(from_args, expect);
     }

@@ -22,6 +22,7 @@ pub struct ConfigFile {
     pub cors: Option<CorsConfig>,
     pub compression: Option<CompressionConfig>,
     pub basic_auth: Option<BasicAuthConfig>,
+    pub logger: Option<bool>,
 }
 
 impl ConfigFile {
@@ -82,11 +83,12 @@ mod tests {
 
         root_dir.push("./fixtures");
 
+        assert!(config.logger.is_none());
+        assert!(config.compression.is_none());
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
         assert_eq!(config.verbose, Some(true));
         assert_eq!(config.root_dir, Some(root_dir));
-        assert_eq!(config.compression, None);
     }
 
     #[test]
@@ -278,5 +280,17 @@ mod tests {
 
         assert_eq!(basic_auth.username, String::from("johnappleseed"));
         assert_eq!(basic_auth.password, String::from("john::likes::apples!"));
+    }
+
+    #[test]
+    fn parses_config_with_logger() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 7878
+            logger = true
+        "#;
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert_eq!(config.logger, Some(true));
     }
 }
