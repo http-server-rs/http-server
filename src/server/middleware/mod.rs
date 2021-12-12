@@ -121,7 +121,11 @@ impl TryFrom<Arc<Config>> for Middleware {
             }
         }
 
-        middleware.after(make_logger_middleware());
+        if let Some(should_log) = config.logger() {
+            if should_log {
+                middleware.after(make_logger_middleware());
+            }
+        }
 
         Ok(middleware)
     }

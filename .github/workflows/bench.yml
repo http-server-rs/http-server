@@ -34,3 +34,6 @@ jobs:
 
       - name: "Bench w/ Basic Authentication"
         run: ./scripts/bench.sh '--username "john" --password "appleseed"'
+
+      - name: "Bench w/ Logger"
+        run: ./scripts/bench.sh '--logger'

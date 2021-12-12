@@ -30,6 +30,7 @@ pub struct Config {
     cors: Option<CorsConfig>,
     compression: Option<CompressionConfig>,
     basic_auth: Option<BasicAuthConfig>,
+    logger: Option<bool>,
 }
 
 impl Config {
@@ -68,6 +69,10 @@ impl Config {
     pub fn basic_auth(&self) -> Option<BasicAuthConfig> {
         self.basic_auth.clone()
     }
+
+    pub fn logger(&self) -> Option<bool> {
+        self.logger
+    }
 }
 
 impl Default for Config {
@@ -87,6 +92,7 @@ impl Default for Config {
             cors: None,
             compression: None,
             basic_auth: None,
+            logger: None,
         }
     }
 }
@@ -137,6 +143,12 @@ impl TryFrom<Cli> for Config {
                 None
             };
 
+        let logger = if cli_arguments.logger {
+            Some(true)
+        } else {
+            None
+        };
+
         Ok(Config {
             host: cli_arguments.host,
             port: cli_arguments.port,
@@ -147,6 +159,7 @@ impl TryFrom<Cli> for Config {
             cors,
             compression,
             basic_auth,
+            logger,
         })
     }
 }
@@ -177,6 +190,7 @@ impl TryFrom<ConfigFile> for Config {
             cors: file.cors,
             compression: file.compression,
             basic_auth: file.basic_auth,
+            logger: file.logger,
         })
     }
 }
