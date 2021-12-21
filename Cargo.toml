@@ -30,6 +30,7 @@ dhat-profiling = ["dhat"]
 [dependencies]
 anyhow = "1.0.53"
 async-stream = "0.3.2"
+async-trait = "0.1.52"
 chrono = "0.4.19"
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.21"
@@ -37,13 +38,14 @@ flate2 = "1.0.22"
 http = "0.2.6"
 http-auth-basic = "0.3.1"
 handlebars = "4.2.1"
-hyper = { version = "0.14.17", features = ["http1", "server", "stream", "tcp"] }
+hyper = { version = "0.14.16", features = ["http1", "server", "stream", "tcp"] }
+hyper-tls = "0.5.0"
 local-ip-address = "0.4.4"
 mime_guess = "2.0.3"
 rustls = "0.20.3"
 rustls-pemfile = "0.3.0"
-tokio = { version = "1.16.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
 termcolor = "1.1.2"
+tokio = { version = "1.16.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tokio-rustls = "0.23.2"
 toml = "0.5.8"
 serde = { version = "1.0.136", features = ["derive"] }

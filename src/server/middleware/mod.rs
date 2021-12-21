@@ -11,7 +11,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use super::handler::Handler;
+use super::handler::RequestHandler;
 use crate::config::Config;
 
 use self::basic_auth::make_basic_auth_middleware;
@@ -72,7 +72,7 @@ impl Middleware {
     pub async fn handle(
         &self,
         request: http::Request<Body>,
-        handler: Handler,
+        handler: Arc<dyn RequestHandler + Send + Sync>,
     ) -> http::Response<Body> {
         let request = Arc::new(Mutex::new(request));
 
@@ -82,8 +82,7 @@ impl Middleware {
             }
         }
 
-        let response = handler(Arc::clone(&request)).await;
-        let response = Arc::new(Mutex::new(response));
+        let response = handler.handle(Arc::clone(&request)).await;
 
         for fx in self.after.iter() {
             if let Err(err) = fx(Arc::clone(&request), Arc::clone(&response)).await {

@@ -23,7 +23,7 @@ jobs:
             ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo-bench
 
-      - name: "Bench de-facto"
+      - name: "Bench de-facto (File Server only)"
         run: ./scripts/bench.sh
 
       - name: "Bench w/ Cross-Origin-Resource-Sharing"
