@@ -115,6 +115,7 @@ pub async fn compress_http_response(
     Ok(())
 }
 
+#[cfg(test)]
 mod tests {
     use http::response::Builder as HttpResponseBuilder;
     use hyper::{Body, Request};

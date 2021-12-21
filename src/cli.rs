@@ -54,6 +54,9 @@ pub struct Cli {
     /// Prints HTTP request and response details to stdout
     #[structopt(long = "logger")]
     pub logger: bool,
+    /// Proxy requests to the provided URL
+    #[structopt(long = "proxy")]
+    pub proxy: Option<String>,
 }
 
 impl Cli {
@@ -79,10 +82,12 @@ impl Default for Cli {
             username: None,
             password: None,
             logger: false,
+            proxy: None,
         }
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
     use super::*;
@@ -239,6 +244,16 @@ mod tests {
         let mut expect = Cli::default();
 
         expect.logger = true;
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_proxy() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--proxy", "https://example.com"]);
+        let mut expect = Cli::default();
+
+        expect.proxy = Some(String::from("https://example.com"));
 
         assert_eq!(from_args, expect);
     }

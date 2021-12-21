@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use http::response::Builder as HttpResponseBuilder;
 use http::StatusCode;
 use hyper::{Body, Method, Request};
@@ -6,7 +7,7 @@ use tokio::sync::Mutex;
 
 use crate::addon::file_server::FileServer;
 
-use super::Handler;
+use super::RequestHandler;
 
 pub struct FileServerHandler {
     file_server: Arc<FileServer>,
@@ -18,39 +19,26 @@ impl FileServerHandler {
 
         FileServerHandler { file_server }
     }
+}
 
-    pub fn handle(&self) -> Handler {
-        let file_server = Arc::clone(&self.file_server);
+#[async_trait]
+impl RequestHandler for FileServerHandler {
+    async fn handle(&self, req: Arc<Mutex<Request<Body>>>) -> Arc<Mutex<http::Response<Body>>> {
+        let request_lock = req.lock().await;
+        let req_path = request_lock.uri().to_string();
+        let req_method = request_lock.method();
 
-        Box::new(move |request: Arc<Mutex<Request<Body>>>| {
-            let file_server = Arc::clone(&file_server);
-            let request = Arc::clone(&request);
+        if req_method == Method::GET {
+            let response = self.file_server.resolve(req_path).await.unwrap();
 
-            Box::pin(async move {
-                let file_server = Arc::clone(&file_server);
-                let request = Arc::clone(&request);
-                let request_lock = request.lock().await;
-                let req_path = request_lock.uri().to_string();
-                let req_method = request_lock.method();
+            return Arc::new(Mutex::new(response));
+        }
 
-                if req_method == Method::GET {
-                    return file_server
-                        .resolve(req_path)
-                        .await
-                        .map_err(|e| {
-                            HttpResponseBuilder::new()
-                                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                                .body(Body::from(e.to_string()))
-                                .expect("Unable to build response")
-                        })
-                        .unwrap();
-                }
-
-                HttpResponseBuilder::new()
-                    .status(StatusCode::METHOD_NOT_ALLOWED)
-                    .body(Body::empty())
-                    .expect("Unable to build response")
-            })
-        })
+        Arc::new(Mutex::new(
+            HttpResponseBuilder::new()
+                .status(StatusCode::METHOD_NOT_ALLOWED)
+                .body(Body::empty())
+                .expect("Unable to build response"),
+        ))
     }
 }

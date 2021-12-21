@@ -2,6 +2,7 @@ pub mod basic_auth;
 pub mod compression;
 pub mod cors;
 pub mod file;
+pub mod proxy;
 pub mod tls;
 pub mod util;
 
@@ -17,6 +18,7 @@ use self::basic_auth::BasicAuthConfig;
 use self::compression::CompressionConfig;
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
+use self::proxy::ProxyConfig;
 use self::tls::TlsConfig;
 
 /// Server instance configuration used on initialization
@@ -31,6 +33,7 @@ pub struct Config {
     compression: Option<CompressionConfig>,
     basic_auth: Option<BasicAuthConfig>,
     logger: Option<bool>,
+    proxy: Option<ProxyConfig>,
 }
 
 impl Config {
@@ -73,6 +76,10 @@ impl Config {
     pub fn logger(&self) -> Option<bool> {
         self.logger
     }
+
+    pub fn proxy(&self) -> Option<ProxyConfig> {
+        self.proxy.clone()
+    }
 }
 
 impl Default for Config {
@@ -93,6 +100,7 @@ impl Default for Config {
             compression: None,
             basic_auth: None,
             logger: None,
+            proxy: None,
         }
     }
 }
@@ -149,6 +157,14 @@ impl TryFrom<Cli> for Config {
             None
         };
 
+        let proxy = if cli_arguments.proxy.is_some() {
+            let proxy_url = cli_arguments.proxy.unwrap();
+
+            Some(ProxyConfig::url(proxy_url))
+        } else {
+            None
+        };
+
         Ok(Config {
             host: cli_arguments.host,
             port: cli_arguments.port,
@@ -160,6 +176,7 @@ impl TryFrom<Cli> for Config {
             compression,
             basic_auth,
             logger,
+            proxy,
         })
     }
 }
@@ -191,6 +208,7 @@ impl TryFrom<ConfigFile> for Config {
             compression: file.compression,
             basic_auth: file.basic_auth,
             logger: file.logger,
+            proxy: file.proxy,
         })
     }
 }

@@ -8,6 +8,7 @@ use std::str::FromStr;
 use super::basic_auth::BasicAuthConfig;
 use super::compression::CompressionConfig;
 use super::cors::CorsConfig;
+use super::proxy::ProxyConfig;
 use super::tls::TlsConfigFile;
 
 #[derive(Debug, Deserialize)]
@@ -23,6 +24,7 @@ pub struct ConfigFile {
     pub compression: Option<CompressionConfig>,
     pub basic_auth: Option<BasicAuthConfig>,
     pub logger: Option<bool>,
+    pub proxy: Option<ProxyConfig>,
 }
 
 impl ConfigFile {
@@ -292,5 +294,23 @@ mod tests {
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 
         assert_eq!(config.logger, Some(true));
+    }
+
+    #[test]
+    fn parses_config_with_proxy() {
+        let file_contents = r#"
+            host = "0.0.0.0"
+            port = 7878
+
+            [proxy]
+            url = "https://example.com"
+        "#;
+        let config = ConfigFile::parse_toml(file_contents).unwrap();
+
+        assert!(config.proxy.is_some());
+
+        let proxy = config.proxy.unwrap();
+
+        assert_eq!(proxy.url, "https://example.com");
     }
 }

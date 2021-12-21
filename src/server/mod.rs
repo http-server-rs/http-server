@@ -35,7 +35,7 @@ impl Server {
             let https_config = config.tls().unwrap();
             let handler = handler.clone();
             let host = config.address().ip();
-            let port = config.address().port() + 1;
+            let port = config.address().port().saturating_add(1);
             let address = SocketAddr::new(host, port);
             let server = Arc::clone(&server);
             let task = tokio::spawn(async move {
