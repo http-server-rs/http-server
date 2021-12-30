@@ -10,7 +10,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v2
 
       - name: Create Release
@@ -25,11 +25,86 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Create Release Notes
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            await github.request(`POST /repos/${{ github.repository }}/releases`, {
+              tag_name: "${{ github.ref }}",
+              generate_release_notes: true
+            });
+
+  build-artifacts:
+    name: 'Build artifacts for ${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+    needs: create-release
+    strategy:
+      matrix:
+        name:
+          - linux
+          - macos
+          - windows
+        include:
+          - name: linux
+            os: ubuntu-latest
+            artifact_name: 'http-server-linux-${{ github.ref }}'
+            asset_name: 'http-server-linux'
+            asset_extension: '.tar.gz'
+          - name: macos
+            os: macos-latest
+            artifact_name: 'http-server-osx-${{ github.ref }}'
+            asset_name: 'http-server-osx'
+            asset_extension: '.tar.gz'
+          - name: windows
+            os: windows-latest
+            artifact_name: 'http-server-windows-${{ github.ref }}.exe'
+            asset_name: 'http-server-windows'
+            asset_extension: '.zip'
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup environment variables
+        shell: bash
+        run: |
+          RELEASE_VERSION=$(echo ${GITHUB_REF:10})
+          echo "asset_name=${{ matrix.asset_name }}-${RELEASE_VERSION}${{ matrix.asset_extension }}" >> $GITHUB_ENV
+
+      - name: Setup Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Build optimized executable
+        run: cargo build --release --locked
+
+      - name: Archive release assets
+        shell: bash
+        run: |
+          cp "target/release/${{ matrix.artifact_name }}" "${{ matrix.artifact_name }}"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z a "${asset_name}" "${{ matrix.artifact_name }}"
+          else
+            tar czf "${asset_name}" "${{ matrix.artifact_name }}"
+          fi
+
+      - name: Attach builded binaries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: http-server*${{ matrix.asset_extension }}
+          file_glob: true
+          tag: ${{ github.ref }}
+
   publish-crate:
     name: Publish to crates.io
     runs-on: ubuntu-latest
+    needs: build-artifacts
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout source code
+        uses: actions/checkout@v2
 
       - uses: actions-rs/toolchain@v1
         with:
