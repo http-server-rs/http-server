@@ -13,18 +13,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v2
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: ''
-          draft: false
-          prerelease: false
-
       - name: Create Release Notes
         uses: actions/github-script@v5
         with:
@@ -48,18 +36,20 @@ jobs:
         include:
           - name: linux
             os: ubuntu-latest
-            artifact_name: 'http-server-linux-${{ github.ref }}'
-            asset_name: 'http-server-linux'
+            artifact_name: 'http-server-linux'
+            asset_name: 'http-server'
             asset_extension: '.tar.gz'
+
           - name: macos
             os: macos-latest
-            artifact_name: 'http-server-osx-${{ github.ref }}'
-            asset_name: 'http-server-osx'
+            artifact_name: 'http-server-macos'
+            asset_name: 'http-server'
             asset_extension: '.tar.gz'
+
           - name: windows
             os: windows-latest
-            artifact_name: 'http-server-windows-${{ github.ref }}.exe'
-            asset_name: 'http-server-windows'
+            artifact_name: 'http-server-windows.exe'
+            asset_name: 'http-server.exe'
             asset_extension: '.zip'
     steps:
       - name: Checkout source code
@@ -68,8 +58,7 @@ jobs:
       - name: Setup environment variables
         shell: bash
         run: |
-          RELEASE_VERSION=$(echo ${GITHUB_REF:10})
-          echo "asset_name=${{ matrix.asset_name }}-${RELEASE_VERSION}${{ matrix.asset_extension }}" >> $GITHUB_ENV
+          RELEASE_VERSION=$(echo ${GITHUB_REF:10}) >> $GITHUB_ENV
 
       - name: Setup Rust Toolchain
         uses: actions-rs/toolchain@v1
@@ -83,19 +72,18 @@ jobs:
       - name: Archive release assets
         shell: bash
         run: |
-          cp "target/release/${{ matrix.artifact_name }}" "${{ matrix.artifact_name }}"
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            7z a "${asset_name}" "${{ matrix.artifact_name }}"
+            cp target/release/http-server.exe ${{ matrix.asset_name }}
           else
-            tar czf "${asset_name}" "${{ matrix.artifact_name }}"
+            cp target/release/http-server "${{ matrix.asset_name }}"
           fi
 
       - name: Attach builded binaries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
+          asset_name: '${{ matrix.os }}http-server'
+          file: '${{ matrix.asset_name }}'
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: http-server*${{ matrix.asset_extension }}
-          file_glob: true
           tag: ${{ github.ref }}
 
   publish-crate:

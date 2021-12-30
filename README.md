@@ -53,6 +53,7 @@ CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://gi
 Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/EstebanBorai/http-server#compression) reference | Disabled
 Verbose | Print server details when running. This doesn't include any logging capabilities. | Disabled
 Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/EstebanBorai/http-server#basic-authentication)  | Disabled
+Logger | Prints HTTP request and response details to stdout | Disabled
 
 ## Usage
 
@@ -73,6 +74,7 @@ Name | Short | Long | Description
 Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sharing allowing any origin
 GZip Compression | N/A | `--gzip` | Enable GZip compression for responses
 Help | N/A | `--help` | Prints help information
+Logger | N/A | `--logger` | Prints HTTP request and response details to stdout
 Version | `-V` | `--version` | Prints version information
 Verbose | `-v` | `--verbose` | Prints output to console
 
