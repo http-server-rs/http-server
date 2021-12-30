@@ -2,6 +2,27 @@
 
 <Empty>
 
+<a name="v0.6.0"></a>
+## v0.6.0 (2021-12-30)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Feature
+
+* Implements logging support using the `--logger` flag.
+* Attach artifacts for Linux, MacOS and Windows on GitHub Releases.
+Kudos to @Emilgardis for openning the issue! [ISSUE#92](https://github.com/EstebanBorai/http-server/issues/92)
+
+#### Fixes
+
+* Update dependencies. Now dependencies are being updated by dependabot every
+monday.
+
+#### Fixes
+
+* Dependencies update
+* Use `release.created` instead of `release.published`
+
 <a name="v0.5.6"></a>
 ## v0.5.6 (2021-10-03)
 
