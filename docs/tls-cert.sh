@@ -29,5 +29,5 @@ echo $PWA
 
 echo "Next steps are:"
 echo "Provide your certificate and key to the HTTP Server as follows"
-echo "http-server --tls --tls_cert $PWD/localhost.crt --tls_key $PWD/localhost.pem"
+echo "http-server --tls --tls-cert $PWD/localhost.crt --tls-key $PWD/localhost.key"
 echo "Note: Keep in mind that Certificate installation may differ depending on OS"
