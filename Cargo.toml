@@ -36,7 +36,7 @@ futures = "0.3.19"
 flate2 = "1.0.22"
 http = "0.2.6"
 http-auth-basic = "0.3.1"
-handlebars = "4.2.0"
+handlebars = "4.2.1"
 hyper = { version = "0.14.16", features = ["http1", "server", "stream", "tcp"] }
 local-ip-address = "0.4.4"
 mime_guess = "2.0.3"
