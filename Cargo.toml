@@ -40,7 +40,7 @@ handlebars = "4.2.1"
 hyper = { version = "0.14.16", features = ["http1", "server", "stream", "tcp"] }
 local-ip-address = "0.4.4"
 mime_guess = "2.0.3"
-rustls = "0.20.2"
+rustls = "0.20.3"
 rustls-pemfile = "0.3.0"
 tokio = { version = "1.16.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
 termcolor = "1.1.2"
