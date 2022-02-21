@@ -42,7 +42,7 @@ hyper = { version = "0.14.16", features = ["http1", "server", "stream", "tcp"] }
 hyper-tls = "0.5.0"
 local-ip-address = "0.4.4"
 mime_guess = "2.0.3"
-rustls = "0.20.3"
+rustls = "0.20.4"
 rustls-pemfile = "0.3.0"
 termcolor = "1.1.2"
 tokio = { version = "1.16.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
