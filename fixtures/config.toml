@@ -27,3 +27,6 @@ port = 7878
 # [basic_auth]
 # username = "John"
 # password = "Appleseed"
+
+# [proxy]
+# url = "https://example.com"

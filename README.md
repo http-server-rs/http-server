@@ -97,6 +97,28 @@ TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `ke
 TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
 Username | N/A | `--username` | Specify the username to validate using basic authentication | N/A
 Password | N/A | `--password` | Specify the password to validate using basic authentication. **Depends on `--username`** | N/A
+Proxy | N/A | `--proxy` | Proxy requests to the provided URL | N/A
+
+## Request Handlers
+
+This HTTP Proxy supports different _Request Handlers_, this determines how each
+incoming HTTP request must be handled, they can't be combinable so you must
+choose one based on your needs.
+
+- [File Server](#file-server-handler)
+- [Proxy](#proxy-handler)
+
+### File Server Handler
+
+Useful for serving files in the provided directory. Navigation is scoped to the
+specified directory, if no directory is provided the CWD will be used.
+
+> This is the default behavior for the HTTP server.
+
+### Proxy Handler
+
+Proxies requests to the provided URL. The URL provided is used as the base URL
+for incoming requests.
 
 ## References
 
@@ -199,6 +221,20 @@ TOML file.
 [basic_auth]
 username = "John"
 password = "Appleseed"
+```
+
+### Proxy
+
+The HTTP Server is able to proxy requests to an specified URL.
+
+By using the proxy the FileExplorer wont be available, the proxy is considered
+a _Request Handler_.
+
+The config TOML file can be used to provide proxy configurations:
+
+```toml
+[proxy]
+url = "https://example.com"
 ```
 
 ## Release
