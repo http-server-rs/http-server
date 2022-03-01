@@ -81,7 +81,7 @@ jobs:
       - name: Attach builded binaries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
-          asset_name: '${{ matrix.os }}http-server'
+          asset_name: 'http-server_${{ matrix.os }}'
           file: '${{ matrix.asset_name }}'
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
