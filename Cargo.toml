@@ -34,7 +34,7 @@ async-trait = "0.1.53"
 chrono = "0.4.19"
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.21"
-flate2 = "1.0.22"
+flate2 = "1.0.23"
 http = "0.2.6"
 http-auth-basic = "0.3.3"
 handlebars = "4.2.2"
