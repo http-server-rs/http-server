@@ -2,7 +2,7 @@ use http::header::USER_AGENT;
 use http::header::{HeaderName, HeaderValue};
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Response, Uri};
-use hyper_tls::HttpsConnector;
+use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -15,7 +15,11 @@ pub struct Proxy {
 
 impl Proxy {
     pub fn new(upstream: &str) -> Self {
-        let https_connector = HttpsConnector::new();
+        let https_connector = HttpsConnectorBuilder::new()
+            .with_webpki_roots()
+            .https_only()
+            .enable_http1()
+            .build();
         let client = Client::builder().build::<_, hyper::Body>(https_connector);
         let upstream = Uri::from_str(upstream).unwrap();
 
