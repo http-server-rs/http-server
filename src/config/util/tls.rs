@@ -31,7 +31,7 @@ impl FromStr for PrivateKeyAlgorithm {
 /// Load certificate on the provided `path` and retrieve it
 /// as an instance of `Vec<Certificate>`.
 pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
-    let file = File::open(path.to_path_buf()).context(format!(
+    let file = File::open(path).context(format!(
         "Unable to find the TLS certificate on: {}",
         path.to_str().unwrap()
     ))?;
@@ -52,7 +52,7 @@ pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
 }
 
 pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<PrivateKey> {
-    let file = File::open(path.to_path_buf())
+    let file = File::open(path)
         .with_context(|| format!("Unable to find the TLS keys on: {}", path.to_str().unwrap()))?;
     let mut reader = BufReader::new(file);
     let keys = match kind {
