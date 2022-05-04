@@ -59,6 +59,7 @@ impl ScopedFileSystem {
     /// to retrieve a `Entry`.
     pub async fn resolve(&self, path: PathBuf) -> std::io::Result<Entry> {
         let entry_path = self.build_relative_path(path);
+        let entry_path = entry_path.canonicalize()?;
 
         ScopedFileSystem::open(entry_path).await
     }
