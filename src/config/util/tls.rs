@@ -1,10 +1,12 @@
 use anyhow::{ensure, Context, Error, Result};
-use rustls::internal::msgs::codec::{Codec, Reader};
+use rustls::internal::msgs::codec::Codec;
+use rustls::Reader;
 use rustls::{Certificate, PrivateKey};
-use rustls_pemfile::{pkcs8_private_keys, rsa_private_keys};
+use rustls_pemfile::{pkcs8_private_keys, rsa_private_keys, Item};
 use serde::Deserialize;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
+use std::iter;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -36,19 +38,10 @@ pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
         path.to_str().unwrap()
     ))?;
     let mut buf_reader = BufReader::new(file);
-    let bytes = buf_reader
-        .fill_buf()
-        .context("Failed to read cerficate bytes.")?;
+    let cert_bytes = &rustls_pemfile::certs(&mut buf_reader).unwrap()[0];
 
-    ensure!(bytes.is_empty(), "The provided certificate is empty");
-
-    let mut reader = Reader::init(bytes);
-
-    if let Some(cert) = Certificate::read(&mut reader) {
-        return Ok(vec![cert]);
-    }
-
-    Err(Error::msg("Failed to read certificate"))
+    ensure!(cert_bytes.len() > 0, "Empty certificate");
+    Ok(vec![Certificate(cert_bytes.to_vec())])
 }
 
 pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<PrivateKey> {
