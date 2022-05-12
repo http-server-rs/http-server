@@ -1,12 +1,9 @@
-use anyhow::{ensure, Context, Error, Result};
-use rustls::internal::msgs::codec::Codec;
-use rustls::Reader;
+use anyhow::{Context, Error, Result};
 use rustls::{Certificate, PrivateKey};
-use rustls_pemfile::{pkcs8_private_keys, rsa_private_keys, Item};
+use rustls_pemfile::{pkcs8_private_keys, rsa_private_keys};
 use serde::Deserialize;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
-use std::iter;
+use std::io::BufReader;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -40,7 +37,6 @@ pub fn load_cert(path: &Path) -> Result<Vec<Certificate>> {
     let mut buf_reader = BufReader::new(file);
     let cert_bytes = &rustls_pemfile::certs(&mut buf_reader).unwrap()[0];
 
-    ensure!(cert_bytes.len() > 0, "Empty certificate");
     Ok(vec![Certificate(cert_bytes.to_vec())])
 }
 
@@ -61,6 +57,5 @@ pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<Priva
         })?,
     };
 
-    ensure!(keys.len() == 1, "Expected a single private key");
     Ok(PrivateKey(keys[0].clone()))
 }

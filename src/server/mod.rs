@@ -105,7 +105,7 @@ impl Server {
             println!("Serving HTTPS: {}", address);
         }
 
-        if let Err(e) = server
+        let server_with_graceful_shutdown = server
             .serve(make_service_fn(|_| {
                 // Move a clone of `handler` into the `service_fn`.
                 let handler = handler.clone();
@@ -116,8 +116,9 @@ impl Server {
                     }))
                 }
             }))
-            .await
-        {
+            .with_graceful_shutdown(crate::utils::signal::shutdown_signal());
+
+        if let Err(e) = server_with_graceful_shutdown.await {
             eprint!("Server Error: {}", e);
         }
     }
