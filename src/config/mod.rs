@@ -34,6 +34,7 @@ pub struct Config {
     basic_auth: Option<BasicAuthConfig>,
     logger: Option<bool>,
     proxy: Option<ProxyConfig>,
+    graceful_shutdown: bool,
 }
 
 impl Config {
@@ -80,6 +81,10 @@ impl Config {
     pub fn proxy(&self) -> Option<ProxyConfig> {
         self.proxy.clone()
     }
+
+    pub fn graceful_shutdown(&self) -> bool {
+        self.graceful_shutdown
+    }
 }
 
 impl Default for Config {
@@ -101,6 +106,7 @@ impl Default for Config {
             basic_auth: None,
             logger: None,
             proxy: None,
+            graceful_shutdown: false,
         }
     }
 }
@@ -177,6 +183,7 @@ impl TryFrom<Cli> for Config {
             basic_auth,
             logger,
             proxy,
+            graceful_shutdown: cli_arguments.graceful_shutdown,
         })
     }
 }
@@ -209,6 +216,7 @@ impl TryFrom<ConfigFile> for Config {
             basic_auth: file.basic_auth,
             logger: file.logger,
             proxy: file.proxy,
+            graceful_shutdown: file.graceful_shutdown,
         })
     }
 }

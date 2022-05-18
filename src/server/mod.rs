@@ -73,9 +73,6 @@ impl Server {
             }
         }));
 
-        let server_with_graceful_shutdown =
-            server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
-
         if self.config.verbose() {
             println!("Serving HTTP: http://{}", address);
 
@@ -86,7 +83,17 @@ impl Server {
             }
         }
 
-        if let Err(e) = server_with_graceful_shutdown.await {
+        if self.config.graceful_shutdown() {
+            let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
+
+            if let Err(e) = graceful.await {
+                eprint!("Server Error: {}", e);
+            }
+
+            return;
+        }
+
+        if let Err(e) = server.await {
             eprint!("Server Error: {}", e);
         }
     }
@@ -100,25 +107,38 @@ impl Server {
         let (cert, key) = https_config.parts();
         let https_server_builder = https::Https::new(cert, key);
         let server = https_server_builder.make_server(address).await.unwrap();
+        let server = server.serve(make_service_fn(|_| {
+            // Move a clone of `handler` into the `service_fn`.
+            let handler = handler.clone();
+
+            async {
+                Ok::<_, Error>(service_fn(move |req| {
+                    service::main_service(handler.to_owned(), req)
+                }))
+            }
+        }));
 
         if self.config.verbose() {
-            println!("Serving HTTPS: {}", address);
+            println!("Serving HTTPS: http://{}", address);
+
+            if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
+                if let Ok(ip) = local_ip_address::local_ip() {
+                    println!("Local Network IP: https://{}:{}", ip, self.config.port());
+                }
+            }
         }
 
-        let server_with_graceful_shutdown = server
-            .serve(make_service_fn(|_| {
-                // Move a clone of `handler` into the `service_fn`.
-                let handler = handler.clone();
+        if self.config.graceful_shutdown() {
+            let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
-                async {
-                    Ok::<_, Error>(service_fn(move |req| {
-                        service::main_service(handler.to_owned(), req)
-                    }))
-                }
-            }))
-            .with_graceful_shutdown(crate::utils::signal::shutdown_signal());
+            if let Err(e) = graceful.await {
+                eprint!("Server Error: {}", e);
+            }
 
-        if let Err(e) = server_with_graceful_shutdown.await {
+            return;
+        }
+
+        if let Err(e) = server.await {
             eprint!("Server Error: {}", e);
         }
     }

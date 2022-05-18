@@ -57,6 +57,9 @@ pub struct Cli {
     /// Proxy requests to the provided URL
     #[structopt(long = "proxy")]
     pub proxy: Option<String>,
+    /// Waits for all requests to fulfill before shutting down the server
+    #[structopt(long = "graceful-shutdown")]
+    pub graceful_shutdown: bool,
 }
 
 impl Cli {
@@ -83,6 +86,7 @@ impl Default for Cli {
             password: None,
             logger: false,
             proxy: None,
+            graceful_shutdown: false,
         }
     }
 }
