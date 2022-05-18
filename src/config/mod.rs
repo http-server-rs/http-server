@@ -119,7 +119,12 @@ impl TryFrom<Cli> for Config {
         let root_dir = if cli_arguments.root_dir.to_str().unwrap() == "./" {
             current_dir().unwrap()
         } else {
-            cli_arguments.root_dir.canonicalize().unwrap()
+            let root_dir = cli_arguments.root_dir.to_str().unwrap();
+
+            cli_arguments
+                .root_dir
+                .canonicalize()
+                .expect(&format!("Failed to find config on: {}", root_dir))
         };
 
         let tls: Option<TlsConfig> = if cli_arguments.tls {
