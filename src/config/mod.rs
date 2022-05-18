@@ -221,7 +221,7 @@ impl TryFrom<ConfigFile> for Config {
             basic_auth: file.basic_auth,
             logger: file.logger,
             proxy: file.proxy,
-            graceful_shutdown: file.graceful_shutdown,
+            graceful_shutdown: file.graceful_shutdown.unwrap_or(false),
         })
     }
 }

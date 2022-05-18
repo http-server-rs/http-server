@@ -6,6 +6,7 @@ port = 7878
 
 # verbose = false
 # root_dir = "./"
+# graceful_shutdown = false
 
 # [tls]
 # cert = "cert.pem"

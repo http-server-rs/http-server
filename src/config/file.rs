@@ -25,7 +25,7 @@ pub struct ConfigFile {
     pub basic_auth: Option<BasicAuthConfig>,
     pub logger: Option<bool>,
     pub proxy: Option<ProxyConfig>,
-    pub graceful_shutdown: bool,
+    pub graceful_shutdown: Option<bool>,
 }
 
 impl ConfigFile {
@@ -86,7 +86,7 @@ mod tests {
 
         root_dir.push("./fixtures");
 
-        assert!(!config.graceful_shutdown);
+        assert!(config.graceful_shutdown.is_none());
         assert!(config.logger.is_none());
         assert!(config.compression.is_none());
         assert_eq!(config.host, host);
@@ -325,6 +325,7 @@ mod tests {
         "#;
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 
-        assert!(config.graceful_shutdown);
+        assert!(config.graceful_shutdown.is_some());
+        assert!(config.graceful_shutdown.unwrap());
     }
 }
