@@ -124,7 +124,7 @@ impl TryFrom<Cli> for Config {
             cli_arguments
                 .root_dir
                 .canonicalize()
-                .expect(&format!("Failed to find config on: {}", root_dir))
+                .unwrap_or_else(|_| panic!("Failed to find config on: {}", root_dir))
         };
 
         let tls: Option<TlsConfig> = if cli_arguments.tls {
