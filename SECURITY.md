@@ -22,8 +22,7 @@ hesitate on contacting software editors by opening an issue or a pull request.
 
 ## Reporting a Vulnerability
 
-If you have found any issue using this solution, please don't hesitate to
-open a Pull Request or send an email to estebanborai@gmail.com if you consider
-the issue of urgent priority.
+If you have found any issue using this solution, please don't hesitate to send
+an email to estebanborai@gmail.com.
 
 [1]: https://github.com/EstebanBorai/http-server#tls-https
