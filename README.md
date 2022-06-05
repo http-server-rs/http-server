@@ -237,6 +237,8 @@ The config TOML file can be used to provide proxy configurations:
 url = "https://example.com"
 ```
 
+## Roadmap
+
 ## Release
 
 In order to create a release you must push a Git tag as follows
