@@ -273,6 +273,70 @@ url = "https://example.com"
 
 ## Roadmap
 
+The following roadmap list features to provide for the version `v1.0.0`.
+
+This roadmap still open for suggestions, if you find that theres a missing
+feature in this list, you would like to work on or expect for the first
+stable release, please contact software editors by opening an issue or a
+discussion.
+
+If you want to contribute to one of these, please make sure
+theres an issue tracking the feature and ping me. Otherwise
+open an issue to be assigned and track the progress there.
+
+- [x] Logging
+  - [x] Request/Response Logging
+  - [x] Service Config Loggins
+- [ ] File Explorer
+  - [x] Modified Date
+  - [x] File Size
+  - [ ] Breadcrumb Navigation
+  - [ ] File Upload
+  - [ ] Filtering
+  - [ ] Sorting
+    - [ ] Sort By: File Name
+    - [ ] Sort By: File Size
+    - [ ] Sort By: File Modified Date
+    - [x] Directories First
+    - [ ] Files First
+- [x] HTTPS/TLS Serving
+  - [x] HTTPS/TLS Support
+- [ ] Compression
+  - [x] `gzip/deflate` Compression
+  - [ ] `brotli` Compression
+- [ ] CORS
+  - [x] Cross Origin Resource Sharing
+    - [x] Allow Credentials
+    - [x] Allow Headers
+    - [x] Allow Methods
+    - [x] Allow Origin
+    - [x] Expose Headers
+    - [x] Max Age
+    - [x] Request Headers
+    - [x] Request Methods
+    - [ ] Multiple Origins (#8)
+- [ ] Cache Control
+  - [ ] `Last-Modified` and `ETag`
+  - [ ] Respond with 304 to `If-Modified-Since`
+- [ ] Partial Request
+  - [ ] `Accept-Ranges`
+  - [ ] `Content-Range`
+  - [ ] `If-Range`
+  - [ ] `If-Match`
+  - [ ] `Range`
+- [x] Standalone Builds
+  - [x] macOS
+  - [x] Linux
+  - [x] Windows
+- [ ] Development Server
+  - [ ] Live Reload
+- [x] Proxy
+  - [x] URL Configuration
+- [x] Basic Authentication
+  - [x] Username
+  - [x] Password
+- [x] Graceful Shutdown
+
 ## Release
 
 In order to create a release you must push a Git tag as follows
