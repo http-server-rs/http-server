@@ -14,6 +14,17 @@ use tokio::fs::OpenOptions;
 
 use super::file::File;
 
+/// The file is being opened or created for a backup or restore operation.
+/// The system ensures that the calling process overrides file security
+/// checks when the process has SE_BACKUP_NAME and SE_RESTORE_NAME privileges.
+/// For more information, see Changing Privileges in a Token.
+/// You must set this flag to obtain a handle to a directory.
+/// A directory handle can be passed to some functions instead of a file handle.
+///
+/// Refer: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+#[cfg(target_os = "windows")]
+const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x02000000;
+
 /// Representation of a OS ScopedFileSystem directory providing the path
 /// (`PathBuf`)
 #[derive(Debug)]
@@ -59,7 +70,6 @@ impl ScopedFileSystem {
     /// to retrieve a `Entry`.
     pub async fn resolve(&self, path: PathBuf) -> std::io::Result<Entry> {
         let entry_path = self.build_relative_path(path);
-        let entry_path = entry_path.canonicalize()?;
 
         ScopedFileSystem::open(entry_path).await
     }
@@ -100,10 +110,29 @@ impl ScopedFileSystem {
             })
     }
 
+    #[cfg(not(target_os = "windows"))]
     async fn open(path: PathBuf) -> std::io::Result<Entry> {
         let mut open_options = OpenOptions::new();
         let entry_path: PathBuf = path.clone();
         let file = open_options.read(true).open(path).await?;
+        let metadata = file.metadata().await?;
+
+        if metadata.is_dir() {
+            return Ok(Entry::Directory(Directory { path: entry_path }));
+        }
+
+        Ok(Entry::File(Box::new(File::new(entry_path, file, metadata))))
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn open(path: PathBuf) -> std::io::Result<Entry> {
+        let mut open_options = OpenOptions::new();
+        let entry_path: PathBuf = path.clone();
+        let file = open_options
+            .read(true)
+            .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
+            .open(path)
+            .await?;
         let metadata = file.metadata().await?;
 
         if metadata.is_dir() {
