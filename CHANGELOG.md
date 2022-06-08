@@ -1,6 +1,66 @@
 ## Unreleased
 
+> **Warning**: This is a manually maintained Changelog, for an automatically maintained version which is provided on every release along with binaries and source code, please visit the [Releases Page](https://github.com/EstebanBorai/http-server/releases).
+
 <Empty>
+
+<a name="v0.7.4"></a>
+## v0.7.4 (2022-06-08)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Fixes
+
+* Access declined opening files on Windows
+
+<a name="v0.7.3"></a>
+## v0.7.3 (2022-06-05)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Fixes
+
+* Update dependencies.
+
+<a name="v0.7.2"></a>
+## v0.7.2 (2022-05-11)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Feature
+
+* Support PEM certificates
+
+#### Fixes
+
+* Update dependencies.
+
+<a name="v0.7.1"></a>
+## v0.7.1 (2022-05-04)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Feature
+
+* Uses Rust TLS instead of Native TLS by @stackinspector
+
+#### Fixes
+
+* Update dependencies.
+
+<a name="v0.7.0"></a>
+## v0.7.0 (2022-02-28)
+
+> Requires Rust: rustc 1.56.1 (59eed8a2a 2021-11-01)
+
+#### Feature
+
+* Introduces Proxy support
+
+#### Fixes
+
+* Update dependencies.
+* Suggestion on how to run server with TLS script by @johan-smits
 
 <a name="v0.6.0"></a>
 ## v0.6.0 (2021-12-30)
