@@ -53,7 +53,7 @@ serde_json = "1.0.82"
 structopt = { version = "0.3.26", default-features = false }
 
 [dev-dependencies]
-criterion = { version = "0.3.5", features = ["async_tokio", "html_reports"] }
+criterion = { version = "0.3.6", features = ["async_tokio", "html_reports"] }
 hyper = { version = "0.14.20", features = ["client"] }
 tokio = { version = "1.19.2", features = ["full"] }
 lazy_static = "1.4.0"
