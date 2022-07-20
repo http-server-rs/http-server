@@ -64,8 +64,9 @@ impl<'a> FileServer {
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
+            let path = path.replace("%20", " ");
 
-            return Ok(PathBuf::from_str(path)?);
+            return Ok(PathBuf::from_str(&path)?);
         }
 
         Ok(PathBuf::from_str("/")?)
@@ -196,11 +197,10 @@ impl<'a> FileServer {
     /// This happens because links should behave relative to the `/` path
     /// which in this case is `http-server/src` instead of system's root path.
     fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
-        // format!("/{}", &entry_path[current_dir_path.len()..])
         let root_dir = root_dir.to_str().unwrap();
         let entry_path = entry_path.to_str().unwrap();
 
-        entry_path[root_dir.len()..].to_string()
+        (&entry_path[root_dir.len()..]).replace(" ", "%20")
     }
 }
 
@@ -216,11 +216,11 @@ mod tests {
     fn makes_dir_entry_link() {
         let root_dir = PathBuf::from_str("/Users/bob/sources/http-server").unwrap();
         let entry_path =
-            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/file_explorer.rs")
+            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/testing stuff/filename with spaces.txt")
                 .unwrap();
 
         assert_eq!(
-            "/src/server/service/file_explorer.rs",
+            "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
             FileServer::make_dir_entry_link(&root_dir, &entry_path)
         );
     }
