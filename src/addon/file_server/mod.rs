@@ -17,6 +17,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::utils::fmt::{format_bytes, format_system_date};
+use crate::utils::url_encode::{decode_uri, encode_uri};
 
 use self::directory_entry::{DirectoryEntry, DirectoryIndex};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
@@ -64,9 +65,8 @@ impl<'a> FileServer {
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
-            let path = path.replace("%20", " ");
 
-            return Ok(PathBuf::from_str(&path)?);
+            return decode_uri(path);
         }
 
         Ok(PathBuf::from_str("/")?)
@@ -199,8 +199,9 @@ impl<'a> FileServer {
     fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
         let root_dir = root_dir.to_str().unwrap();
         let entry_path = entry_path.to_str().unwrap();
+        let path_buf = PathBuf::from_str(&entry_path[root_dir.len()..]).unwrap();
 
-        (&entry_path[root_dir.len()..]).replace(" ", "%20")
+        encode_uri(&path_buf)
     }
 }
 
