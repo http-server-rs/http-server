@@ -2,9 +2,11 @@ use anyhow::{Error, Result};
 use percent_encoding::{
     percent_decode, percent_encode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC,
 };
-use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 use std::str::FromStr;
+
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
 
 pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'-')
