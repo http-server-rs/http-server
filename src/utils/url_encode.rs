@@ -36,7 +36,7 @@ pub fn encode_uri(file_path: &Path) -> String {
                                 bytes.push(wc[1]);
                             }
 
-                            bytes
+                            &bytes
                         }
 
                         #[cfg(not(windows))]
