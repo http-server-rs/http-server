@@ -197,11 +197,9 @@ impl<'a> FileServer {
     /// This happens because links should behave relative to the `/` path
     /// which in this case is `http-server/src` instead of system's root path.
     fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
-        let root_dir = root_dir.to_str().unwrap();
-        let entry_path = entry_path.to_str().unwrap();
-        let path_buf = PathBuf::from_str(&entry_path[root_dir.len()..]).unwrap();
+        let path = entry_path.strip_prefix(root_dir).unwrap();
 
-        encode_uri(&path_buf)
+        encode_uri(&path.to_path_buf())
     }
 }
 
