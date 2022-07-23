@@ -66,7 +66,7 @@ impl<'a> FileServer {
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
 
-            return decode_uri(path);
+            return Ok(decode_uri(path));
         }
 
         Ok(PathBuf::from_str("/")?)

@@ -1,9 +1,7 @@
-use anyhow::{Error, Result};
 use percent_encoding::{
     percent_decode, percent_encode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC,
 };
-use std::path::{PathBuf, Path};
-use std::str::FromStr;
+use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
@@ -54,8 +52,8 @@ pub fn encode_uri(file_path: &Path) -> String {
         .collect::<String>()
 }
 
-pub fn decode_uri(file_path: &str) -> Result<PathBuf> {
-    let path_string = file_path
+pub fn decode_uri(file_path: &str) -> PathBuf {
+    file_path
         .split('/')
         .map(|encoded_part| {
             let decode = percent_decode(encoded_part.as_bytes());
@@ -63,10 +61,7 @@ pub fn decode_uri(file_path: &str) -> Result<PathBuf> {
 
             decode.to_string()
         })
-        .collect::<Vec<String>>()
-        .join("/");
-
-    PathBuf::from_str(&path_string).map_err(|err| Error::msg(err.to_string()))
+        .collect::<PathBuf>()
 }
 
 #[cfg(test)]
@@ -91,7 +86,7 @@ mod tests {
     #[test]
     fn decodes_uri() {
         let file_path = "these%20are%20important%20files/do_not_delete/file%20name.txt";
-        let file_path = decode_uri(&file_path).unwrap();
+        let file_path = decode_uri(&file_path);
         let file_path = file_path.to_str().unwrap();
 
         assert_eq!(
