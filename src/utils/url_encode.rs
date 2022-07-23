@@ -8,6 +8,9 @@ use std::str::FromStr;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
+
 pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'-')
     .remove(b'_')
