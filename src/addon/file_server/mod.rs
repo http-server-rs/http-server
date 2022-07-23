@@ -199,7 +199,7 @@ impl<'a> FileServer {
     fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
         let path = entry_path.strip_prefix(root_dir).unwrap();
 
-        encode_uri(&path.to_path_buf())
+        encode_uri(path)
     }
 }
 

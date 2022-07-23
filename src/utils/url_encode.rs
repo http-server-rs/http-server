@@ -2,7 +2,7 @@ use anyhow::{Error, Result};
 use percent_encoding::{
     percent_decode, percent_encode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC,
 };
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::str::FromStr;
 
 #[cfg(unix)]
@@ -17,7 +17,7 @@ pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'.')
     .remove(b'~');
 
-pub fn encode_uri(file_path: &PathBuf) -> String {
+pub fn encode_uri(file_path: &Path) -> String {
     assert!(!file_path.is_absolute());
 
     file_path
@@ -45,7 +45,7 @@ pub fn encode_uri(file_path: &PathBuf) -> String {
                         component.as_bytes()
                     };
 
-                    percent_encode(&bytes, PERCENT_ENCODE_SET)
+                    percent_encode(bytes, PERCENT_ENCODE_SET)
                 }
             };
 
