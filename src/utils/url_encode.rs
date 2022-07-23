@@ -15,9 +15,10 @@ pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'~');
 
 pub fn encode_uri(file_path: &PathBuf) -> String {
+    assert!(!file_path.is_absolute());
+
     file_path
         .iter()
-        .filter(|c| c.to_str().unwrap().ne("/"))
         .flat_map(|component| {
             let segment = match component.to_str() {
                 Some(component) => utf8_percent_encode(component, PERCENT_ENCODE_SET),
