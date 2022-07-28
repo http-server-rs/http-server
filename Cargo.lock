@@ -581,6 +581,7 @@ dependencies = [
  "lazy_static",
  "local-ip-address",
  "mime_guess",
+ "percent-encoding",
  "rustls",
  "rustls-pemfile",
  "serde",
@@ -895,6 +896,12 @@ dependencies = [
  "smallvec",
  "windows-sys",
 ]
+
+[[package]]
+name = "percent-encoding"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
 name = "pest"
