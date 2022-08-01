@@ -1,6 +1,7 @@
 use percent_encoding::{
     percent_decode, percent_encode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC,
 };
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
@@ -15,6 +16,25 @@ pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'.')
     .remove(b'~');
 
+fn bytes_from_component(comp: &OsStr) -> Vec<u8> {
+    #[cfg(windows)]
+    {
+        let mut bytes = Vec::with_capacity(comp.len() * 2);
+
+        for wc in comp.encode_wide() {
+            let wc = wc.to_be_bytes();
+
+            bytes.push(wc[0]);
+            bytes.push(wc[1]);
+        }
+
+        bytes
+    }
+
+    #[cfg(not(windows))]
+    comp.as_bytes().to_vec()
+}
+
 pub fn encode_uri(file_path: &Path) -> String {
     assert!(!file_path.is_absolute());
 
@@ -24,26 +44,9 @@ pub fn encode_uri(file_path: &Path) -> String {
             let segment = match component.to_str() {
                 Some(component) => utf8_percent_encode(component, PERCENT_ENCODE_SET),
                 None => {
-                    let bytes = {
-                        #[cfg(windows)]
-                        {
-                            let mut bytes = Vec::with_capacity(component.len() * 2);
+                    let bytes = bytes_from_component(component);
 
-                            for wc in component.encode_wide() {
-                                let wc = wc.to_be_bytes();
-
-                                bytes.push(wc[0]);
-                                bytes.push(wc[1]);
-                            }
-
-                            &bytes
-                        }
-
-                        #[cfg(not(windows))]
-                        component.as_bytes()
-                    };
-
-                    percent_encode(bytes, PERCENT_ENCODE_SET)
+                    percent_encode(bytes.as_slice(), PERCENT_ENCODE_SET)
                 }
             };
 
