@@ -1,13 +1,5 @@
-use percent_encoding::{
-    percent_decode, percent_encode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC,
-};
+use percent_encoding::{percent_decode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC};
 use std::path::{Path, PathBuf};
-
-#[cfg(unix)]
-use std::os::unix::ffi::OsStrExt;
-
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 
 pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'-')
@@ -21,31 +13,8 @@ pub fn encode_uri(file_path: &Path) -> String {
     file_path
         .iter()
         .flat_map(|component| {
-            let segment = match component.to_str() {
-                Some(component) => utf8_percent_encode(component, PERCENT_ENCODE_SET),
-                None => {
-                    let bytes = {
-                        #[cfg(windows)]
-                        {
-                            let mut bytes = Vec::with_capacity(component.len() * 2);
-
-                            for wc in component.encode_wide() {
-                                let wc = wc.to_be_bytes();
-
-                                bytes.push(wc[0]);
-                                bytes.push(wc[1]);
-                            }
-
-                            &bytes
-                        }
-
-                        #[cfg(not(windows))]
-                        component.as_bytes()
-                    };
-
-                    percent_encode(bytes, PERCENT_ENCODE_SET)
-                }
-            };
+            let component = component.to_str().unwrap();
+            let segment = utf8_percent_encode(component, PERCENT_ENCODE_SET);
 
             std::iter::once("/").chain(segment)
         })
