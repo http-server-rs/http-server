@@ -688,9 +688,9 @@ checksum = "21a41fed9d98f27ab1c6d161da622a4fa35e8a54a8adc24bbf3ddd0ef70b0e50"
 
 [[package]]
 name = "local-ip-address"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41c5693c571e807a652c01f39f8def84a0950083d698e0f08c2b625a45e75567"
+checksum = "a0267899deb46e9d91fa101571cf146db20466c3eb0bb015a65e3259d8634fb3"
 dependencies = [
  "libc",
  "memalloc",
