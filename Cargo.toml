@@ -46,7 +46,7 @@ percent-encoding = "2.1.0"
 rustls = "0.20.6"
 rustls-pemfile = "1.0.0"
 serde = { version = "1.0.142", features = ["derive"] }
-serde_json = "1.0.82"
+serde_json = "1.0.83"
 structopt = { version = "0.3.26", default-features = false }
 termcolor = "1.1.3"
 tokio = { version = "1.20.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
