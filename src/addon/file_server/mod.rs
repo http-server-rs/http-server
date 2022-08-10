@@ -11,15 +11,16 @@ use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
+use percent_encoding::utf8_percent_encode;
 use std::fs::read_dir;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::utils::fmt::{format_bytes, format_system_date};
-use crate::utils::url_encode::{decode_uri, encode_uri};
+use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
-use self::directory_entry::{DirectoryEntry, DirectoryIndex};
+use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
 
 /// Explorer's Handlebars template filename
@@ -48,7 +49,7 @@ impl<'a> FileServer {
     fn make_handlebars_engine() -> Arc<Handlebars<'a>> {
         let mut handlebars = Handlebars::new();
 
-        let template = std::include_bytes!("./template/explorer.hbs");
+        let template = std::include_bytes!("./template/explorer.html");
         let template = std::str::from_utf8(template).unwrap();
 
         handlebars
@@ -144,9 +145,60 @@ impl<'a> FileServer {
             .expect("Failed to build response"))
     }
 
+    /// Encodes a `PathBuf` component using `PercentEncode` with UTF-8 charset.
+    ///
+    /// # Panics
+    ///
+    /// If the component's `OsStr` representation doesn't belong to valid UTF-8
+    /// this function panics.
+    fn encode_component(comp: Component) -> String {
+        let component = comp
+            .as_os_str()
+            .to_str()
+            .expect("The provided OsStr doesn't belong to the UTF-8 charset.");
+
+        utf8_percent_encode(component, PERCENT_ENCODE_SET).to_string()
+    }
+
+    fn breadcrumbs_from_path(root_dir: &PathBuf, path: &PathBuf) -> Result<Vec<BreadcrumbItem>> {
+        let root_dir_name = root_dir.clone();
+        let root_dir_name = root_dir_name
+            .components()
+            .last()
+            .unwrap()
+            .as_os_str()
+            .to_str()
+            .expect("The first path component is not UTF-8 charset compliant.");
+        let stripped = path
+            .strip_prefix(root_dir)?
+            .components()
+            .map(FileServer::encode_component)
+            .collect::<Vec<String>>();
+
+        let mut breadcrumbs = stripped
+            .iter()
+            .enumerate()
+            .map(|(idx, entry_name)| BreadcrumbItem {
+                entry_name: entry_name.to_owned(),
+                entry_link: format!("/{}", stripped[0..=idx].join("/")),
+            })
+            .collect::<Vec<BreadcrumbItem>>();
+
+        breadcrumbs.insert(
+            0,
+            BreadcrumbItem {
+                entry_name: String::from(root_dir_name),
+                entry_link: String::from("/"),
+            },
+        );
+
+        Ok(breadcrumbs)
+    }
+
     /// Creates a `DirectoryIndex` with the provided `root_dir` and `path`
     /// (HTTP Request URI)
     fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
+        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)?;
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
@@ -182,6 +234,7 @@ impl<'a> FileServer {
 
         Ok(DirectoryIndex {
             entries: directory_entries,
+            breadcrumbs,
         })
     }
 
@@ -209,7 +262,7 @@ mod tests {
     use std::str::FromStr;
     use std::vec;
 
-    use super::FileServer;
+    use super::{BreadcrumbItem, FileServer};
 
     #[test]
     fn makes_dir_entry_link() {
@@ -246,5 +299,44 @@ mod tests {
 
             assert_eq!(sanitized_path, wanted_path);
         }
+    }
+
+    #[test]
+    fn breadcrumbs_from_paths() {
+        let root_dir = PathBuf::from_str("/Users/bob/sources/http-server").unwrap();
+        let entry_path =
+            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/testing stuff/filename with spaces.txt")
+                .unwrap();
+        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &entry_path).unwrap();
+        let expect = vec![
+            BreadcrumbItem {
+                entry_name: String::from("http-server"),
+                entry_link: String::from("/"),
+            },
+            BreadcrumbItem {
+                entry_name: String::from("src"),
+                entry_link: String::from("/src"),
+            },
+            BreadcrumbItem {
+                entry_name: String::from("server"),
+                entry_link: String::from("/src/server"),
+            },
+            BreadcrumbItem {
+                entry_name: String::from("service"),
+                entry_link: String::from("/src/server/service"),
+            },
+            BreadcrumbItem {
+                entry_name: String::from("testing%20stuff"),
+                entry_link: String::from("/src/server/service/testing%20stuff"),
+            },
+            BreadcrumbItem {
+                entry_name: String::from("filename%20with%20spaces.txt"),
+                entry_link: String::from(
+                    "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
+                ),
+            },
+        ];
+
+        assert_eq!(breadcrumbs, expect);
     }
 }
