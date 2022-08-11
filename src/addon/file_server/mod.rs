@@ -11,7 +11,7 @@ use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
-use percent_encoding::utf8_percent_encode;
+use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -179,7 +179,10 @@ impl<'a> FileServer {
             .iter()
             .enumerate()
             .map(|(idx, entry_name)| BreadcrumbItem {
-                entry_name: entry_name.to_owned(),
+                entry_name: percent_decode_str(entry_name)
+                    .decode_utf8()
+                    .expect("The path name is not UTF-8 compliant")
+                    .to_string(),
                 entry_link: format!("/{}", stripped[0..=idx].join("/")),
             })
             .collect::<Vec<BreadcrumbItem>>();
@@ -326,11 +329,11 @@ mod tests {
                 entry_link: String::from("/src/server/service"),
             },
             BreadcrumbItem {
-                entry_name: String::from("testing%20stuff"),
+                entry_name: String::from("testing stuff"),
                 entry_link: String::from("/src/server/service/testing%20stuff"),
             },
             BreadcrumbItem {
-                entry_name: String::from("filename%20with%20spaces.txt"),
+                entry_name: String::from("filename with spaces.txt"),
                 entry_link: String::from(
                     "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
                 ),
