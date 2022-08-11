@@ -49,7 +49,7 @@ impl<'a> FileServer {
     fn make_handlebars_engine() -> Arc<Handlebars<'a>> {
         let mut handlebars = Handlebars::new();
 
-        let template = std::include_bytes!("./template/explorer.html");
+        let template = std::include_bytes!("./template/explorer.hbs");
         let template = std::str::from_utf8(template).unwrap();
 
         handlebars
