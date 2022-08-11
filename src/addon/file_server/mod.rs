@@ -160,9 +160,8 @@ impl<'a> FileServer {
         utf8_percent_encode(component, PERCENT_ENCODE_SET).to_string()
     }
 
-    fn breadcrumbs_from_path(root_dir: &PathBuf, path: &PathBuf) -> Result<Vec<BreadcrumbItem>> {
-        let root_dir_name = root_dir.clone();
-        let root_dir_name = root_dir_name
+    fn breadcrumbs_from_path(root_dir: &Path, path: &Path) -> Result<Vec<BreadcrumbItem>> {
+        let root_dir_name = root_dir
             .components()
             .last()
             .unwrap()
