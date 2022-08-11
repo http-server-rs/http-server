@@ -52,6 +52,13 @@ impl PartialEq for DirectoryEntry {
     }
 }
 
+/// A Breadcrumb Item used to navigate to previous path components
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct BreadcrumbItem {
+    pub(crate) entry_name: String,
+    pub(crate) entry_link: String,
+}
+
 /// The value passed to the Handlebars template engine.
 /// All references contained in File Explorer's UI are provided
 /// via the `DirectoryIndex` struct
@@ -59,4 +66,5 @@ impl PartialEq for DirectoryEntry {
 pub struct DirectoryIndex {
     /// Directory listing entry
     pub(crate) entries: Vec<DirectoryEntry>,
+    pub(crate) breadcrumbs: Vec<BreadcrumbItem>,
 }
