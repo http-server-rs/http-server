@@ -41,11 +41,10 @@ impl Proxy {
         );
 
         let client = self.client.clone();
-        let response = tokio::spawn(async move { client.request(outogoing).await.unwrap() })
-            .await
-            .unwrap();
 
-        response
+        tokio::spawn(async move { client.request(outogoing).await.unwrap() })
+            .await
+            .unwrap()
     }
 
     /// Creates a `Via` HTTP header for the provided HTTP Request.

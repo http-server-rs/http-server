@@ -102,7 +102,7 @@ impl<'a> FileServer {
 
         let path = FileServer::sanitize_path(req_path.as_str())?;
 
-        return match self.scoped_file_system.resolve(path).await {
+        match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
                 Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
                 Entry::File(file) => {
@@ -123,7 +123,7 @@ impl<'a> FileServer {
                     .body(Body::from(err.to_string()))
                     .expect("Failed to build response")),
             },
-        };
+        }
     }
 
     /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`

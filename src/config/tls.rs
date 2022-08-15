@@ -14,7 +14,7 @@ pub struct TlsConfig {
     key_algorithm: PrivateKeyAlgorithm,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct TlsConfigFile {
     pub cert: PathBuf,
     pub key: PathBuf,
