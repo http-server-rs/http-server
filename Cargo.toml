@@ -31,7 +31,7 @@ dhat-profiling = ["dhat"]
 anyhow = "1.0.60"
 async-stream = "0.3.3"
 async-trait = "0.1.57"
-chrono = "0.4.19"
+chrono = "0.4.20"
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.21"
 flate2 = "1.0.24"
