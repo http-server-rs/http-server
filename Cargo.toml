@@ -2,7 +2,7 @@
 name = "http-server"
 version = "0.8.1"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "Simple and configurable command-line HTTP server"
 repository = "https://github.com/EstebanBorai/http-server"
 categories = ["web-programming", "web-programming::http-server"]
