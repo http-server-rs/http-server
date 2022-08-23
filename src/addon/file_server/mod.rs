@@ -66,7 +66,7 @@ impl<'a> FileServer {
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
-            let queries = if let Some(query_str) = path_and_query.query() {
+            let _queries = if let Some(query_str) = path_and_query.query() {
                 Some(query_params::QueryParams::from_str(query_str)?)
             } else {
                 None

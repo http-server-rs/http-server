@@ -20,15 +20,9 @@ impl FromStr for SortBy {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct QueryParams {
     sort_by: Option<SortBy>,
-}
-
-impl Default for QueryParams {
-    fn default() -> Self {
-        QueryParams { sort_by: None }
-    }
 }
 
 impl FromStr for QueryParams {
