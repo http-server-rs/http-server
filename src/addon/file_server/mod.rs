@@ -1,6 +1,7 @@
 mod directory_entry;
 mod file;
 mod http_utils;
+mod query_params;
 mod scoped_file_system;
 
 pub use file::{File, FILE_BUFFER_SIZE};
@@ -59,13 +60,17 @@ impl<'a> FileServer {
         Arc::new(handlebars)
     }
 
-    /// Retrieves the path from the URI and removes the query params
-    fn sanitize_path(req_uri: &str) -> Result<PathBuf> {
+    fn parse_path(req_uri: &str) -> Result<PathBuf> {
         let uri = Uri::from_str(req_uri)?;
         let uri_parts = uri.into_parts();
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
+            let _queries = if let Some(query_str) = path_and_query.query() {
+                Some(query_params::QueryParams::from_str(query_str)?)
+            } else {
+                None
+            };
 
             return Ok(decode_uri(path));
         }
@@ -83,8 +88,8 @@ impl<'a> FileServer {
     ///
     /// If the HTTP Request URI points to `/` (root), the default behavior
     /// would be to respond with `Not Found` but in order to provide `root_dir`
-    /// indexing, the request is handled and renders `root_dir` directory listing
-    /// instead.
+    /// indexing, the request is handled and renders `root_dir` directory
+    /// listing instead.
     ///
     /// If the HTTP Request doesn't match any file relative to `root_dir` then
     /// responds with 'Not Found'
@@ -100,7 +105,7 @@ impl<'a> FileServer {
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
         use std::io::ErrorKind;
 
-        let path = FileServer::sanitize_path(req_path.as_str())?;
+        let path = FileServer::parse_path(req_path.as_str())?;
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
@@ -280,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn sanitize_req_uri_path() {
+    fn parse_req_uri_path() {
         let have = vec![
             "/index.html",
             "/index.html?foo=1234",
@@ -296,7 +301,7 @@ mod tests {
         ];
 
         for (idx, req_uri) in have.iter().enumerate() {
-            let sanitized_path = FileServer::sanitize_path(req_uri).unwrap();
+            let sanitized_path = FileServer::parse_path(req_uri).unwrap();
             let wanted_path = PathBuf::from_str(want[idx]).unwrap();
 
             assert_eq!(sanitized_path, wanted_path);
