@@ -9,6 +9,7 @@ pub struct DirectoryEntry {
     pub(crate) display_name: String,
     pub(crate) is_dir: bool,
     pub(crate) size: String,
+    pub(crate) len: u64,
     pub(crate) entry_path: String,
     pub(crate) created_at: String,
     pub(crate) updated_at: String,
@@ -67,4 +68,6 @@ pub struct DirectoryIndex {
     /// Directory listing entry
     pub(crate) entries: Vec<DirectoryEntry>,
     pub(crate) breadcrumbs: Vec<BreadcrumbItem>,
+    pub(crate) sort_by_name: bool,
+    pub(crate) sort_by_size: bool,
 }

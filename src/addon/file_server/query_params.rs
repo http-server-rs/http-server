@@ -1,9 +1,11 @@
 use anyhow::Error;
+use serde::Serialize;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq)]
-enum SortBy {
+#[derive(Debug, Eq, PartialEq, Serialize)]
+pub enum SortBy {
     Name,
+    Size,
 }
 
 impl FromStr for SortBy {
@@ -15,6 +17,7 @@ impl FromStr for SortBy {
 
         match lower {
             "name" => Ok(SortBy::Name),
+            "size" => Ok(SortBy::Size),
             _ => Err(Error::msg("Value doesnt correspond")),
         }
     }
@@ -22,7 +25,7 @@ impl FromStr for SortBy {
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct QueryParams {
-    sort_by: Option<SortBy>,
+    pub(crate) sort_by: Option<SortBy>,
 }
 
 impl FromStr for QueryParams {

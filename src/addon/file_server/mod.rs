@@ -23,7 +23,7 @@ use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
-use self::query_params::QueryParams;
+use self::query_params::{QueryParams, SortBy};
 
 /// Explorer's Handlebars template filename
 const EXPLORER_TEMPLATE: &str = "explorer";
@@ -106,11 +106,13 @@ impl<'a> FileServer {
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
         use std::io::ErrorKind;
 
-        let path_and_query = FileServer::parse_path(req_path.as_str())?;
+        let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
 
-        match self.scoped_file_system.resolve(path_and_query).await {
+        match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
-                Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
+                Entry::Directory(dir) => {
+                    self.render_directory_index(dir.path(), query_params).await
+                }
                 Entry::File(file) => {
                     make_http_file_response(*file, CacheControlDirective::MaxAge(2500)).await
                 }
@@ -135,8 +137,13 @@ impl<'a> FileServer {
     /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`
     /// is used to build the Handlebars "Explorer" template using the Handlebars
     /// engine and builds an HTTP Response containing such file
-    async fn render_directory_index(&self, path: PathBuf) -> Result<Response<Body>> {
-        let directory_index = FileServer::index_directory(self.root_dir.clone(), path)?;
+    async fn render_directory_index(
+        &self,
+        path: PathBuf,
+        query_params: Option<QueryParams>,
+    ) -> Result<Response<Body>> {
+        let directory_index =
+            FileServer::index_directory(self.root_dir.clone(), path, query_params)?;
         let html = self
             .handlebars
             .render(EXPLORER_TEMPLATE, &directory_index)
@@ -205,7 +212,11 @@ impl<'a> FileServer {
 
     /// Creates a `DirectoryIndex` with the provided `root_dir` and `path`
     /// (HTTP Request URI)
-    fn index_directory(root_dir: PathBuf, path: PathBuf) -> Result<DirectoryIndex> {
+    fn index_directory(
+        root_dir: PathBuf,
+        path: PathBuf,
+        query_params: Option<QueryParams>,
+    ) -> Result<DirectoryIndex> {
         let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)?;
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
@@ -232,10 +243,38 @@ impl<'a> FileServer {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size: format_bytes(metadata.len() as f64),
+                len: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
                 created_at,
                 updated_at,
             });
+        }
+
+        if let Some(query_params) = query_params {
+            if let Some(sort_by) = query_params.sort_by {
+                match sort_by {
+                    SortBy::Name => {
+                        directory_entries.sort_by_key(|entry| entry.display_name.clone());
+
+                        return Ok(DirectoryIndex {
+                            entries: directory_entries,
+                            breadcrumbs,
+                            sort_by_name: true,
+                            sort_by_size: false,
+                        });
+                    }
+                    SortBy::Size => {
+                        directory_entries.sort_by_key(|entry| entry.len);
+
+                        return Ok(DirectoryIndex {
+                            entries: directory_entries,
+                            breadcrumbs,
+                            sort_by_name: false,
+                            sort_by_size: true,
+                        });
+                    }
+                }
+            }
         }
 
         directory_entries.sort();
@@ -243,6 +282,8 @@ impl<'a> FileServer {
         Ok(DirectoryIndex {
             entries: directory_entries,
             breadcrumbs,
+            sort_by_name: false,
+            sort_by_size: false,
         })
     }
 

@@ -28,22 +28,20 @@
       min-width: var(--min-width);
       overflow-y: auto;
       padding: 0;
-      padding-bottom: 2rem;
       width: 95%;
     }
 
     #explorer .hrow {
       background-color: #FFFFFF;
       border-bottom: 1px solid #DDDDDD;
-      position: -webkit-sticky;
-      position: sticky;
-      top: 0;
     }
 
     #explorer .hrow .hcol {
       border-right: 1px solid #DDDDDD;
       box-sizing: border-box;
-      padding: .3rem .35rem;
+      color: #000000;
+      padding: .3rem;
+      text-decoration: none;
     }
 
     #explorer .brow, .bcol {
@@ -65,7 +63,6 @@
 
     #explorer .hcol:nth-child(2), #explorer .bcol:nth-child(2) {
       /* Name Column */
-      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       width: 300px;
@@ -188,11 +185,19 @@
   <main>
     <ul id="explorer">
       <li class="hrow">
-        <span class="hcol icon-col">&nbsp;</span>
-        <span class="hcol">Name</span>
-        <span class="hcol">Size</span>
-        <span class="hcol">Date created</span>
-        <span class="hcol">Date modified</span>
+        <span class="hcol icon-col"></span>
+        {{#if sort_by_name}}
+          <a class="hcol" href="?sort_by=">Name&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=name">Name</a>
+        {{/if}}
+        {{#if sort_by_size}}
+          <a class="hcol" href="?sort_by=">Size&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=size">Size</a>
+        {{/if}}
+        <a class="hcol">Date created</a>
+        <a class="hcol">Date modified</a>
       </li>
       {{#each entries}}
       <li class="brow">
