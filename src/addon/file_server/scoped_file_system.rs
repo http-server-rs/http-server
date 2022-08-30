@@ -13,7 +13,6 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs::OpenOptions;
 
 use super::file::File;
-use super::QueryParams;
 
 /// The file is being opened or created for a backup or restore operation.
 /// The system ensures that the calling process overrides file security
