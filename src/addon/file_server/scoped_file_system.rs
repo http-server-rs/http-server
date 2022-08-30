@@ -13,6 +13,7 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs::OpenOptions;
 
 use super::file::File;
+use super::QueryParams;
 
 /// The file is being opened or created for a backup or restore operation.
 /// The system ensures that the calling process overrides file security
@@ -68,8 +69,8 @@ impl ScopedFileSystem {
     ///
     /// A relative path is built using `build_relative_path` and then is opened
     /// to retrieve a `Entry`.
-    pub async fn resolve(&self, path: PathBuf) -> std::io::Result<Entry> {
-        let entry_path = self.build_relative_path(path);
+    pub async fn resolve(&self, path_and_query: (PathBuf, Option<QueryParams>)) -> std::io::Result<Entry> {
+        let entry_path = self.build_relative_path(path_and_query.0);
 
         ScopedFileSystem::open(entry_path).await
     }
@@ -201,7 +202,7 @@ mod tests {
     #[tokio::test]
     async fn resolves_a_file() {
         let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
-        let resolved_entry = sfs.resolve(PathBuf::from("assets/logo.svg")).await.unwrap();
+        let resolved_entry = sfs.resolve((PathBuf::from("assets/logo.svg"), None)).await.unwrap();
 
         if let Entry::File(file) = resolved_entry {
             assert_eq!(file.metadata.is_file(), true);
@@ -213,7 +214,7 @@ mod tests {
     #[tokio::test]
     async fn detect_directory_paths() {
         let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
-        let resolved_entry = sfs.resolve(PathBuf::from("assets/")).await.unwrap();
+        let resolved_entry = sfs.resolve((PathBuf::from("assets/"), None)).await.unwrap();
 
         assert!(matches!(resolved_entry, Entry::Directory(_)));
     }
@@ -221,7 +222,7 @@ mod tests {
     #[tokio::test]
     async fn detect_directory_paths_without_postfixed_slash() {
         let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
-        let resolved_entry = sfs.resolve(PathBuf::from("assets")).await.unwrap();
+        let resolved_entry = sfs.resolve((PathBuf::from("assets"), None)).await.unwrap();
 
         assert!(matches!(resolved_entry, Entry::Directory(_)));
     }
@@ -230,7 +231,7 @@ mod tests {
     async fn returns_error_if_file_doesnt_exists() {
         let sfs = ScopedFileSystem::new(PathBuf::from("")).unwrap();
         let resolved_entry = sfs
-            .resolve(PathBuf::from("assets/unexistent_file.doc"))
+            .resolve((PathBuf::from("assets/unexistent_file.doc"), None))
             .await;
 
         assert_eq!(resolved_entry.is_err(), true);

@@ -23,6 +23,7 @@ use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
+use self::query_params::QueryParams;
 
 /// Explorer's Handlebars template filename
 const EXPLORER_TEMPLATE: &str = "explorer";
@@ -60,22 +61,22 @@ impl<'a> FileServer {
         Arc::new(handlebars)
     }
 
-    fn parse_path(req_uri: &str) -> Result<PathBuf> {
+    fn parse_path(req_uri: &str) -> Result<(PathBuf, Option<QueryParams>)> {
         let uri = Uri::from_str(req_uri)?;
         let uri_parts = uri.into_parts();
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
-            let _queries = if let Some(query_str) = path_and_query.query() {
-                Some(query_params::QueryParams::from_str(query_str)?)
+            let query_params = if let Some(query_str) = path_and_query.query() {
+                Some(QueryParams::from_str(query_str)?)
             } else {
                 None
             };
 
-            return Ok(decode_uri(path));
+            return Ok((decode_uri(path), query_params));
         }
 
-        Ok(PathBuf::from_str("/")?)
+        Ok((PathBuf::from_str("/")?, None))
     }
 
     /// Resolves a HTTP Request to a file or directory.
@@ -105,9 +106,9 @@ impl<'a> FileServer {
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
         use std::io::ErrorKind;
 
-        let path = FileServer::parse_path(req_path.as_str())?;
+        let path_and_query = FileServer::parse_path(req_path.as_str())?;
 
-        match self.scoped_file_system.resolve(path).await {
+        match self.scoped_file_system.resolve(path_and_query).await {
             Ok(entry) => match entry {
                 Entry::Directory(dir) => self.render_directory_index(dir.path()).await,
                 Entry::File(file) => {
@@ -301,7 +302,7 @@ mod tests {
         ];
 
         for (idx, req_uri) in have.iter().enumerate() {
-            let sanitized_path = FileServer::parse_path(req_uri).unwrap();
+            let sanitized_path = FileServer::parse_path(req_uri).unwrap().0;
             let wanted_path = PathBuf::from_str(want[idx]).unwrap();
 
             assert_eq!(sanitized_path, wanted_path);
