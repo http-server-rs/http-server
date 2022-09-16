@@ -108,7 +108,7 @@ Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sh
 GZip Compression | N/A | `--gzip` | Enable GZip compression for responses
 Graceful Shutdown | N/A | `--graceful-shutdown` | Waits for all requests to fulfill before shutting down the server
 Help | N/A | `--help` | Prints help information
-Logger | N/A | `--logger` | Prints HTTP request and response details to stdout
+Logger | `-l` | `--logger` | Prints HTTP request and response details to stdout
 Version | `-V` | `--version` | Prints version information
 Verbose | `-v` | `--verbose` | Prints output to console
 
