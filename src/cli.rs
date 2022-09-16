@@ -52,7 +52,7 @@ pub struct Cli {
     #[structopt(long = "password")]
     pub password: Option<String>,
     /// Prints HTTP request and response details to stdout
-    #[structopt(long = "logger")]
+    #[structopt(short = "l", long = "logger")]
     pub logger: bool,
     /// Proxy requests to the provided URL
     #[structopt(long = "proxy")]
