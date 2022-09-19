@@ -54,7 +54,7 @@ tokio-rustls = "0.23.4"
 toml = "0.5.9"
 
 [dev-dependencies]
-criterion = { version = "0.3.6", features = ["async_tokio", "html_reports"] }
+criterion = { version = "0.4.0", features = ["async_tokio", "html_reports"] }
 hyper = { version = "0.14.20", features = ["client"] }
 tokio = { version = "1.20.1", features = ["full"] }
 lazy_static = "1.4.0"
