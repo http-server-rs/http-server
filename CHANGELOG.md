@@ -1,6 +1,6 @@
 ## Unreleased
 
-> **Warning**: This is a manually maintained Changelog, for an automatically maintained version which is provided on every release along with binaries and source code, please visit the [Releases Page](https://github.com/EstebanBorai/http-server/releases).
+> **Warning**: This is a manually maintained Changelog. For an automatically maintained version which is provided on every release along with binaries and source code, please visit the [Releases Page](https://github.com/EstebanBorai/http-server/releases).
 
 <Empty>
 
