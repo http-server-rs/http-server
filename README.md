@@ -28,13 +28,13 @@
 cargo install http-server
 ```
 
-Check for the installation to be successful.
+Verify successful installation.
 
 ```bash
 http-server --help
 ```
 
-Expect the following output
+Expect the following output:
 
 ```
 USAGE:
@@ -65,12 +65,12 @@ ARGS:
     <root-dir>    Directory to serve files from [default: ./]
 ```
 
-> If you find this output is out-of-date, don't hesitate to open a [PR here][1].
+> If you find this output is out of date, don't hesitate to open a [PR here][1].
 
 ## Configuration
 
 When running the server with no options or flags provided, a set of default
-configurations will be set, you can always change this behavior by either
+configurations will be used. You can always change this behavior by either
 creating your own config with the [Configuration TOML](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) file
 or by providing CLI arguments described in the [usage](#usage) section.
 
@@ -106,15 +106,15 @@ Name | Short | Long | Description
 --- | --- | --- | ---
 Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sharing allowing any origin
 GZip Compression | N/A | `--gzip` | Enable GZip compression for responses
-Graceful Shutdown | N/A | `--graceful-shutdown` | Waits for all requests to fulfill before shutting down the server
-Help | N/A | `--help` | Prints help information
-Logger | `-l` | `--logger` | Prints HTTP request and response details to stdout
-Version | `-V` | `--version` | Prints version information
-Verbose | `-v` | `--verbose` | Prints output to console
+Graceful Shutdown | N/A | `--graceful-shutdown` | Wait for all requests to be fulfilled before shutting down the server
+Help | N/A | `--help` | Print help information
+Logger | `-l` | `--logger` | Print HTTP request and response details to stdout
+Version | `-V` | `--version` | Print version information
+Verbose | `-v` | `--verbose` | Print output to console
 
 ### Options
 
-Options receives a value and have support for default values as well.
+Options receive a value and support default values as well.
 
 ```
 http-server --host 127.0.0.1
@@ -124,28 +124,28 @@ Name | Short | Long | Description | Default Value
 --- | --- | --- | --- | ---
 Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
 Port | `-p` | `--port` | Port to bind the server | `7878`
-Configuration File | `-c` | `--config` | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
+Configuration File | `-c` | `--config` | Configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
 TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
 TLS Ceritificate | N/A | `--tls-cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
 TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
 TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
-Username | N/A | `--username` | Specify the username to validate using basic authentication | N/A
-Password | N/A | `--password` | Specify the password to validate using basic authentication. **Depends on `--username`** | N/A
+Username | N/A | `--username` | Username to validate using basic authentication | N/A
+Password | N/A | `--password` | Password to validate using basic authentication. **Depends on `--username`** | N/A
 Proxy | N/A | `--proxy` | Proxy requests to the provided URL | N/A
 
 ## Request Handlers
 
-This HTTP Proxy supports different _Request Handlers_, this determines how each
-incoming HTTP request must be handled, they can't be combinable so you must
+This HTTP Proxy supports different _Request Handlers_ which determine how each
+incoming HTTP request is handled. They can't be combined, you must
 choose one based on your needs.
 
-- [File Server](#file-server-handler)
+- [File Server](#file-server-handler) _default_
 - [Proxy](#proxy-handler)
 
 ### File Server Handler
 
-Useful for serving files in the provided directory. Navigation is scoped to the
-specified directory, if no directory is provided the CWD will be used.
+Serves files from the provided directory. Navigation is scoped to the
+specified directory. If no directory is provided the CWD will be used.
 
 > This is the default behavior for the HTTP server.
 
@@ -154,22 +154,22 @@ specified directory, if no directory is provided the CWD will be used.
 Proxies requests to the provided URL. The URL provided is used as the base URL
 for incoming requests.
 
-## References
+## Reference
 
 The following are some relevant details on features supported by this HTTP Server
-solution that may be of the interest of the user.
+that may be of interest to the user.
 
 ### Compression
 
-Even when compression is supported, by default the server will not compress any
+Even though compression is supported, by default the server will not compress any
 HTTP response contents.
+You must specify the compression configuration you want to use, in the
+configuration file or on the command line.
 
-You must specify the compression configuration you want to use, as of today
-the server only supports compression with the GZip algorithm, but `brotli` is
-also planed to be supported, that's why theres two ways to configure this
-server to use compression.
+As of today the server only supports compression with the GZip algorithm, but
+`brotli` support is also planned.
 
-The following MIME types will be skipped from compression:
+The following MIME types are never compressed:
 
 - `application/gzip`
 - `application/octet-stream`
@@ -180,8 +180,8 @@ The following MIME types will be skipped from compression:
 
 #### The Configuration File's Compression Section
 
-As suppport for other compression algorithms is planned to be provided in the
-future, the configuration file already supports compression settings.
+As future support for other compression algorithms is planned,
+the configuration file already supports compression settings.
 
 ```toml
 [compression]
@@ -198,16 +198,16 @@ http-server --gzip
 
 ### TLS (HTTPS)
 
-The TLS solution supported for this HTTP Server is built with [rustls](https://github.com/ctz/rustls)
+The TLS solution supported for this HTTP Server is built with the [rustls](https://github.com/ctz/rustls)
 crate along with [hyper-rustls](https://github.com/ctz/hyper-rustls).
 
 When running with TLS support you will need:
 
 - A certificate
-- A RSA Private Key for such certificate
+- A matching RSA Private Key for the certificate
 
 A script to generate certificates and keys is available here [tls-cert.sh](./docs/tls-cert.sh).
-This script relies on `openssl`, so make sure you have it installed in your system.
+This script relies on `openssl`, so make sure you have it installed on your system.
 
 Run `http-server` as follows:
 
@@ -217,19 +217,18 @@ http-server --tls --tls-cert <PATH TO YOUR CERTIFICATE> --tls-key <PATH TO YOUR 
 
 ### Cross-Origin Resource Sharing (CORS)
 
-This HTTP Server brings support to CORS headers _out of the box_.
-Based on the headers you want to provide to your HTTP Responses, 2
+This HTTP Server supports CORS headers _out of the box_.
+Based on the headers you want to provide in your HTTP Responses, two
 different methods for CORS configuration are available.
 
-By providing the `--cors` option to the `http-server`, CORS headers
+By providing the `--cors` option to `http-server`, CORS headers
 will be appended to every HTTP Response, allowing any origin.
 
 For more complex configurations, like specifying an origin, a set of allowed
 HTTP methods and more, you should specify the configuration via the configuration
 TOML file.
 
-The following example shows all the options available, these options are
-mapped to the server configuration during initialization.
+The following example shows all the available options.
 
 ```toml
 [cors]
@@ -259,10 +258,10 @@ password = "Appleseed"
 
 ### Proxy
 
-The HTTP Server is able to proxy requests to an specified URL.
+The HTTP Server is able to proxy requests to a specified URL.
 
-By using the proxy the FileExplorer wont be available, the proxy is considered
-a _Request Handler_.
+When using the proxy, the FileExplorer won't be available, as the proxy is
+an alternate _Request Handler_.
 
 The config TOML file can be used to provide proxy configurations:
 
@@ -275,13 +274,13 @@ url = "https://example.com"
 
 The following roadmap list features to provide for the version `v1.0.0`.
 
-This roadmap still open for suggestions, if you find that theres a missing
-feature in this list, you would like to work on or expect for the first
-stable release, please contact software editors by opening an issue or a
+This roadmap is still open for suggestions. If you find that there's a missing
+feature in this list, that you would like to work on or expect for the first
+stable release, please contact the software editors by opening an issue or a
 discussion.
 
 If you want to contribute to one of these, please make sure
-theres an issue tracking the feature and ping me. Otherwise
+there's an issue tracking the feature and ping me. Otherwise
 open an issue to be assigned and track the progress there.
 
 - [x] Logging
@@ -351,7 +350,7 @@ git tag -a <version> -m <message>
 git tag -a v0.1.0 -m "First release"
 ```
 
-> Tags must follow semver conventions
+> Tags must follow semver conventions.
 > Tags must be prefixed with a lowercase `v` letter.
 
 Then push tags as follows:
@@ -362,8 +361,8 @@ git push origin main --follow-tags
 
 ## Contributing
 
-Every contribution to this project is welcome. Feel free to open a pull request,
-an issue or just by starting this project.
+Every contribution to this project is welcome. Feel free to open a pull request or
+an issue. Just by using this project you're helping it grow. Thank you!
 
 ## License
 
