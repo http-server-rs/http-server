@@ -10,6 +10,8 @@ pub struct CorsConfig {
     pub max_age: Option<u64>,
     pub request_headers: Option<Vec<String>>,
     pub request_method: Option<String>,
+    pub embedder_policy: Option<String>,
+    pub opener_policy: Option<String>,
 }
 
 impl CorsConfig {
@@ -31,7 +33,22 @@ impl CorsConfig {
             ]),
             allow_credentials: false,
             max_age: Some(43200),
+            ..Default::default()
+        }
+    }
+}
+
+impl Default for CorsConfig {
+    fn default() -> Self {
+        Self {
+            allow_origin: None,
+            allow_headers: None,
+            allow_credentials: false,
+            allow_methods: None,
+            embedder_policy: None,
             expose_headers: None,
+            max_age: None,
+            opener_policy: None,
             request_headers: None,
             request_method: None,
         }

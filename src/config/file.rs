@@ -190,10 +190,7 @@ mod tests {
                 "DELETE".to_string(),
             ]),
             allow_origin: Some(String::from("example.com")),
-            expose_headers: None,
-            max_age: None,
-            request_headers: None,
-            request_method: None,
+            ..Default::default()
         };
         let config = ConfigFile::parse_toml(file_contents).unwrap();
         let root_dir = Some(std::env::current_dir().unwrap());
@@ -219,6 +216,8 @@ mod tests {
             max_age = 2800
             request_headers = ["x-app-version"]
             request_method = "GET"
+            embedder_policy = "require-corp"
+            opener_policy = "same-origin"
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let port = 8080;
@@ -242,6 +241,8 @@ mod tests {
             max_age: Some(2800),
             request_headers: Some(vec!["x-app-version".to_string()]),
             request_method: Some(String::from("GET")),
+            embedder_policy: Some(String::from("require-corp")),
+            opener_policy: Some(String::from("same-origin")),
         };
         let config = ConfigFile::parse_toml(file_contents).unwrap();
 

@@ -79,6 +79,18 @@ pub struct Cors {
     /// preflight request is always an OPTIONS and doesn't use the same method as
     /// the actual request.
     pub(crate) request_method: Option<String>,
+    /// The HTTP Cross-Origin-Embedder-Policy (COEP) response header prevents a
+    /// document from loading any cross-origin resources that don't explicitly
+    /// grant the document permission (using CORP or CORS).
+    ///
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+    pub(crate) embedder_policy: Option<String>,
+    /// The HTTP Cross-Origin-Opener-Policy (COOP) response header allows you to
+    /// ensure a top-level document does not share a browsing context group with
+    /// cross-origin documents.
+    ///
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
+    pub(crate) opener_policy: Option<String>,
 }
 
 impl Cors {
@@ -156,6 +168,32 @@ impl Cors {
             ));
         }
 
+        if let Some(embedder_policy) = cors.embedder_policy {
+            // TODO: Validate possible directives
+            //
+            // Cross-Origin-Embedder-Policy: unsafe-none | require-corp
+            //
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy#directives
+            cors_headers.push((
+                HeaderName::from_static("Cross-Origin-Embedder-Policy"),
+                HeaderValue::from_str(&embedder_policy.as_str()).unwrap(),
+            ));
+        }
+
+        if let Some(opener_policy) = cors.opener_policy {
+            // TODO: Validate possible directives
+            //
+            // Cross-Origin-Opener-Policy: unsafe-none
+            // Cross-Origin-Opener-Policy: same-origin-allow-popups
+            // Cross-Origin-Opener-Policy: same-origin
+            //
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy#directives
+            cors_headers.push((
+                HeaderName::from_static("Cross-Origin-Opener-Policy"),
+                HeaderValue::from_str(&opener_policy.as_str()).unwrap(),
+            ));
+        }
+
         cors_headers
     }
 }
@@ -206,6 +244,16 @@ impl CorsBuilder {
         self
     }
 
+    pub fn embedder_policy(mut self, embedder_policy: String) -> Self {
+        self.config.embedder_policy = Some(embedder_policy);
+        self
+    }
+
+    pub fn opener_policy(mut self, opener_policy: String) -> Self {
+        self.config.opener_policy = Some(opener_policy);
+        self
+    }
+
     pub fn build(self) -> Cors {
         self.config
     }
@@ -247,6 +295,14 @@ impl TryFrom<CorsConfig> for Cors {
 
         if let Some(request_method) = value.request_method {
             builder = builder.request_method(request_method);
+        }
+
+        if let Some(embedder_policy) = value.embedder_policy {
+            builder = builder.embedder_policy(embedder_policy);
+        }
+
+        if let Some(opener_policy) = value.opener_policy {
+            builder = builder.opener_policy(opener_policy);
         }
 
         Ok(builder.build())
@@ -360,6 +416,7 @@ mod tests {
             max_age: Some(max_age),
             request_headers: Some(request_headers.clone()),
             request_method: Some(request_method.clone()),
+            ..Default::default()
         };
         let cors = Cors {
             allow_credentials: true,
@@ -370,6 +427,7 @@ mod tests {
             max_age: Some(max_age),
             request_headers: Some(request_headers),
             request_method: Some(request_method),
+            ..Default::default()
         };
 
         assert_eq!(cors, Cors::try_from(config).unwrap());

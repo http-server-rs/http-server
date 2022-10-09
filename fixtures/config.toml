@@ -21,6 +21,8 @@ port = 7878
 # max_age = 600
 # request_headers = ["x-app-version"]
 # request_method = "GET"
+# embedder_policy = "require-corp"
+# opener_policy = "same-origin"
 
 # [compression]
 # gzip = true
