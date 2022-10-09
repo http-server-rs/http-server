@@ -12,17 +12,17 @@ port = 7878
 # cert = "cert.pem"
 # key = "key.pem"
 
-# [cors]
-# allow_credentials = false
-# allow_headers = ["content-type", "authorization", "content-length"]
-# allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
-# allow_origin = "example.com"
-# expose_headers = ["*", "authorization"]
-# max_age = 600
-# request_headers = ["x-app-version"]
-# request_method = "GET"
-# embedder_policy = "require-corp"
-# opener_policy = "same-origin"
+[cors]
+allow_credentials = false
+allow_headers = ["content-type", "authorization", "content-length"]
+allow_methods = ["GET", "PATCH", "POST", "PUT", "DELETE"]
+allow_origin = "example.com"
+expose_headers = ["*", "authorization"]
+max_age = 600
+request_headers = ["x-app-version"]
+request_method = "GET"
+embedder_policy = "require-corp"
+opener_policy = "same-origin"
 
 # [compression]
 # gzip = true

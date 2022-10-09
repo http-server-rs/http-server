@@ -176,7 +176,7 @@ impl Cors {
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy#directives
             cors_headers.push((
                 HeaderName::from_static("Cross-Origin-Embedder-Policy"),
-                HeaderValue::from_str(&embedder_policy.as_str()).unwrap(),
+                HeaderValue::from_str(embedder_policy.as_str()).unwrap(),
             ));
         }
 
@@ -190,7 +190,7 @@ impl Cors {
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy#directives
             cors_headers.push((
                 HeaderName::from_static("Cross-Origin-Opener-Policy"),
-                HeaderValue::from_str(&opener_policy.as_str()).unwrap(),
+                HeaderValue::from_str(opener_policy.as_str()).unwrap(),
             ));
         }
 
