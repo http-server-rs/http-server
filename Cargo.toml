@@ -43,7 +43,7 @@ hyper-rustls = { version = "0.23.0", features = ["webpki-roots"] }
 local-ip-address = "0.4.9"
 mime_guess = "2.0.4"
 percent-encoding = "2.2.0"
-rustls = "0.20.6"
+rustls = "0.20.7"
 rustls-pemfile = "1.0.1"
 serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.86"
