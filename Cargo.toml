@@ -28,7 +28,7 @@ harness = false
 dhat-profiling = ["dhat"]
 
 [dependencies]
-anyhow = "1.0.66"
+anyhow = "1.0.68"
 async-stream = "0.3.3"
 async-trait = "0.1.58"
 chrono = "0.4.23"
