@@ -37,7 +37,7 @@ futures = "0.3.25"
 flate2 = "1.0.25"
 http = "0.2.8"
 http-auth-basic = "0.3.3"
-handlebars = "4.3.5"
+handlebars = "4.3.6"
 hyper = { version = "0.14.23", features = ["http1", "server", "stream", "tcp"] }
 hyper-rustls = { version = "0.23.2", features = ["webpki-roots"] }
 local-ip-address = "0.4.9"
