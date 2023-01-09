@@ -30,7 +30,7 @@ dhat-profiling = ["dhat"]
 [dependencies]
 anyhow = "1.0.68"
 async-stream = "0.3.3"
-async-trait = "0.1.60"
+async-trait = "0.1.61"
 chrono = "0.4.23"
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.25"
