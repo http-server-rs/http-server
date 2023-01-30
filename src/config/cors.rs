@@ -1,6 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub struct CorsConfig {
     pub allow_credentials: bool,
     pub allow_headers: Option<Vec<String>>,
@@ -38,19 +39,4 @@ impl CorsConfig {
     }
 }
 
-impl Default for CorsConfig {
-    fn default() -> Self {
-        Self {
-            allow_origin: None,
-            allow_headers: None,
-            allow_credentials: false,
-            allow_methods: None,
-            embedder_policy: None,
-            expose_headers: None,
-            max_age: None,
-            opener_policy: None,
-            request_headers: None,
-            request_method: None,
-        }
-    }
-}
+
