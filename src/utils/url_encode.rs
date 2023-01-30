@@ -55,7 +55,7 @@ mod tests {
     #[test]
     fn decodes_uri() {
         let file_path = "these%20are%20important%20files/do_not_delete/file%20name.txt";
-        let file_path = decode_uri(&file_path);
+        let file_path = decode_uri(file_path);
         let file_path = file_path.to_str().unwrap();
 
         assert_eq!(

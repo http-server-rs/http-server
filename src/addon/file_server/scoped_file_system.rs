@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn normalizes_an_arbitrary_path() {
         let arbitrary_path = PathBuf::from("docs/collegue/cs50/lectures/../code/voting_excecise");
-        let normalized = ScopedFileSystem::normalize_path(&arbitrary_path.clone());
+        let normalized = ScopedFileSystem::normalize_path(&arbitrary_path);
 
         assert_eq!(
             normalized.to_str().unwrap(),
@@ -204,7 +204,7 @@ mod tests {
         let resolved_entry = sfs.resolve(PathBuf::from("assets/logo.svg")).await.unwrap();
 
         if let Entry::File(file) = resolved_entry {
-            assert_eq!(file.metadata.is_file(), true);
+            assert!(file.metadata.is_file());
         } else {
             panic!("Found a directory instead of a file in the provied path");
         }
@@ -233,6 +233,6 @@ mod tests {
             .resolve(PathBuf::from("assets/unexistent_file.doc"))
             .await;
 
-        assert_eq!(resolved_entry.is_err(), true);
+        assert!(resolved_entry.is_err());
     }
 }

@@ -51,8 +51,8 @@ impl ToString for CacheControlDirective {
             Self::Public => String::from("public"),
             Self::Private => String::from("private"),
             Self::ProxyRavalidate => String::from("proxy-revalidate"),
-            Self::MaxAge(age) => format!("max-age={}", age),
-            Self::SMaxAge(age) => format!("s-maxage={}", age),
+            Self::MaxAge(age) => format!("max-age={age}"),
+            Self::SMaxAge(age) => format!("s-maxage={age}"),
         }
     }
 }

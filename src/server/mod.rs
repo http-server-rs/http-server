@@ -74,7 +74,7 @@ impl Server {
         }));
 
         if self.config.verbose() {
-            println!("Serving HTTP: http://{}", address);
+            println!("Serving HTTP: http://{address}");
 
             if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
                 if let Ok(ip) = local_ip_address::local_ip() {
@@ -87,14 +87,14 @@ impl Server {
             let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
             if let Err(e) = graceful.await {
-                eprint!("Server Error: {}", e);
+                eprint!("Server Error: {e}");
             }
 
             return;
         }
 
         if let Err(e) = server.await {
-            eprint!("Server Error: {}", e);
+            eprint!("Server Error: {e}");
         }
     }
 
@@ -119,7 +119,7 @@ impl Server {
         }));
 
         if self.config.verbose() {
-            println!("Serving HTTPS: http://{}", address);
+            println!("Serving HTTPS: http://{address}");
 
             if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
                 if let Ok(ip) = local_ip_address::local_ip() {
@@ -132,14 +132,14 @@ impl Server {
             let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
             if let Err(e) = graceful.await {
-                eprint!("Server Error: {}", e);
+                eprint!("Server Error: {e}");
             }
 
             return;
         }
 
         if let Err(e) = server.await {
-            eprint!("Server Error: {}", e);
+            eprint!("Server Error: {e}");
         }
     }
 }

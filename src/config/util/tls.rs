@@ -48,12 +48,12 @@ pub fn load_private_key(path: &Path, kind: &PrivateKeyAlgorithm) -> Result<Priva
         PrivateKeyAlgorithm::Rsa => rsa_private_keys(&mut reader).map_err(|_| {
             let path = path.to_str().unwrap();
 
-            Error::msg(format!("Failed to read private (RSA) keys at {}", path))
+            Error::msg(format!("Failed to read private (RSA) keys at {path}"))
         })?,
         PrivateKeyAlgorithm::Pkcs8 => pkcs8_private_keys(&mut reader).map_err(|_| {
             let path = path.to_str().unwrap();
 
-            Error::msg(format!("Failed to read private (PKCS8) keys at {}", path))
+            Error::msg(format!("Failed to read private (PKCS8) keys at {path}"))
         })?,
     };
 

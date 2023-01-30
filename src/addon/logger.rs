@@ -26,7 +26,7 @@ impl Logger {
 
         // UTC Time
         let moment: DateTime<Utc> = Utc::now();
-        write!(&mut buffer, "[{:?}] \"", moment)?;
+        write!(&mut buffer, "[{moment:?}] \"")?;
 
         // HTTP Request Method
         let method = request.method();
@@ -40,7 +40,7 @@ impl Logger {
             _ => buffer.set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))?,
         };
 
-        write!(&mut buffer, "{} ", method)?;
+        write!(&mut buffer, "{method} ")?;
         buffer.reset()?;
 
         // HTTP Request URI and Version
@@ -82,7 +82,7 @@ impl Logger {
         } else {
             "N/A"
         };
-        write!(&mut buffer, "\" \"{}\" ", user_agent)?;
+        write!(&mut buffer, "\" \"{user_agent}\" ")?;
 
         writeln!(&mut buffer)?;
         self.buffer_writer.print(&buffer)?;

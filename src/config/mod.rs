@@ -124,7 +124,7 @@ impl TryFrom<Cli> for Config {
             cli_arguments
                 .root_dir
                 .canonicalize()
-                .unwrap_or_else(|_| panic!("Failed to find config on: {}", root_dir))
+                .unwrap_or_else(|_| panic!("Failed to find config on: {root_dir}"))
         };
 
         let tls: Option<TlsConfig> = if cli_arguments.tls {
@@ -240,15 +240,10 @@ mod tests {
         assert_eq!(
             config.host,
             IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-            "default host: {}",
-            host
+            "default host: {host}"
         );
-        assert_eq!(config.port, 7878, "default port: {}", port);
-        assert_eq!(
-            config.address, address,
-            "default socket address: {}",
-            address
-        );
+        assert_eq!(config.port, 7878, "default port: {port}");
+        assert_eq!(config.address, address, "default socket address: {address}");
         assert!(!config.verbose, "verbose is off by default");
     }
 }

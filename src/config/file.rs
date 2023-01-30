@@ -40,8 +40,7 @@ impl ConfigFile {
         match toml::from_str(content) {
             Ok(config) => Ok(config),
             Err(err) => Err(Error::msg(format!(
-                "Failed to parse config from file. {}",
-                err
+                "Failed to parse config from file. {err}"
             ))),
         }
     }
@@ -82,7 +81,7 @@ mod tests {
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
         let port = 7878;
         let config = ConfigFile::parse_toml(file_contents).unwrap();
-        let mut root_dir = PathBuf::from(std::env::current_dir().unwrap());
+        let mut root_dir = std::env::current_dir().unwrap();
 
         root_dir.push("./fixtures");
 

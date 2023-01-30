@@ -107,9 +107,10 @@ mod tests {
     #[test]
     fn with_host() {
         let from_args = Cli::from_str_args(vec!["http-server", "--host", "0.0.0.0"]);
-        let mut expect = Cli::default();
-
-        expect.host = "0.0.0.0".parse().unwrap();
+        let expect = Cli {
+            host: "0.0.0.0".parse().unwrap(),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -123,10 +124,11 @@ mod tests {
             "--port",
             "54200",
         ]);
-        let mut expect = Cli::default();
-
-        expect.host = "192.168.0.1".parse().unwrap();
-        expect.port = 54200 as u16;
+        let expect = Cli {
+            host: "192.168.0.1".parse().unwrap(),
+            port: 54200_u16,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -134,9 +136,10 @@ mod tests {
     #[test]
     fn with_root_dir() {
         let from_args = Cli::from_str_args(vec!["http-server", "~/User/sources/http-server"]);
-        let mut expect = Cli::default();
-
-        expect.root_dir = PathBuf::from_str("~/User/sources/http-server").unwrap();
+        let expect = Cli {
+            root_dir: PathBuf::from_str("~/User/sources/http-server").unwrap(),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -144,9 +147,10 @@ mod tests {
     #[test]
     fn with_verbose() {
         let from_args = Cli::from_str_args(vec!["http-server", "--verbose"]);
-        let mut expect = Cli::default();
-
-        expect.verbose = true;
+        let expect = Cli {
+            verbose: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -154,9 +158,10 @@ mod tests {
     #[test]
     fn with_tls_no_config() {
         let from_args = Cli::from_str_args(vec!["http-server", "--tls"]);
-        let mut expect = Cli::default();
-
-        expect.tls = true;
+        let expect = Cli {
+            tls: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }

@@ -18,7 +18,7 @@ async fn main() {
             server.run().await;
         }
         Err(error) => {
-            eprint!("{:?}", error);
+            eprint!("{error:?}");
             exit(1);
         }
     }

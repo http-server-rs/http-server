@@ -18,7 +18,7 @@ pub fn make_logger_middleware() -> MiddlewareAfter {
                 let mut logger = logger.lock().await;
 
                 if let Err(error) = logger.log(request, response).await {
-                    eprintln!("{:#?}", error);
+                    eprintln!("{error:#?}");
                 }
 
                 Ok(())
