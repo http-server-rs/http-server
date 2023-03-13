@@ -33,7 +33,7 @@ async-stream = "0.3.4"
 async-trait = "0.1.66"
 chrono = "0.4.23"
 dhat = { version = "0.2.4", optional = true }
-futures = "0.3.26"
+futures = "0.3.27"
 flate2 = "1.0.25"
 http = "0.2.9"
 http-auth-basic = "0.3.3"
