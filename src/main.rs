@@ -1,5 +1,4 @@
 mod cli;
-mod extension;
 mod server;
 
 use clap::Parser;
@@ -20,7 +19,7 @@ async fn main() -> Result<()> {
 
     axum::Server::bind(&address)
         .serve(server.router().into_make_service())
-        .await
-        .unwrap();
+        .await?;
+
     Ok(())
 }
