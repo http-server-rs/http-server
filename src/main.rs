@@ -1,3 +1,5 @@
+use std::net::{IpAddr, SocketAddr};
+
 use axum::{routing::get, Router};
 use clap::Parser;
 
@@ -5,20 +7,28 @@ use clap::Parser;
 #[command(author, version, about, long_about = None)]
 struct Cli {
     /// The address to listen on
-    #[arg(long)]
-    address: String,
+    #[arg(long, default_value = "127.0.0.1")]
+    host: IpAddr,
     /// The port to listen on
-    #[arg(long)]
+    #[arg(long, default_value = "7878")]
     port: u16,
+}
+
+impl Cli {
+    fn address(&self) -> SocketAddr {
+        SocketAddr::new(self.host, self.port)
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    // let cli = Cli::parse();
+    let cli = Cli::parse();
+    let address = cli.address();
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
 
-    // run it with hyper on localhost:3000
-    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+    println!("Listening on http://{}", address);
+
+    axum::Server::bind(&address)
         .serve(app.into_make_service())
         .await
         .unwrap();
