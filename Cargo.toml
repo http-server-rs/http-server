@@ -17,7 +17,6 @@ name = "http-server"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.71"
 axum = "0.6.18"
 color-eyre = "0.6.2"
 clap = { version = "4.2.7", features = ["derive"] }
