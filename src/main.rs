@@ -1,5 +1,4 @@
 mod cli;
-mod extension;
 mod server;
 
 use clap::Parser;
