@@ -19,10 +19,8 @@ path = "src/main.rs"
 [dependencies]
 axum = "0.6.18"
 clap = { version = "4.2.7", features = ["derive"] }
-color-backtrace = "0.5.1"
-color-eyre = "0.6.2"
 tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"] }
-use = "0.0.0"
+color-eyre = "0.6.2"
 
 [profile.release]
 debug = 1
