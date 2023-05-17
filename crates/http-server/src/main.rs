@@ -11,7 +11,6 @@ use self::server::Server;
 async fn main() -> Result<()> {
     color_eyre::install()?;
 
-
     let cli = Cli::parse();
     let address = cli.address();
     let server = Server::from(cli);
