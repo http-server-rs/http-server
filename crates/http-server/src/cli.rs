@@ -9,7 +9,7 @@ pub struct Cli {
     #[arg(long, default_value = "127.0.0.1")]
     pub host: IpAddr,
     /// The port to listen on
-    #[arg(long, default_value = "7878")]
+    #[arg(long, default_value = "3000")]
     pub port: u16,
 }
 

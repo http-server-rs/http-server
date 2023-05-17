@@ -21,7 +21,8 @@ axum = "0.6.18"
 color-eyre = "0.6.2"
 clap = { version = "4.2.7", features = ["derive"] }
 tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"] }
-
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 [profile.release]
 debug = 1
 
