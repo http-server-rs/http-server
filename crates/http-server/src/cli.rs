@@ -1,4 +1,7 @@
-use std::net::{IpAddr, SocketAddr};
+use std::{
+    net::{IpAddr, SocketAddr},
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
 
@@ -11,10 +14,16 @@ pub struct Cli {
     /// The port to listen on
     #[arg(long, default_value = "7878")]
     pub port: u16,
+    /// Directory to serve files from
+    #[arg(long, default_value = "./")]
+    pub root_dir: PathBuf,
 }
 
 impl Cli {
     pub fn address(&self) -> SocketAddr {
         SocketAddr::new(self.host, self.port)
+    }
+    pub fn root_dir_path(&self) -> &Path {
+        &self.root_dir
     }
 }
