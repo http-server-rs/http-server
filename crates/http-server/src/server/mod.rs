@@ -1,9 +1,12 @@
-use crate::cli::Cli;
-use axum::{routing::get, Router};
-use tracing::{info, Level};
+use axum::Router;
+use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
-pub struct Server(pub Router);
+use file_explorer::FileExplorer;
+
+use crate::cli::Cli;
+
+pub struct Server(Router);
 
 impl Server {
     pub fn router(self) -> Router {
@@ -12,18 +15,13 @@ impl Server {
 }
 
 impl From<Cli> for Server {
-    fn from(value: Cli) -> Self {
+    fn from(opts: Cli) -> Self {
         let filter = EnvFilter::from_default_env().add_directive(Level::INFO.into());
 
         tracing_subscriber::fmt().with_env_filter(filter).init();
 
-        let mut app = Router::new();
-
-        if value.port == 7878 {
-            app = app.route("/", get(|| async { info!("Hello, Rust!") }));
-        } else {
-            app = app.route("/", get(|| async { info!("Hello, World!") }));
-        }
+        let file_explorer = FileExplorer::new(opts.root_dir);
+        let app = Router::new().nest_service("/", file_explorer);
 
         Self(app)
     }

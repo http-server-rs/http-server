@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let address = cli.address();
     let server = Server::from(cli);
 
-    println!("Listening on http://{}", address);
+    tracing::info!("Listening on http://{}", address);
 
     axum::Server::bind(&address)
         .serve(server.router().into_make_service())

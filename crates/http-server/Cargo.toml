@@ -17,15 +17,20 @@ name = "http-server"
 path = "src/main.rs"
 
 [dependencies]
-axum = "0.6.18"
 color-eyre = "0.6.2"
 clap = { version = "4.2.7", features = ["derive"] }
-tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"] }
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+
+# Workspace Dependencies
+axum = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+# Local Dependencies
+file-explorer = { path = "../file-explorer" }
+
 [profile.release]
 debug = 1
-
 
 [profile.dev.package.backtrace]
 opt-level = 1

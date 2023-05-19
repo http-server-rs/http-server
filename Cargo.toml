@@ -1,6 +1,14 @@
 [workspace]
 members = [
+  "crates/file-explorer",
   "crates/http-server",
 ]
 
 default-members = ["crates/http-server"]
+
+[workspace.dependencies]
+axum = "0.6.18"
+tokio = "1.28.1"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
+tower = "0.4.13"

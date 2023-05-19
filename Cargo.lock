@@ -278,6 +278,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "file-explorer"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "tokio",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,6 +392,7 @@ dependencies = [
  "axum",
  "clap",
  "color-eyre",
+ "file-explorer",
  "tokio",
  "tracing",
  "tracing-subscriber",

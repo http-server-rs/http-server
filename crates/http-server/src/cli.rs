@@ -1,4 +1,7 @@
-use std::net::{IpAddr, SocketAddr};
+use std::{
+    net::{IpAddr, SocketAddr},
+    path::PathBuf,
+};
 
 use clap::Parser;
 
@@ -11,6 +14,9 @@ pub struct Cli {
     /// The port to listen on
     #[arg(long, default_value = "7878")]
     pub port: u16,
+    /// Root directory for File Explorer
+    #[arg(long, default_value = "./")]
+    pub root_dir: PathBuf,
 }
 
 impl Cli {
