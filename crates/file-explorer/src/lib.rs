@@ -54,8 +54,8 @@ impl FileExplorer {
             return absolute_path;
         }
 
-        if path.starts_with('/') {
-            absolute_path.push(&path[1..]);
+        if let Some(stripped_path) = path.strip_prefix('/') {
+            absolute_path.push(stripped_path);
             return absolute_path;
         }
 

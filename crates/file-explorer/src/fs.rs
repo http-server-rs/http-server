@@ -110,6 +110,7 @@ impl Stream for ByteStream {
 /// Representation of a directory
 #[derive(Debug)]
 pub struct Directory {
+    #[allow(dead_code)]
     path: PathBuf,
 }
 
@@ -122,8 +123,6 @@ pub enum Entry {
 
 #[cfg(not(target_os = "windows"))]
 pub async fn open(path: PathBuf) -> Result<Entry> {
-    use crate::FileExplorerError;
-
     let mut open_options = OpenOptions::new();
     let file = open_options.read(true).open(&path).await?;
     let metadata = file.metadata().await?;
