@@ -11,11 +11,7 @@ use tokio::io::{AsyncRead, ReadBuf};
 
 use crate::{FileExplorerResponse, Result};
 
-use super::fs::File;
-
-const FILE_BUFFER_SIZE: usize = 8 * 1024;
-
-pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
+use super::fs::{FILE_BUFFER_SIZE, File, FileBuffer};
 
 pub struct ByteStream {
     file: tokio::fs::File,
