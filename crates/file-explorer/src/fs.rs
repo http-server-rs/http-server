@@ -135,6 +135,6 @@ pub async fn open(path: PathBuf) -> Result<Entry> {
 }
 
 #[cfg(target_os = "windows")]
-async fn open(path: PathBuf) -> Result<Entry> {
+pub async fn open(path: PathBuf) -> Result<Entry> {
     todo!("Windows support is not yet implemented")
 }
