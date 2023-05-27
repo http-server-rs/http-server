@@ -122,16 +122,17 @@ pub enum Entry {
 
 #[cfg(not(target_os = "windows"))]
 pub async fn open(path: PathBuf) -> Result<Entry> {
+    use crate::FileExplorerError;
+
     let mut open_options = OpenOptions::new();
-    let entry_path: PathBuf = path.clone();
-    let file = open_options.read(true).open(path).await?;
+    let file = open_options.read(true).open(&path).await?;
     let metadata = file.metadata().await?;
 
     if metadata.is_dir() {
-        return Ok(Entry::Directory(Directory { path: entry_path }));
+        return Ok(Entry::Directory(Directory { path }));
     }
 
-    Ok(Entry::File(Box::new(File::new(entry_path, file, metadata))))
+    Ok(Entry::File(Box::new(File::new(path, file, metadata))))
 }
 
 #[cfg(target_os = "windows")]

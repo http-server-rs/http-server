@@ -18,7 +18,9 @@ use self::http::{make_http_file_response, CacheControlDirective};
 #[derive(Debug, Error)]
 pub enum FileExplorerError {
     #[error("Failed to open file")]
-    OpenFile(#[from] std::io::Error),
+    Open(#[from] std::io::Error),
+    #[error("The provided path (\"{0}\") doesn't belong to the base directory")]
+    NotFound(String),
 }
 
 pub type Result<T> = std::result::Result<T, FileExplorerError>;
@@ -32,6 +34,14 @@ pub struct FileExplorer {
 
 impl FileExplorer {
     pub fn new(base_dir: PathBuf) -> Self {
+        if base_dir == PathBuf::from("./") {
+            let base_dir = std::env::current_dir().unwrap();
+
+            tracing::info!("Serving files from {}", base_dir.display());
+
+            return Self { base_dir };
+        }
+
         Self { base_dir }
     }
 
@@ -40,8 +50,12 @@ impl FileExplorer {
         let path = path.trim().replace("../", "");
         let mut absolute_path = self.base_dir.clone();
 
-        // If the path starts with a slash, it's already absolute.
         if path == "/" || path.is_empty() {
+            return absolute_path;
+        }
+
+        if path.starts_with('/') {
+            absolute_path.push(&path[1..]);
             return absolute_path;
         }
 
@@ -65,6 +79,7 @@ impl Service<Request<Body>> for FileExplorer {
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let path = req.uri().path();
         let entry_path = self.absolute_path(path);
+        tracing::info!("Attempting to read {}", entry_path.display());
 
         Box::pin(async move {
             let entry = open(entry_path).await.unwrap();
