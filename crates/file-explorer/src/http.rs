@@ -11,7 +11,7 @@ use tokio::io::{AsyncRead, ReadBuf};
 
 use crate::{FileExplorerResponse, Result};
 
-use super::fs::{FILE_BUFFER_SIZE, File, FileBuffer};
+use super::fs::{File, FileBuffer, FILE_BUFFER_SIZE};
 
 pub struct ByteStream {
     file: tokio::fs::File,
