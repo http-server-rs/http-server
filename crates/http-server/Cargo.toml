@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 color-eyre = "0.6.2"
-clap = { version = "4.3.0", features = ["derive"] }
+clap = { version = "4.3.2", features = ["derive"] }
 
 # Workspace Dependencies
 axum = { workspace = true }
