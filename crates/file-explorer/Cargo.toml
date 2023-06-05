@@ -10,7 +10,7 @@ name = "file_explorer"
 path = "src/lib.rs"
 
 [dependencies]
-chrono = "0.4.25"
+chrono = "0.4.26"
 futures = "0.3.28"
 thiserror = "1.0.40"
 mime_guess = "2.0.4"
