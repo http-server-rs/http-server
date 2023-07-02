@@ -1,26 +1,21 @@
-//! File System utilities for the file explorer
-
+use anyhow::{Context, Result};
+use chrono::{DateTime, Local};
+use futures::Stream;
+use hyper::body::Bytes;
+use mime_guess::{from_path, Mime};
 use std::fs::Metadata;
 use std::mem::MaybeUninit;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{self, Poll};
-
-use axum::body::Bytes;
-use chrono::{DateTime, Local};
-use futures::Stream;
-use mime_guess::{from_path, Mime};
-use tokio::fs::OpenOptions;
 use tokio::io::{AsyncRead, ReadBuf};
-
-use crate::Result;
 
 pub const FILE_BUFFER_SIZE: usize = 8 * 1024;
 
 pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
 
-/// Wrapper around `tokio::fs::File` providing `std::fs::Metadata` and the
-/// path to the file
+/// Wrapper around `tokio::fs::File` built from a OS ScopedFileSystem file
+/// providing `std::fs::Metadata` and the path to such file
 #[derive(Debug)]
 pub struct File {
     pub path: PathBuf,
@@ -46,7 +41,10 @@ impl File {
     }
 
     pub fn last_modified(&self) -> Result<DateTime<Local>> {
-        let modified = self.metadata.modified()?;
+        let modified = self
+            .metadata
+            .modified()
+            .context("Failed to read last modified time for file")?;
         let modified: DateTime<Local> = modified.into();
 
         Ok(modified)
@@ -105,36 +103,4 @@ impl Stream for ByteStream {
             Poll::Pending => Poll::Pending,
         }
     }
-}
-
-/// Representation of a directory
-#[derive(Debug)]
-pub struct Directory {
-    #[allow(dead_code)]
-    path: PathBuf,
-}
-
-/// An entry in a directory
-#[derive(Debug)]
-pub enum Entry {
-    File(Box<File>),
-    Directory(Directory),
-}
-
-#[cfg(not(target_os = "windows"))]
-pub async fn open(path: PathBuf) -> Result<Entry> {
-    let mut open_options = OpenOptions::new();
-    let file = open_options.read(true).open(&path).await?;
-    let metadata = file.metadata().await?;
-
-    if metadata.is_dir() {
-        return Ok(Entry::Directory(Directory { path }));
-    }
-
-    Ok(Entry::File(Box::new(File::new(path, file, metadata))))
-}
-
-#[cfg(target_os = "windows")]
-pub async fn open(path: PathBuf) -> Result<Entry> {
-    todo!("Windows support is not yet implemented")
 }

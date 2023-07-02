@@ -10,17 +10,17 @@
 
   [![Crates.io](https://img.shields.io/crates/v/http-server.svg)](https://crates.io/crates/http-server)
   [![Documentation](https://docs.rs/http-server/badge.svg)](https://docs.rs/http-server)
-  ![Build](https://github.com/EstebanBorai/http-server/workflows/build/badge.svg)
-  ![Clippy](https://github.com/EstebanBorai/http-server/workflows/clippy/badge.svg)
-  ![Formatter](https://github.com/EstebanBorai/http-server/workflows/fmt/badge.svg)
-  ![Tests](https://github.com/EstebanBorai/http-server/workflows/test/badge.svg)
-  ![Benchs](https://github.com/EstebanBorai/http-server/workflows/bench/badge.svg)
+  ![Build](https://github.com/http-server-rs/http-server/workflows/build/badge.svg)
+  ![Clippy](https://github.com/http-server-rs/http-server/workflows/clippy/badge.svg)
+  ![Formatter](https://github.com/http-server-rs/http-server/workflows/fmt/badge.svg)
+  ![Tests](https://github.com/http-server-rs/http-server/workflows/test/badge.svg)
+  ![Benchs](https://github.com/http-server-rs/http-server/workflows/bench/badge.svg)
   [![Discord](https://img.shields.io/discord/1124069466259591201?color=blue&label=discord&logo=discord)](https://discord.gg/qJgv2p9Ebf)
 
 </div>
 
 <div align="center">
-  <img src="https://github.com/EstebanBorai/http-server/blob/main/docs/screenshot.png?raw=true" width="600" />
+  <img src="https://github.com/http-server-rs/http-server/blob/main/docs/screenshot.png?raw=true" width="600" />
 </div>
 
 ## Installation
@@ -72,7 +72,7 @@ ARGS:
 
 When running the server with no options or flags provided, a set of default
 configurations will be used. You can always change this behavior by either
-creating your own config with the [Configuration TOML](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) file
+creating your own config with the [Configuration TOML](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) file
 or by providing CLI arguments described in the [usage](#usage) section.
 
 Name | Description | Default
@@ -81,12 +81,12 @@ Host | Address to bind the server | `127.0.0.1`
 Port | Port to bind the server | `7878`
 Root Directory | The directory to serve files from | `CWD`
 File Explorer UI | A File Explorer UI for the directory configured as the _Root Directory_ | Enabled
-Configuration File | Specifies a configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | Disabled
-HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/EstebanBorai/http-server#tls-https) reference | Disabled
-CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/EstebanBorai/http-server#cross-origin-resource-sharing-cors) reference | Disabled
-Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/EstebanBorai/http-server#compression) reference | Disabled
+Configuration File | Specifies a configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | Disabled
+HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/http-server-rs/http-server#tls-https) reference | Disabled
+CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/http-server-rs/http-server#cross-origin-resource-sharing-cors) reference | Disabled
+Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/http-server-rs/http-server#compression) reference | Disabled
 Verbose | Print server details when running. This doesn't include any logging capabilities. | Disabled
-Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/EstebanBorai/http-server#basic-authentication)  | Disabled
+Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/http-server-rs/http-server#basic-authentication)  | Disabled
 Logger | Prints HTTP request and response details to stdout | Disabled
 
 ## Usage
@@ -125,7 +125,7 @@ Name | Short | Long | Description | Default Value
 --- | --- | --- | --- | ---
 Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
 Port | `-p` | `--port` | Port to bind the server | `7878`
-Configuration File | `-c` | `--config` | Configuration file. [Example](https://github.com/EstebanBorai/http-server/blob/main/fixtures/config.toml) | N/A
+Configuration File | `-c` | `--config` | Configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | N/A
 TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
 TLS Ceritificate | N/A | `--tls-cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
 TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
@@ -369,4 +369,4 @@ an issue. Just by using this project you're helping it grow. Thank you!
 
 Distributed under the terms of both the MIT license and the Apache License (Version 2.0)
 
-[1]: https://github.com/EstebanBorai/http-server
+[1]: https://github.com/http-server-rs/http-server

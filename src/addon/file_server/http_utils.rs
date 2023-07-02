@@ -1,48 +1,19 @@
+use anyhow::{Context, Result};
+use chrono::{DateTime, Local, Utc};
+use futures::Stream;
+use http::response::Builder as HttpResponseBuilder;
+use hyper::body::Body;
+use hyper::body::Bytes;
 use std::mem::MaybeUninit;
 use std::pin::Pin;
 use std::task::{self, Poll};
-
-use axum::body::{Body, Bytes};
-use axum::http::header;
-use axum::http::response::Builder as HttpResponseBuilder;
-use chrono::{DateTime, Local, Utc};
-use futures::Stream;
 use tokio::io::{AsyncRead, ReadBuf};
 
-use crate::{FileExplorerResponse, Result};
+use super::file::File;
 
-use super::fs::{File, FileBuffer, FILE_BUFFER_SIZE};
+const FILE_BUFFER_SIZE: usize = 8 * 1024;
 
-pub struct ByteStream {
-    file: tokio::fs::File,
-    buffer: FileBuffer,
-}
-
-impl Stream for ByteStream {
-    type Item = Result<Bytes>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
-        let ByteStream {
-            ref mut file,
-            ref mut buffer,
-        } = *self;
-        let mut read_buffer = ReadBuf::uninit(&mut buffer[..]);
-
-        match Pin::new(file).poll_read(cx, &mut read_buffer) {
-            Poll::Ready(Ok(())) => {
-                let filled = read_buffer.filled();
-
-                if filled.is_empty() {
-                    Poll::Ready(None)
-                } else {
-                    Poll::Ready(Some(Ok(Bytes::copy_from_slice(filled))))
-                }
-            }
-            Poll::Ready(Err(error)) => Poll::Ready(Some(Err(error.into()))),
-            Poll::Pending => Poll::Pending,
-        }
-    }
-}
+pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
 
 /// HTTP Response `Cache-Control` directive
 ///
@@ -137,7 +108,27 @@ impl ResponseHeaders {
     }
 }
 
-async fn file_bytes_into_http_body(file: File) -> Body {
+pub async fn make_http_file_response(
+    file: File,
+    cache_control_directive: CacheControlDirective,
+) -> Result<hyper::http::Response<Body>> {
+    let headers = ResponseHeaders::new(&file, cache_control_directive)?;
+    let builder = HttpResponseBuilder::new()
+        .header(http::header::CONTENT_LENGTH, headers.content_length)
+        .header(http::header::CACHE_CONTROL, headers.cache_control)
+        .header(http::header::CONTENT_TYPE, headers.content_type)
+        .header(http::header::ETAG, headers.etag)
+        .header(http::header::LAST_MODIFIED, headers.last_modified);
+
+    let body = file_bytes_into_http_body(file).await;
+    let response = builder
+        .body(body)
+        .context("Failed to build HTTP File Response")?;
+
+    Ok(response)
+}
+
+pub async fn file_bytes_into_http_body(file: File) -> Body {
     let byte_stream = ByteStream {
         file: file.file,
         buffer: Box::new([MaybeUninit::uninit(); FILE_BUFFER_SIZE]),
@@ -146,20 +137,33 @@ async fn file_bytes_into_http_body(file: File) -> Body {
     Body::wrap_stream(byte_stream)
 }
 
-pub async fn make_http_file_response(
-    file: File,
-    cache_control_directive: CacheControlDirective,
-) -> Result<FileExplorerResponse> {
-    let headers = ResponseHeaders::new(&file, cache_control_directive)?;
-    let builder = HttpResponseBuilder::new()
-        .header(header::CONTENT_LENGTH, headers.content_length)
-        .header(header::CACHE_CONTROL, headers.cache_control)
-        .header(header::CONTENT_TYPE, headers.content_type)
-        .header(header::ETAG, headers.etag)
-        .header(header::LAST_MODIFIED, headers.last_modified);
+pub struct ByteStream {
+    file: tokio::fs::File,
+    buffer: FileBuffer,
+}
 
-    let body = file_bytes_into_http_body(file).await;
-    let response = builder.body(body).unwrap();
+impl Stream for ByteStream {
+    type Item = Result<Bytes>;
 
-    Ok(response)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
+        let ByteStream {
+            ref mut file,
+            ref mut buffer,
+        } = *self;
+        let mut read_buffer = ReadBuf::uninit(&mut buffer[..]);
+
+        match Pin::new(file).poll_read(cx, &mut read_buffer) {
+            Poll::Ready(Ok(())) => {
+                let filled = read_buffer.filled();
+
+                if filled.is_empty() {
+                    Poll::Ready(None)
+                } else {
+                    Poll::Ready(Some(Ok(Bytes::copy_from_slice(filled))))
+                }
+            }
+            Poll::Ready(Err(error)) => Poll::Ready(Some(Err(error.into()))),
+            Poll::Pending => Poll::Pending,
+        }
+    }
 }
