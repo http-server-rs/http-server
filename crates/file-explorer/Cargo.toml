@@ -1,0 +1,29 @@
+[package]
+name = "file-explorer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "file_explorer"
+path = "src/lib.rs"
+
+[dependencies]
+chrono = "0.4.26"
+futures = "0.3.28"
+thiserror = "1.0.40"
+mime_guess = "2.0.4"
+
+# Workspace Dependencies
+axum = { workspace = true }
+tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tower = { workspace = true }
+
+[profile.release]
+debug = 1
+
+[profile.dev.package.backtrace]
+opt-level = 1
