@@ -491,7 +491,9 @@ dependencies = [
  "clap",
  "color-eyre",
  "file-explorer",
+ "futures-util",
  "tokio",
+ "tower",
  "tracing",
  "tracing-subscriber",
 ]
