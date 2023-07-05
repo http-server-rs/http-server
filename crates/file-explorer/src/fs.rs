@@ -10,6 +10,7 @@ use axum::body::Bytes;
 use chrono::{DateTime, Local};
 use futures::Stream;
 use mime_guess::{from_path, Mime};
+#[allow(unused_imports)]
 use tokio::fs::OpenOptions;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -28,6 +29,7 @@ pub struct File {
     pub metadata: Metadata,
 }
 
+#[allow(dead_code)]
 impl File {
     pub fn new(path: PathBuf, file: tokio::fs::File, metadata: Metadata) -> Self {
         File {
@@ -115,6 +117,7 @@ pub struct Directory {
 }
 
 /// An entry in a directory
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum Entry {
     File(Box<File>),
@@ -133,7 +136,7 @@ pub async fn open(path: PathBuf) -> Result<Entry> {
 
     Ok(Entry::File(Box::new(File::new(path, file, metadata))))
 }
-
+#[allow(unused_variables)]
 #[cfg(target_os = "windows")]
 pub async fn open(path: PathBuf) -> Result<Entry> {
     todo!("Windows support is not yet implemented")
