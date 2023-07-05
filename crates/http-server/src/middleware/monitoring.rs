@@ -37,7 +37,7 @@ where
         self.inner.poll_ready(cx)
     }
 
- fn call(&mut self, request: Request<Body>) -> Self::Future {
+    fn call(&mut self, request: Request<Body>) -> Self::Future {
         let start_time = Instant::now();
         let request_info = RequestInfo {
             method: request.method().to_string(),
