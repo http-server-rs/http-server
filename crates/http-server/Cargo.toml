@@ -28,9 +28,3 @@ tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 # Local Dependencies
 file-explorer = { path = "../file-explorer" }
-
-[profile.release]
-debug = 1
-
-[profile.dev.package.backtrace]
-opt-level = 1
