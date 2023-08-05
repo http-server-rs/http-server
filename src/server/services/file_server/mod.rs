@@ -4,19 +4,23 @@ mod http_utils;
 mod query_params;
 mod scoped_file_system;
 
-pub use file::{File, FILE_BUFFER_SIZE};
-pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
+use std::convert::Infallible;
+use std::fs::read_dir;
+use std::path::{Component, Path, PathBuf};
+use std::pin::Pin;
+use std::str::FromStr;
+use std::sync::Arc;
+use std::task::Poll;
 
 use anyhow::{Context, Result};
+use futures::Future;
 use handlebars::Handlebars;
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
+use hyper::{Method, Request};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-use std::fs::read_dir;
-use std::path::{Component, Path, PathBuf};
-use std::str::FromStr;
-use std::sync::Arc;
+use tower::Service;
 
 use crate::utils::fmt::{format_bytes, format_system_date};
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
@@ -25,9 +29,13 @@ use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
 use self::query_params::{QueryParams, SortBy};
 
+pub use file::{File, FILE_BUFFER_SIZE};
+pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
+
 /// Explorer's Handlebars template filename
 const EXPLORER_TEMPLATE: &str = "explorer";
 
+#[derive(Clone)]
 pub struct FileServer {
     root_dir: PathBuf,
     handlebars: Arc<Handlebars<'static>>,
@@ -302,6 +310,41 @@ impl<'a> FileServer {
         let path = entry_path.strip_prefix(root_dir).unwrap();
 
         encode_uri(path)
+    }
+}
+
+impl Service<Request<Body>> for FileServer {
+    type Response = http::Response<Body>;
+    type Error = Infallible;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(
+        &mut self,
+        _cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::result::Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let file_explorer = self.clone();
+
+        let fut = async move {
+            let req_path = req.uri().to_string();
+            let req_method = req.method();
+
+            if req_method == Method::GET {
+                let response = file_explorer.resolve(req_path).await.unwrap();
+
+                return Ok(response);
+            }
+
+            Ok(HttpResponseBuilder::new()
+                .status(StatusCode::METHOD_NOT_ALLOWED)
+                .body(Body::empty())
+                .expect("Unable to build response"))
+        };
+
+        Box::pin(fut)
     }
 }
 

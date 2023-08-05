@@ -15,7 +15,7 @@ async fn main() {
 
     match make_server() {
         Ok(server) => {
-            server.run().await;
+            server.run().await.expect("Failed to execute server");
         }
         Err(error) => {
             eprint!("{:?}", error);

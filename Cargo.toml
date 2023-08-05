@@ -31,6 +31,7 @@ dhat-profiling = ["dhat"]
 anyhow = "1.0.72"
 async-stream = "0.3.5"
 async-trait = "0.1.72"
+axum = "0.6.20"
 chrono = "0.4.26"
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.28"
@@ -52,6 +53,7 @@ termcolor = "1.1.3"
 tokio = { version = "1.21.2", features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tokio-rustls = "0.23.4"
 toml = "0.7.6"
+tower = "0.4.13"
 
 [dev-dependencies]
 criterion = { version = "0.4.0", features = ["async_tokio", "html_reports"] }
