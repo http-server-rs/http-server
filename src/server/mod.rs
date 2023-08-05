@@ -8,6 +8,8 @@ use axum::Router;
 use crate::config::Config;
 use crate::server::services::file_server::FileServer;
 
+use self::services::proxy::Proxy;
+
 pub struct Server {
     config: Arc<Config>,
 }
@@ -20,13 +22,28 @@ impl Server {
     }
 
     pub async fn run(&self) -> Result<()> {
-        let file_server = FileServer::new(self.config.root_dir());
-        let router = Router::new().nest_service("/", file_server);
+        let router = self.router();
 
         axum::Server::bind(&self.config.address())
             .serve(router.into_make_service())
             .await?;
 
         Ok(())
+    }
+
+    pub fn router(&self) -> Router {
+        let mut router = Router::new();
+
+        if let Some(proxy_config) = self.config.proxy() {
+            let proxy = Proxy::new(&proxy_config.url);
+
+            router = router.nest_service("/", proxy);
+            return router;
+        }
+
+        let file_server = FileServer::new(self.config.root_dir());
+
+        router = router.nest_service("/", file_server);
+        router
     }
 }

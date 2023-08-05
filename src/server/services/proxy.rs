@@ -1,13 +1,19 @@
+use std::convert::Infallible;
+use std::pin::Pin;
+use std::str::FromStr;
+use std::sync::Arc;
+use std::task::Poll;
+
+use futures::Future;
 use http::header::USER_AGENT;
 use http::header::{HeaderName, HeaderValue};
+use http::Request;
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Response, Uri};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
-use std::str::FromStr;
-use std::sync::Arc;
+use tower::Service;
 
-use crate::server::middleware::Request;
-
+#[derive(Clone)]
 pub struct Proxy {
     client: Client<HttpsConnector<HttpConnector>>,
     upstream: Uri,
@@ -27,10 +33,12 @@ impl Proxy {
     }
 
     pub async fn handle(&self, request: Request<Body>) -> Response<Body> {
-        self.remove_hbh_headers(Arc::clone(&request)).await;
-        self.add_via_header(Arc::clone(&request)).await;
+        let mut request = request;
 
-        let mut outogoing = self.map_incoming_request(Arc::clone(&request)).await;
+        self.remove_hbh_headers(&mut request).await;
+        self.add_via_header(&mut request).await;
+
+        let mut outogoing = self.map_incoming_request(&mut request).await;
         let outgoing_headers = outogoing.headers_mut();
 
         // Host must be the authority from the proxied URL
@@ -59,8 +67,7 @@ impl Proxy {
     /// ## References
     ///
     /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Via
-    async fn add_via_header(&self, request: Request<Body>) {
-        let mut request = request.lock().await;
+    async fn add_via_header(&self, request: &mut Request<Body>) {
         let via_header_str = format!("{:?} Rust http-server", request.version());
         let via_header = HeaderValue::from_str(&via_header_str).unwrap();
 
@@ -108,13 +115,12 @@ impl Proxy {
     /// ## References
     ///
     /// http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
-    async fn remove_hbh_headers(&self, request: Request<Body>) {
+    async fn remove_hbh_headers(&self, request: &mut Request<Body>) {
         use http::header::{
             CONNECTION, PROXY_AUTHENTICATE, PROXY_AUTHORIZATION, TE, TRAILER, TRANSFER_ENCODING,
             UPGRADE,
         };
 
-        let mut request = request.lock().await;
         let headers = request.headers_mut();
 
         headers.remove(CONNECTION);
@@ -128,8 +134,7 @@ impl Proxy {
     }
 
     /// Maps a _incoming_ HTTP request into a _outgoing_ HTTP request.
-    async fn map_incoming_request(&self, incoming: Request<Body>) -> hyper::Request<Body> {
-        let incoming = incoming.lock().await;
+    async fn map_incoming_request(&self, incoming: &mut Request<Body>) -> hyper::Request<Body> {
         let upstream_uri = self.map_upstream_uri(incoming.uri());
         let mut request = hyper::Request::builder()
             .uri(upstream_uri)
@@ -176,6 +181,27 @@ impl Proxy {
     }
 }
 
+impl Service<Request<Body>> for Proxy {
+    type Response = http::Response<Body>;
+    type Error = Infallible;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(
+        &mut self,
+        _cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::result::Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let proxy = self.clone();
+
+        let fut = async move { Ok(proxy.handle(req).await) };
+
+        Box::pin(fut)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use http::header::{HeaderName, HeaderValue};
@@ -184,20 +210,16 @@ mod tests {
         UPGRADE,
     };
     use hyper::Body;
-    use std::sync::Arc;
-    use tokio::sync::Mutex;
 
     use super::Proxy;
 
     #[tokio::test]
     async fn adds_via_header_if_not_present() {
         let proxy = Proxy::new("https://example.com");
-        let request = http::Request::new(Body::empty());
-        let request = Arc::new(Mutex::new(request));
+        let mut request = http::Request::new(Body::empty());
 
-        proxy.add_via_header(Arc::clone(&request)).await;
+        proxy.add_via_header(&mut request).await;
 
-        let request = request.lock().await;
         let headers = request.headers();
 
         assert!(headers.get(&HeaderName::from_static("via")).is_some());
@@ -219,11 +241,8 @@ mod tests {
             HeaderValue::from_str("HTTP/1.1 GoodProxy").unwrap(),
         );
 
-        let request = Arc::new(Mutex::new(request));
+        proxy.add_via_header(&mut request).await;
 
-        proxy.add_via_header(Arc::clone(&request)).await;
-
-        let request = request.lock().await;
         let headers = request.headers();
 
         assert!(headers.get(&HeaderName::from_static("via")).is_some());
@@ -262,11 +281,7 @@ mod tests {
             headers.append(name, value);
         }
 
-        let request = Arc::new(Mutex::new(request));
-
-        proxy.remove_hbh_headers(Arc::clone(&request)).await;
-
-        let request = request.lock().await;
+        proxy.remove_hbh_headers(&mut request).await;
 
         assert!(!request.headers().contains_key(CONNECTION));
         assert!(!request.headers().contains_key(PROXY_AUTHENTICATE));
