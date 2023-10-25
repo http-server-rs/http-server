@@ -85,7 +85,7 @@ Configuration File | Specifies a configuration file. [Example](https://github.co
 HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/http-server-rs/http-server#tls-https) reference | Disabled
 CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/http-server-rs/http-server#cross-origin-resource-sharing-cors) reference | Disabled
 Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/http-server-rs/http-server#compression) reference | Disabled
-Quiet | Don't Print server details when running. This doesn't include any logging capabilities. | Disabled
+Quiet | Don't print server details when running. This doesn't include any logging capabilities. | Disabled
 Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/http-server-rs/http-server#basic-authentication)  | Disabled
 Logger | Prints HTTP request and response details to stdout | Disabled
 
