@@ -1,6 +1,6 @@
-# Use verbose output.
+# Use quiet output.
 # Default: false
-#   verbose = 
+#   quiet = 
 
 # Do not reformat out of line modules.
 # Default: false
@@ -275,4 +275,4 @@
 
 # Replace strings of _ wildcards by a single .. in tuple patterns.
 # Default: false
-#   condense_wildcard_suffices = 
+#   condense_wildcard_suffices =

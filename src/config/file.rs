@@ -15,7 +15,7 @@ use super::tls::TlsConfigFile;
 pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
-    pub verbose: Option<bool>,
+    pub quiet: Option<bool>,
     #[serde(default = "current_working_dir")]
     #[serde(deserialize_with = "canonicalize_some")]
     pub root_dir: Option<PathBuf>,
@@ -76,7 +76,7 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
-            verbose = true
+            quiet = true
             root_dir = "./fixtures"
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
@@ -91,7 +91,7 @@ mod tests {
         assert!(config.compression.is_none());
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
-        assert_eq!(config.verbose, Some(true));
+        assert_eq!(config.quiet, Some(true));
         assert_eq!(config.root_dir, Some(root_dir));
     }
 
@@ -111,7 +111,7 @@ mod tests {
         let file_contents = r#"
             host = "192.168.0.1"
             port = 7878
-            verbose = false
+            quiet = false
 
             [tls]
             cert = "cert_123.pem"
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(config.port, port);
         assert_eq!(config.root_dir, root_dir);
         assert_eq!(config.tls.unwrap(), tls);
-        assert_eq!(config.verbose, Some(false));
+        assert_eq!(config.quiet, Some(false));
     }
 
     #[test]
