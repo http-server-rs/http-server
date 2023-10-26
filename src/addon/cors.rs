@@ -296,7 +296,7 @@ mod tests {
                 String::from("Content-Length"),
             ])
         );
-        assert_eq!(cors_config.allow_credentials, false);
+        assert!(!cors_config.allow_credentials);
         assert_eq!(cors_config.max_age, None);
         assert_eq!(cors_config.expose_headers, None);
         assert_eq!(cors_config.request_headers, None);
@@ -327,7 +327,7 @@ mod tests {
                 String::from("Content-Type"),
             ])
         );
-        assert_eq!(cors_config.allow_credentials, false);
+        assert!(!cors_config.allow_credentials);
         assert_eq!(cors_config.max_age, Some(43200));
         assert_eq!(cors_config.expose_headers, None);
         assert_eq!(cors_config.request_headers, None);
