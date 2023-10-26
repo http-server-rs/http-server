@@ -49,7 +49,7 @@ FLAGS:
         --logger               Prints HTTP request and response details to stdout
         --tls                  Enables HTTPS serving using TLS
     -V, --version              Prints version information
-    -q, --quiet              Turns off stdout/stderr logging
+    -q, --quiet                Turns off stdout/stderr logging
 
 OPTIONS:
     -c, --config <config>                          Path to TOML configuration file
