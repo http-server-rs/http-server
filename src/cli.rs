@@ -126,7 +126,7 @@ mod tests {
         let mut expect = Cli::default();
 
         expect.host = "192.168.0.1".parse().unwrap();
-        expect.port = 54200 as u16;
+        expect.port = 54200_u16;
 
         assert_eq!(from_args, expect);
     }
