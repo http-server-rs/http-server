@@ -8,13 +8,13 @@
 
 <div align="center">
 
-  [![Crates.io](https://img.shields.io/crates/v/http-server.svg)](https://crates.io/crates/http-server)
-  [![Documentation](https://docs.rs/http-server/badge.svg)](https://docs.rs/http-server)
-  ![Build](https://github.com/http-server-rs/http-server/workflows/build/badge.svg)
-  ![Clippy](https://github.com/http-server-rs/http-server/workflows/clippy/badge.svg)
-  ![Formatter](https://github.com/http-server-rs/http-server/workflows/fmt/badge.svg)
-  ![Tests](https://github.com/http-server-rs/http-server/workflows/test/badge.svg)
-  ![Benchs](https://github.com/http-server-rs/http-server/workflows/bench/badge.svg)
+[![Crates.io](https://img.shields.io/crates/v/http-server.svg)](https://crates.io/crates/http-server)
+[![Documentation](https://docs.rs/http-server/badge.svg)](https://docs.rs/http-server)
+![Build](https://github.com/http-server-rs/http-server/workflows/build/badge.svg)
+![Clippy](https://github.com/http-server-rs/http-server/workflows/clippy/badge.svg)
+![Formatter](https://github.com/http-server-rs/http-server/workflows/fmt/badge.svg)
+![Tests](https://github.com/http-server-rs/http-server/workflows/test/badge.svg)
+![Benchs](https://github.com/http-server-rs/http-server/workflows/bench/badge.svg)
 
 </div>
 
@@ -45,10 +45,11 @@ FLAGS:
         --graceful-shutdown    Waits for all requests to fulfill before shutting down the server
         --gzip                 Enable GZip compression for HTTP Responses
         --help                 Prints help information
-        --logger               Prints HTTP request and response details to stdout
-        --tls                  Enables HTTPS serving using TLS
-    -V, --version              Prints version information
+    -l, --logger               Prints HTTP request and response details to stdout
     -q, --quiet                Turns off stdout/stderr logging
+        --tls                  Enables HTTPS serving using TLS
+    -i, --use-index            Whether to route directories to index.html if present
+    -V, --version              Prints version information
 
 OPTIONS:
     -c, --config <config>                          Path to TOML configuration file
@@ -74,19 +75,20 @@ configurations will be used. You can always change this behavior by either
 creating your own config with the [Configuration TOML](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) file
 or by providing CLI arguments described in the [usage](#usage) section.
 
-Name | Description | Default
---- | --- | ---
-Host | Address to bind the server | `127.0.0.1`
-Port | Port to bind the server | `7878`
-Root Directory | The directory to serve files from | `CWD`
-File Explorer UI | A File Explorer UI for the directory configured as the _Root Directory_ | Enabled
-Configuration File | Specifies a configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | Disabled
-HTTPS (TLS) | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/http-server-rs/http-server#tls-https) reference | Disabled
-CORS | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/http-server-rs/http-server#cross-origin-resource-sharing-cors) reference | Disabled
-Compression | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/http-server-rs/http-server#compression) reference | Disabled
-Quiet | Don't print server details when running. This doesn't include any logging capabilities. | Disabled
-Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/http-server-rs/http-server#basic-authentication)  | Disabled
-Logger | Prints HTTP request and response details to stdout | Disabled
+| Name                 | Description                                                                                                                                                | Default     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Host                 | Address to bind the server                                                                                                                                 | `127.0.0.1` |
+| Port                 | Port to bind the server                                                                                                                                    | `7878`      |
+| Root Directory       | The directory to serve files from                                                                                                                          | `CWD`       |
+| File Explorer UI     | A File Explorer UI for the directory configured as the _Root Directory_                                                                                    | Enabled     |
+| Configuration File   | Specifies a configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml)                                    | Disabled    |
+| HTTPS (TLS)          | HTTPS Secure connection configuration. Refer to [TLS (HTTPS)](https://github.com/http-server-rs/http-server#tls-https) reference                           | Disabled    |
+| CORS                 | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/http-server-rs/http-server#cross-origin-resource-sharing-cors) reference | Disabled    |
+| Compression          | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/http-server-rs/http-server#compression) reference                     | Disabled    |
+| Quiet                | Don't print server details when running. This doesn't include any logging capabilities.                                                                    | Disabled    |
+| Use Index            | Route directories to index.html if present                                                                                                                 | Disabled    |
+| Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/http-server-rs/http-server#basic-authentication)         | Disabled    |
+| Logger               | Prints HTTP request and response details to stdout                                                                                                         | Disabled    |
 
 ## Usage
 
@@ -102,15 +104,16 @@ Flags are provided without any values. For example:
 http-server --help
 ```
 
-Name | Short | Long | Description
---- | --- | --- | ---
-Cross-Origin Resource Sharing | N/A | `--cors` | Enable Cross-Origin Resource Sharing allowing any origin
-GZip Compression | N/A | `--gzip` | Enable GZip compression for responses
-Graceful Shutdown | N/A | `--graceful-shutdown` | Wait for all requests to be fulfilled before shutting down the server
-Help | N/A | `--help` | Print help information
-Logger | `-l` | `--logger` | Print HTTP request and response details to stdout
-Version | `-V` | `--version` | Print version information
-Quiet | `-q` | `--quiet` | Don't print output to console
+| Name                          | Short | Long                  | Description                                                           |
+| ----------------------------- | ----- | --------------------- | --------------------------------------------------------------------- |
+| Cross-Origin Resource Sharing | N/A   | `--cors`              | Enable Cross-Origin Resource Sharing allowing any origin              |
+| GZip Compression              | N/A   | `--gzip`              | Enable GZip compression for responses                                 |
+| Graceful Shutdown             | N/A   | `--graceful-shutdown` | Wait for all requests to be fulfilled before shutting down the server |
+| Help                          | N/A   | `--help`              | Print help information                                                |
+| Logger                        | `-l`  | `--logger`            | Print HTTP request and response details to stdout                     |
+| Version                       | `-V`  | `--version`           | Print version information                                             |
+| Quiet                         | `-q`  | `--quiet`             | Don't print output to console                                         |
+| Use Index                     | `-i`  | `--use-index`         | Route directories to index.html if present                            |
 
 ### Options
 
@@ -120,18 +123,18 @@ Options receive a value and support default values as well.
 http-server --host 127.0.0.1
 ```
 
-Name | Short | Long | Description | Default Value
---- | --- | --- | --- | ---
-Host | `-h` | `--host` | Address to bind the server | `127.0.0.1`
-Port | `-p` | `--port` | Port to bind the server | `7878`
-Configuration File | `-c` | `--config` | Configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | N/A
-TLS | N/A | `--tls` | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference) | N/A
-TLS Ceritificate | N/A | `--tls-cert` | Path to TLS certificate file. **Depends on `--tls`** | `cert.pem`
-TLS Key | N/A | `--tls-key` | Path to TLS key file. **Depends on `--tls`** | `key.rsa`
-TLS Key Algorithm | N/A | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`** | `rsa`
-Username | N/A | `--username` | Username to validate using basic authentication | N/A
-Password | N/A | `--password` | Password to validate using basic authentication. **Depends on `--username`** | N/A
-Proxy | N/A | `--proxy` | Proxy requests to the provided URL | N/A
+| Name               | Short | Long                  | Description                                                                                                 | Default Value |
+| ------------------ | ----- | --------------------- | ----------------------------------------------------------------------------------------------------------- | ------------- |
+| Host               | `-h`  | `--host`              | Address to bind the server                                                                                  | `127.0.0.1`   |
+| Port               | `-p`  | `--port`              | Port to bind the server                                                                                     | `7878`        |
+| Configuration File | `-c`  | `--config`            | Configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | N/A           |
+| TLS                | N/A   | `--tls`               | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference)               | N/A           |
+| TLS Ceritificate   | N/A   | `--tls-cert`          | Path to TLS certificate file. **Depends on `--tls`**                                                        | `cert.pem`    |
+| TLS Key            | N/A   | `--tls-key`           | Path to TLS key file. **Depends on `--tls`**                                                                | `key.rsa`     |
+| TLS Key Algorithm  | N/A   | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`**                                          | `rsa`         |
+| Username           | N/A   | `--username`          | Username to validate using basic authentication                                                             | N/A           |
+| Password           | N/A   | `--password`          | Password to validate using basic authentication. **Depends on `--username`**                                | N/A           |
+| Proxy              | N/A   | `--proxy`             | Proxy requests to the provided URL                                                                          | N/A           |
 
 ## Request Handlers
 
