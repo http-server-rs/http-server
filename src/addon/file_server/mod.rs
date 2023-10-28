@@ -15,11 +15,13 @@ use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-use std::fs::read_dir;
+use std::fs::{self, read_dir};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::config::Config;
+use crate::utils::fmt::{format_bytes, format_system_date};
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
@@ -33,11 +35,12 @@ pub struct FileServer {
     root_dir: PathBuf,
     handlebars: Arc<Handlebars<'static>>,
     scoped_file_system: ScopedFileSystem,
+    config: Arc<Config>,
 }
 
 impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
-    pub fn new(root_dir: PathBuf) -> Self {
+    pub fn new(root_dir: PathBuf, config: Arc<Config>) -> Self {
         let handlebars = FileServer::make_handlebars_engine();
         let scoped_file_system = ScopedFileSystem::new(root_dir.clone()).unwrap();
 
@@ -45,6 +48,7 @@ impl<'a> FileServer {
             root_dir,
             handlebars,
             scoped_file_system,
+            config,
         }
     }
 
@@ -134,7 +138,23 @@ impl<'a> FileServer {
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
-                Entry::Directory(dir) => {
+                Entry::Directory(dir) => 'dir: {
+                    if self.config.use_index() {
+                        let mut filepath = dir.path();
+
+                        filepath.push("index.html");
+                        if let Ok(file) = tokio::fs::File::open(&filepath).await {
+                            break 'dir make_http_file_response(
+                                File {
+                                    path: filepath,
+                                    metadata: file.metadata().await?,
+                                    file,
+                                },
+                                CacheControlDirective::MaxAge(2500),
+                            )
+                            .await;
+                        }
+                    }
                     self.render_directory_index(dir.path(), query_params).await
                 }
                 Entry::File(file) => {
