@@ -19,7 +19,7 @@ use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::utils::fmt::{format_bytes};
+use crate::utils::fmt::format_bytes;
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
