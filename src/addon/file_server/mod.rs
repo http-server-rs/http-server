@@ -328,14 +328,14 @@ mod tests {
 
     #[test]
     fn parse_req_uri_path() {
-        let have = vec![
+        let have = [
             "/index.html",
             "/index.html?foo=1234",
             "/foo/index.html?bar=baz",
             "/foo/bar/baz.html?day=6&month=27&year=2021",
         ];
 
-        let want = vec![
+        let want = [
             "/index.html",
             "/index.html",
             "/foo/index.html",

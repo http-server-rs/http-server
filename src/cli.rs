@@ -64,7 +64,7 @@ pub struct Cli {
 
 impl Cli {
     pub fn from_str_args(args: Vec<&str>) -> Self {
-        Cli::from_iter_safe(args.into_iter()).unwrap_or_else(|e| e.exit())
+        Cli::from_iter_safe(args).unwrap_or_else(|e| e.exit())
     }
 }
 
@@ -107,9 +107,10 @@ mod tests {
     #[test]
     fn with_host() {
         let from_args = Cli::from_str_args(vec!["http-server", "--host", "0.0.0.0"]);
-        let mut expect = Cli::default();
-
-        expect.host = "0.0.0.0".parse().unwrap();
+        let expect = Cli {
+            host: "0.0.0.0".parse().unwrap(),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -123,10 +124,11 @@ mod tests {
             "--port",
             "54200",
         ]);
-        let mut expect = Cli::default();
-
-        expect.host = "192.168.0.1".parse().unwrap();
-        expect.port = 54200_u16;
+        let expect = Cli {
+            host: "192.168.0.1".parse().unwrap(),
+            port: 54200_u16,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -134,9 +136,10 @@ mod tests {
     #[test]
     fn with_root_dir() {
         let from_args = Cli::from_str_args(vec!["http-server", "~/User/sources/http-server"]);
-        let mut expect = Cli::default();
-
-        expect.root_dir = PathBuf::from_str("~/User/sources/http-server").unwrap();
+        let expect = Cli {
+            root_dir: PathBuf::from_str("~/User/sources/http-server").unwrap(),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -144,9 +147,10 @@ mod tests {
     #[test]
     fn with_quiet() {
         let from_args = Cli::from_str_args(vec!["http-server", "--quiet"]);
-        let mut expect = Cli::default();
-
-        expect.quiet = true;
+        let expect = Cli {
+            quiet: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -154,9 +158,10 @@ mod tests {
     #[test]
     fn with_tls_no_config() {
         let from_args = Cli::from_str_args(vec!["http-server", "--tls"]);
-        let mut expect = Cli::default();
-
-        expect.tls = true;
+        let expect = Cli {
+            tls: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -173,12 +178,13 @@ mod tests {
             "--tls-key-algorithm",
             "rsa",
         ]);
-        let mut expect = Cli::default();
-
-        expect.tls = true;
-        expect.tls_cert = PathBuf::from_str("~/secrets/cert").unwrap();
-        expect.tls_key = PathBuf::from_str("~/secrets/key").unwrap();
-        expect.tls_key_algorithm = PrivateKeyAlgorithm::Rsa;
+        let expect = Cli {
+            tls: true,
+            tls_cert: PathBuf::from_str("~/secrets/cert").unwrap(),
+            tls_key: PathBuf::from_str("~/secrets/key").unwrap(),
+            tls_key_algorithm: PrivateKeyAlgorithm::Rsa,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -186,9 +192,10 @@ mod tests {
     #[test]
     fn with_cors() {
         let from_args = Cli::from_str_args(vec!["http-server", "--cors"]);
-        let mut expect = Cli::default();
-
-        expect.cors = true;
+        let expect = Cli {
+            cors: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -196,9 +203,10 @@ mod tests {
     #[test]
     fn with_gzip() {
         let from_args = Cli::from_str_args(vec!["http-server", "--gzip"]);
-        let mut expect = Cli::default();
-
-        expect.gzip = true;
+        let expect = Cli {
+            gzip: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -212,10 +220,11 @@ mod tests {
             "--password",
             "Appleseed",
         ]);
-        let mut expect = Cli::default();
-
-        expect.username = Some(String::from("John"));
-        expect.password = Some(String::from("Appleseed"));
+        let expect = Cli {
+            username: Some(String::from("John")),
+            password: Some(String::from("Appleseed")),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -223,10 +232,11 @@ mod tests {
     #[test]
     fn with_username_but_not_password() {
         let from_args = Cli::from_str_args(vec!["http-server", "--username", "John"]);
-        let mut expect = Cli::default();
-
-        expect.username = Some(String::from("John"));
-        expect.password = None;
+        let expect = Cli {
+            username: Some(String::from("John")),
+            password: None,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -234,10 +244,11 @@ mod tests {
     #[test]
     fn with_password_but_not_username() {
         let from_args = Cli::from_str_args(vec!["http-server", "--password", "Appleseed"]);
-        let mut expect = Cli::default();
-
-        expect.username = None;
-        expect.password = Some(String::from("Appleseed"));
+        let expect = Cli {
+            username: None,
+            password: Some(String::from("Appleseed")),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -245,9 +256,10 @@ mod tests {
     #[test]
     fn with_logger() {
         let from_args = Cli::from_str_args(vec!["http-server", "--logger"]);
-        let mut expect = Cli::default();
-
-        expect.logger = true;
+        let expect = Cli {
+            logger: true,
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }
@@ -255,9 +267,10 @@ mod tests {
     #[test]
     fn with_proxy() {
         let from_args = Cli::from_str_args(vec!["http-server", "--proxy", "https://example.com"]);
-        let mut expect = Cli::default();
-
-        expect.proxy = Some(String::from("https://example.com"));
+        let expect = Cli {
+            proxy: Some(String::from("https://example.com")),
+            ..Default::default()
+        };
 
         assert_eq!(from_args, expect);
     }

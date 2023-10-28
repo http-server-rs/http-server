@@ -31,15 +31,7 @@ impl Ord for DirectoryEntry {
 
 impl PartialOrd for DirectoryEntry {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.is_dir && other.is_dir {
-            return Some(self.display_name.cmp(&other.display_name));
-        }
-
-        if self.is_dir && !other.is_dir {
-            return Some(Ordering::Less);
-        }
-
-        Some(Ordering::Greater)
+        Some(self.cmp(other))
     }
 }
 
