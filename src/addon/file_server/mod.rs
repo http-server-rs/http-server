@@ -4,6 +4,7 @@ mod http_utils;
 mod query_params;
 mod scoped_file_system;
 
+use chrono::Local;
 pub use file::{File, FILE_BUFFER_SIZE};
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 
@@ -224,16 +225,18 @@ impl<'a> FileServer {
         for entry in entries {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
-            let created_at = if let Ok(time) = metadata.created() {
-                format_system_date(time)
+            let date_created_exact = if let Ok(time) = metadata.created() {
+                time.into()
             } else {
-                String::default()
+                Local::now()
             };
-            let updated_at = if let Ok(time) = metadata.modified() {
-                format_system_date(time)
+            let date_created_string = date_created_exact.format("%Y/%m/%d %H:%M:%S").to_string();
+            let date_modified_exact = if let Ok(time) = metadata.modified() {
+                time.into()
             } else {
-                String::default()
+                Local::now()
             };
+            let date_modified_string = date_modified_exact.format("%Y/%m/%d %H:%M:%S").to_string();
 
             directory_entries.push(DirectoryEntry {
                 display_name: entry
@@ -245,8 +248,10 @@ impl<'a> FileServer {
                 size: format_bytes(metadata.len() as f64),
                 len: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
-                created_at,
-                updated_at,
+                date_created_exact,
+                date_created_string,
+                date_modified_exact,
+                date_modified_string,
             });
         }
 
@@ -261,6 +266,8 @@ impl<'a> FileServer {
                             breadcrumbs,
                             sort_by_name: true,
                             sort_by_size: false,
+                            sort_by_date_created: false,
+                            sort_by_date_modified: false,
                         });
                     }
                     SortBy::Size => {
@@ -271,6 +278,32 @@ impl<'a> FileServer {
                             breadcrumbs,
                             sort_by_name: false,
                             sort_by_size: true,
+                            sort_by_date_created: false,
+                            sort_by_date_modified: false,
+                        });
+                    }
+                    SortBy::DateCreated => {
+                        directory_entries.sort_by_key(|entry| entry.date_created_exact);
+
+                        return Ok(DirectoryIndex {
+                            entries: directory_entries,
+                            breadcrumbs,
+                            sort_by_name: false,
+                            sort_by_size: false,
+                            sort_by_date_created: true,
+                            sort_by_date_modified: false,
+                        });
+                    }
+                    SortBy::DateModified => {
+                        directory_entries.sort_by_key(|entry| entry.date_modified_exact);
+
+                        return Ok(DirectoryIndex {
+                            entries: directory_entries,
+                            breadcrumbs,
+                            sort_by_name: false,
+                            sort_by_size: false,
+                            sort_by_date_created: false,
+                            sort_by_date_modified: true,
                         });
                     }
                 }
@@ -284,6 +317,8 @@ impl<'a> FileServer {
             breadcrumbs,
             sort_by_name: false,
             sort_by_size: false,
+            sort_by_date_created: false,
+            sort_by_date_modified: false,
         })
     }
 

@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use serde::Serialize;
 use std::cmp::{Ord, Ordering};
 
@@ -11,8 +12,10 @@ pub struct DirectoryEntry {
     pub(crate) size: String,
     pub(crate) len: u64,
     pub(crate) entry_path: String,
-    pub(crate) created_at: String,
-    pub(crate) updated_at: String,
+    pub(crate) date_created_string: String,
+    pub(crate) date_modified_string: String,
+    pub(crate) date_created_exact: DateTime<Local>,
+    pub(crate) date_modified_exact: DateTime<Local>,
 }
 
 impl Ord for DirectoryEntry {
@@ -62,4 +65,6 @@ pub struct DirectoryIndex {
     pub(crate) breadcrumbs: Vec<BreadcrumbItem>,
     pub(crate) sort_by_name: bool,
     pub(crate) sort_by_size: bool,
+    pub(crate) sort_by_date_created: bool,
+    pub(crate) sort_by_date_modified: bool,
 }

@@ -200,8 +200,17 @@
         {{else}}
           <a class="hcol" href="?sort_by=size">Size</a>
         {{/if}}
-        <a class="hcol">Date created</a>
-        <a class="hcol">Date modified</a>
+        {{#if sort_by_date_created}}
+          <a class="hcol" href="?sort_by=">Date created&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=date_created">Date created</a>
+        {{/if}}
+        {{#if sort_by_date_modified}}
+          <a class="hcol" href="?sort_by=">Date modified&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=date_modified">Date modified</a>
+        {{/if}}
+
       </li>
       {{#each entries}}
       <li class="brow">
@@ -215,8 +224,8 @@
           </span>
           <span class="bcol">{{display_name}}</span>
           <span class="bcol">{{size}}</span>
-          <span class="bcol">{{created_at}}</span>
-          <span class="bcol">{{updated_at}}</span>
+          <span class="bcol">{{date_created_string}}</span>
+          <span class="bcol">{{date_modified_string}}</span>
         </a>
       </li>
       {{/each}}
