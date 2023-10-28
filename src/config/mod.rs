@@ -27,7 +27,7 @@ pub struct Config {
     host: IpAddr,
     port: u16,
     root_dir: PathBuf,
-    verbose: bool,
+    quiet: bool,
     tls: Option<TlsConfig>,
     cors: Option<CorsConfig>,
     compression: Option<CompressionConfig>,
@@ -54,8 +54,8 @@ impl Config {
         self.root_dir.clone()
     }
 
-    pub fn verbose(&self) -> bool {
-        self.verbose
+    pub fn quiet(&self) -> bool {
+        self.quiet
     }
 
     pub fn tls(&self) -> Option<TlsConfig> {
@@ -99,7 +99,7 @@ impl Default for Config {
             port,
             address,
             root_dir,
-            verbose: false,
+            quiet: false,
             tls: None,
             cors: None,
             compression: None,
@@ -115,7 +115,7 @@ impl TryFrom<Cli> for Config {
     type Error = anyhow::Error;
 
     fn try_from(cli_arguments: Cli) -> Result<Self, Self::Error> {
-        let verbose = cli_arguments.verbose;
+        let quiet = cli_arguments.quiet;
         let root_dir = if cli_arguments.root_dir.to_str().unwrap() == "./" {
             current_dir().unwrap()
         } else {
@@ -181,7 +181,7 @@ impl TryFrom<Cli> for Config {
             port: cli_arguments.port,
             address: SocketAddr::new(cli_arguments.host, cli_arguments.port),
             root_dir,
-            verbose,
+            quiet,
             tls,
             cors,
             compression,
@@ -198,7 +198,7 @@ impl TryFrom<ConfigFile> for Config {
 
     fn try_from(file: ConfigFile) -> Result<Self, Self::Error> {
         let root_dir = file.root_dir.unwrap_or_default();
-        let verbose = file.verbose.unwrap_or(false);
+        let quiet = file.quiet.unwrap_or(false);
         let tls: Option<TlsConfig> = if let Some(https_config) = file.tls {
             Some(TlsConfig::new(
                 https_config.cert,
@@ -213,7 +213,7 @@ impl TryFrom<ConfigFile> for Config {
             host: file.host,
             port: file.port,
             address: SocketAddr::new(file.host, file.port),
-            verbose,
+            quiet,
             root_dir,
             tls,
             cors: file.cors,
@@ -249,6 +249,6 @@ mod tests {
             "default socket address: {}",
             address
         );
-        assert!(!config.verbose, "verbose is off by default");
+        assert!(!config.quiet, "quiet is off by default");
     }
 }

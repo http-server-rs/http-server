@@ -24,9 +24,9 @@ pub struct Cli {
     /// Directory to serve files from
     #[structopt(parse(from_os_str), default_value = "./")]
     pub root_dir: PathBuf,
-    /// Turns on stdout/stderr logging
-    #[structopt(short = "v", long = "verbose")]
-    pub verbose: bool,
+    /// Turns off stdout/stderr logging
+    #[structopt(short = "q", long = "quiet")]
+    pub quiet: bool,
     /// Enables HTTPS serving using TLS
     #[structopt(long = "tls")]
     pub tls: bool,
@@ -75,7 +75,7 @@ impl Default for Cli {
             host: "127.0.0.1".parse().unwrap(),
             port: 7878_u16,
             root_dir: PathBuf::from_str("./").unwrap(),
-            verbose: false,
+            quiet: false,
             tls: false,
             tls_cert: PathBuf::from_str("cert.pem").unwrap(),
             tls_key: PathBuf::from_str("key.rsa").unwrap(),
@@ -142,11 +142,11 @@ mod tests {
     }
 
     #[test]
-    fn with_verbose() {
-        let from_args = Cli::from_str_args(vec!["http-server", "--verbose"]);
+    fn with_quiet() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--quiet"]);
         let mut expect = Cli::default();
 
-        expect.verbose = true;
+        expect.quiet = true;
 
         assert_eq!(from_args, expect);
     }

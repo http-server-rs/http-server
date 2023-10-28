@@ -73,7 +73,7 @@ impl Server {
             }
         }));
 
-        if self.config.verbose() {
+        if !self.config.quiet() {
             println!("Serving HTTP: http://{}", address);
 
             if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
@@ -118,7 +118,7 @@ impl Server {
             }
         }));
 
-        if self.config.verbose() {
+        if !self.config.quiet() {
             println!("Serving HTTPS: http://{}", address);
 
             if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
