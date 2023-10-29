@@ -274,44 +274,35 @@ impl<'a> FileServer {
 
         if let Some(query_params) = query_params {
             if let Some(sort_by) = query_params.sort_by {
-                match sort_by {
+                type SortClosure = Box<dyn FnMut(&mut Vec<DirectoryEntry>)>;
+
+                let mut sort_function: SortClosure = match sort_by {
                     SortBy::Name => {
-                        directory_entries.sort_by_key(|entry| entry.display_name.clone());
-
-                        return Ok(DirectoryIndex {
-                            entries: directory_entries,
-                            breadcrumbs,
-                            sort: Sort::Name,
-                        });
+                        Box::new(|entries| entries.sort_by_key(|entry| entry.display_name.clone()))
                     }
-                    SortBy::Size => {
-                        directory_entries.sort_by_key(|entry| entry.len);
-
-                        return Ok(DirectoryIndex {
-                            entries: directory_entries,
-                            breadcrumbs,
-                            sort: Sort::Size,
-                        });
-                    }
+                    SortBy::Size => Box::new(|entries| entries.sort_by_key(|entry| entry.len)),
                     SortBy::DateCreated => {
-                        directory_entries.sort_by_key(|entry| entry.date_created);
-
-                        return Ok(DirectoryIndex {
-                            entries: directory_entries,
-                            breadcrumbs,
-                            sort: Sort::DateCreated,
-                        });
+                        Box::new(|entries| entries.sort_by_key(|entry| entry.date_created))
                     }
                     SortBy::DateModified => {
-                        directory_entries.sort_by_key(|entry| entry.date_modified);
-
-                        return Ok(DirectoryIndex {
-                            entries: directory_entries,
-                            breadcrumbs,
-                            sort: Sort::DateModified,
-                        });
+                        Box::new(|entries| entries.sort_by_key(|entry| entry.date_modified))
                     }
-                }
+                };
+
+                sort_function(&mut directory_entries);
+
+                let sort_enum = match sort_by {
+                    SortBy::Name => Sort::Name,
+                    SortBy::Size => Sort::Size,
+                    SortBy::DateCreated => Sort::DateCreated,
+                    SortBy::DateModified => Sort::DateModified,
+                };
+
+                return Ok(DirectoryIndex {
+                    entries: directory_entries,
+                    breadcrumbs,
+                    sort: sort_enum,
+                });
             }
         }
 
