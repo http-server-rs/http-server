@@ -17,6 +17,7 @@ pub struct ConfigFile {
     pub port: u16,
     pub quiet: Option<bool>,
     pub use_index: Option<bool>,
+    pub spa: Option<bool>,
     #[serde(default = "current_working_dir")]
     #[serde(deserialize_with = "canonicalize_some")]
     pub root_dir: Option<PathBuf>,
