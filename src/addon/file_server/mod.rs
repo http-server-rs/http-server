@@ -9,6 +9,7 @@ use chrono::{DateTime, Local};
 pub use file::{File, FILE_BUFFER_SIZE};
 use humansize::{format_size, DECIMAL};
 use mime_guess::mime::{HTML, TEXT_HTML};
+
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
@@ -19,7 +20,7 @@ use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde_json::json;
-use std::fs::{self, read_dir};
+use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
