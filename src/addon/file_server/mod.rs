@@ -60,7 +60,12 @@ impl<'a> FileServer {
             .register_template_string(EXPLORER_TEMPLATE, template)
             .unwrap();
 
-        handlebars_helper!(date: |s: DateTime<Local>| s.format("%Y/%m/%d %H:%M:%S").to_string());
+        handlebars_helper!(date: |d: Option<DateTime<Local>>| {
+            match d {
+                Some(d) => d.format("%Y/%m/%d %H:%M:%S").to_string(),
+                None => "-".to_owned(),
+            }
+        });
         handlebars.register_helper("date", Box::new(date));
 
         handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
@@ -242,14 +247,14 @@ impl<'a> FileServer {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
             let date_created = if let Ok(time) = metadata.created() {
-                time.into()
+                Some(time.into())
             } else {
-                Local::now()
+                None
             };
             let date_modified = if let Ok(time) = metadata.modified() {
-                time.into()
+                Some(time.into())
             } else {
-                Local::now()
+                None
             };
 
             directory_entries.push(DirectoryEntry {

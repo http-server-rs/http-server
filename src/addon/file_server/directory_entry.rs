@@ -12,8 +12,8 @@ pub struct DirectoryEntry {
     pub(crate) size: String,
     pub(crate) len: u64,
     pub(crate) entry_path: String,
-    pub(crate) date_created: DateTime<Local>,
-    pub(crate) date_modified: DateTime<Local>,
+    pub(crate) date_created: Option<DateTime<Local>>,
+    pub(crate) date_modified: Option<DateTime<Local>>,
 }
 
 impl Ord for DirectoryEntry {
