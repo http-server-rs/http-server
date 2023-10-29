@@ -8,6 +8,7 @@ port = 7878
 # root_dir = "./"
 # graceful_shutdown = false
 # use_index = false
+# spa = false
 
 # [tls]
 # cert = "cert.pem"
