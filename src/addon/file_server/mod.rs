@@ -137,33 +137,6 @@ impl<'a> FileServer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        fn create_error_response(err: std::io::Error) -> Result<Response<Body>> {
-            use std::io::ErrorKind;
-
-            let status = match err.kind() {
-                ErrorKind::NotFound => StatusCode::NOT_FOUND,
-                ErrorKind::PermissionDenied => StatusCode::FORBIDDEN,
-                _ => StatusCode::BAD_REQUEST,
-            };
-
-            let code = match err.kind() {
-                ErrorKind::NotFound => "404",
-                ErrorKind::PermissionDenied => "403",
-                _ => "400",
-            };
-
-            let response = HttpResponseBuilder::new()
-                .status(status)
-                .header(http::header::CONTENT_TYPE, "text/html")
-                .body(Body::from(Handlebars::new().render_template(
-                    include_str!("./template/error.hbs"),
-                    &json!({"error": err.to_string(), "code": code}),
-                )?))
-                .expect("Failed to build response");
-
-            Ok(response)
-        }
-
         let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
 
         match self.scoped_file_system.resolve(path).await {
@@ -191,7 +164,52 @@ impl<'a> FileServer {
                     make_http_file_response(*file, CacheControlDirective::MaxAge(2500)).await
                 }
             },
-            Err(err) => create_error_response(err),
+            Err(err) => {
+                if self.config.spa() {
+                    make_http_file_response(
+                        {
+                            let mut path = self.config.root_dir();
+                            path.push("index.html");
+
+                            let file = tokio::fs::File::open(&path).await?;
+
+                            let metadata = file.metadata().await?;
+
+                            File {
+                                path,
+                                metadata,
+                                file,
+                            }
+                        },
+                        CacheControlDirective::MaxAge(2500),
+                    )
+                    .await
+                } else {
+                    let status = match err.kind() {
+                        std::io::ErrorKind::NotFound => hyper::StatusCode::NOT_FOUND,
+                        std::io::ErrorKind::PermissionDenied => hyper::StatusCode::FORBIDDEN,
+                        _ => hyper::StatusCode::BAD_REQUEST,
+                    };
+
+                    let code = match err.kind() {
+                        std::io::ErrorKind::NotFound => "404",
+                        std::io::ErrorKind::PermissionDenied => "403",
+                        _ => "400",
+                    };
+
+                    let response = hyper::Response::builder()
+                        .status(status)
+                        .header(http::header::CONTENT_TYPE, "text/html")
+                        .body(hyper::Body::from(
+                            handlebars::Handlebars::new().render_template(
+                                include_str!("./template/error.hbs"),
+                                &serde_json::json!({"error": err.to_string(), "code": code}),
+                            )?,
+                        ))?;
+
+                    Ok(response)
+                }
+            }
         }
     }
 

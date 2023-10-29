@@ -24,6 +24,9 @@ pub struct Cli {
     /// Route directories to index.html if present
     #[structopt(short = "i", long = "use-index")]
     pub use_index: bool,
+    /// Route non-existent files to /index.html
+    #[structopt(long = "spa")]
+    pub spa: bool,
     /// Directory to serve files from
     #[structopt(parse(from_os_str), default_value = "./")]
     pub root_dir: PathBuf,
@@ -78,6 +81,7 @@ impl Default for Cli {
             host: "127.0.0.1".parse().unwrap(),
             port: 7878_u16,
             use_index: false,
+            spa: false,
             root_dir: PathBuf::from_str("./").unwrap(),
             quiet: false,
             tls: false,
