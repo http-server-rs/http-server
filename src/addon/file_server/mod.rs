@@ -4,13 +4,13 @@ mod http_utils;
 mod query_params;
 mod scoped_file_system;
 
-use chrono::Local;
+use chrono::{DateTime, Local};
 
 pub use file::{File, FILE_BUFFER_SIZE};
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
-use handlebars::Handlebars;
+use handlebars::{handlebars_helper, Handlebars};
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
@@ -23,7 +23,7 @@ use std::sync::Arc;
 use crate::utils::fmt::format_bytes;
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
-use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex};
+use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
 use self::http_utils::{make_http_file_response, CacheControlDirective};
 use self::query_params::{QueryParams, SortBy};
 
@@ -59,6 +59,21 @@ impl<'a> FileServer {
         handlebars
             .register_template_string(EXPLORER_TEMPLATE, template)
             .unwrap();
+
+        handlebars_helper!(date: |s: DateTime<Local>| s.format("%Y/%m/%d %H:%M:%S").to_string());
+        handlebars.register_helper("date", Box::new(date));
+
+        handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
+        handlebars.register_helper("sort_name", Box::new(sort_name));
+
+        handlebars_helper!(sort_size: |sort: Sort| sort == Sort::Size);
+        handlebars.register_helper("sort_size", Box::new(sort_size));
+
+        handlebars_helper!(sort_date_created: |sort: Sort| sort == Sort::DateCreated);
+        handlebars.register_helper("sort_date_created", Box::new(sort_date_created));
+
+        handlebars_helper!(sort_date_modified: |sort: Sort| sort == Sort::DateModified);
+        handlebars.register_helper("sort_date_modified", Box::new(sort_date_modified));
 
         Arc::new(handlebars)
     }
@@ -226,18 +241,16 @@ impl<'a> FileServer {
         for entry in entries {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
-            let date_created_exact = if let Ok(time) = metadata.created() {
+            let date_created = if let Ok(time) = metadata.created() {
                 time.into()
             } else {
                 Local::now()
             };
-            let date_created_string = date_created_exact.format("%Y/%m/%d %H:%M:%S").to_string();
-            let date_modified_exact = if let Ok(time) = metadata.modified() {
+            let date_modified = if let Ok(time) = metadata.modified() {
                 time.into()
             } else {
                 Local::now()
             };
-            let date_modified_string = date_modified_exact.format("%Y/%m/%d %H:%M:%S").to_string();
 
             directory_entries.push(DirectoryEntry {
                 display_name: entry
@@ -249,10 +262,8 @@ impl<'a> FileServer {
                 size: format_bytes(metadata.len() as f64),
                 len: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
-                date_created_exact,
-                date_created_string,
-                date_modified_exact,
-                date_modified_string,
+                date_created,
+                date_modified,
             });
         }
 
@@ -265,10 +276,7 @@ impl<'a> FileServer {
                         return Ok(DirectoryIndex {
                             entries: directory_entries,
                             breadcrumbs,
-                            sort_by_name: true,
-                            sort_by_size: false,
-                            sort_by_date_created: false,
-                            sort_by_date_modified: false,
+                            sort: Sort::Name,
                         });
                     }
                     SortBy::Size => {
@@ -277,34 +285,25 @@ impl<'a> FileServer {
                         return Ok(DirectoryIndex {
                             entries: directory_entries,
                             breadcrumbs,
-                            sort_by_name: false,
-                            sort_by_size: true,
-                            sort_by_date_created: false,
-                            sort_by_date_modified: false,
+                            sort: Sort::Size,
                         });
                     }
                     SortBy::DateCreated => {
-                        directory_entries.sort_by_key(|entry| entry.date_created_exact);
+                        directory_entries.sort_by_key(|entry| entry.date_created);
 
                         return Ok(DirectoryIndex {
                             entries: directory_entries,
                             breadcrumbs,
-                            sort_by_name: false,
-                            sort_by_size: false,
-                            sort_by_date_created: true,
-                            sort_by_date_modified: false,
+                            sort: Sort::DateCreated,
                         });
                     }
                     SortBy::DateModified => {
-                        directory_entries.sort_by_key(|entry| entry.date_modified_exact);
+                        directory_entries.sort_by_key(|entry| entry.date_modified);
 
                         return Ok(DirectoryIndex {
                             entries: directory_entries,
                             breadcrumbs,
-                            sort_by_name: false,
-                            sort_by_size: false,
-                            sort_by_date_created: false,
-                            sort_by_date_modified: true,
+                            sort: Sort::DateModified,
                         });
                     }
                 }
@@ -316,10 +315,7 @@ impl<'a> FileServer {
         Ok(DirectoryIndex {
             entries: directory_entries,
             breadcrumbs,
-            sort_by_name: false,
-            sort_by_size: false,
-            sort_by_date_created: false,
-            sort_by_date_modified: false,
+            sort: Sort::Default,
         })
     }
 

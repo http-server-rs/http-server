@@ -190,22 +190,22 @@
     <ul id="explorer">
       <li class="hrow">
         <span class="hcol icon-col"></span>
-        {{#if sort_by_name}}
+        {{#if (sort_name sort)}}
           <a class="hcol" href="?sort_by=">Name&nbsp;↓</a>
         {{else}}
           <a class="hcol" href="?sort_by=name">Name</a>
         {{/if}}
-        {{#if sort_by_size}}
+        {{#if (sort_size sort)}}
           <a class="hcol" href="?sort_by=">Size&nbsp;↓</a>
         {{else}}
           <a class="hcol" href="?sort_by=size">Size</a>
         {{/if}}
-        {{#if sort_by_date_created}}
+        {{#if (sort_date_created sort)}}
           <a class="hcol" href="?sort_by=">Date created&nbsp;↓</a>
         {{else}}
           <a class="hcol" href="?sort_by=date_created">Date created</a>
         {{/if}}
-        {{#if sort_by_date_modified}}
+        {{#if (sort_date_modified sort)}}
           <a class="hcol" href="?sort_by=">Date modified&nbsp;↓</a>
         {{else}}
           <a class="hcol" href="?sort_by=date_modified">Date modified</a>
@@ -224,8 +224,8 @@
           </span>
           <span class="bcol">{{display_name}}</span>
           <span class="bcol">{{size}}</span>
-          <span class="bcol">{{date_created_string}}</span>
-          <span class="bcol">{{date_modified_string}}</span>
+          <span class="bcol">{{date date_created}}</span>
+          <span class="bcol">{{date date_modified}}</span>
         </a>
       </li>
       {{/each}}
