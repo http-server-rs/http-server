@@ -6,7 +6,10 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
+pub use file::{File, FILE_BUFFER_SIZE};
 use humansize::{format_size, DECIMAL};
+use mime_guess::mime::{HTML, TEXT_HTML};
+pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
@@ -15,6 +18,7 @@ use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
+use serde_json::json;
 use std::fs::{self, read_dir};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -164,15 +168,27 @@ impl<'a> FileServer {
             Err(err) => match err.kind() {
                 ErrorKind::NotFound => Ok(HttpResponseBuilder::new()
                     .status(StatusCode::NOT_FOUND)
-                    .body(Body::from(err.to_string()))
+                    .header(http::header::CONTENT_TYPE, "text/html")
+                    .body(Body::from(Handlebars::new().render_template(
+                        include_str!("./template/error.hbs"),
+                        &json!({"error": err.to_string(), "code": "404"}),
+                    )?))
                     .expect("Failed to build response")),
                 ErrorKind::PermissionDenied => Ok(HttpResponseBuilder::new()
                     .status(StatusCode::FORBIDDEN)
-                    .body(Body::from(err.to_string()))
+                    .header(http::header::CONTENT_TYPE, "text/html")
+                    .body(Body::from(Handlebars::new().render_template(
+                        include_str!("./template/error.hbs"),
+                        &json!({"error": err.to_string(), "code": "403"}),
+                    )?))
                     .expect("Failed to build response")),
                 _ => Ok(HttpResponseBuilder::new()
                     .status(StatusCode::BAD_REQUEST)
-                    .body(Body::from(err.to_string()))
+                    .header(http::header::CONTENT_TYPE, "text/html")
+                    .body(Body::from(Handlebars::new().render_template(
+                        include_str!("./template/error.hbs"),
+                        &json!({"error": err.to_string(), "code": "400"}),
+                    )?))
                     .expect("Failed to build response")),
             },
         }
