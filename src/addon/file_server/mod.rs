@@ -15,7 +15,7 @@ use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde_json::json;
-use std::fs::{read_dir};
+use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -109,7 +109,32 @@ impl<'a> FileServer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        use std::io::ErrorKind;
+        fn create_error_response(err: std::io::Error) -> Result<Response<Body>> {
+            use std::io::ErrorKind;
+
+            let status = match err.kind() {
+                ErrorKind::NotFound => StatusCode::NOT_FOUND,
+                ErrorKind::PermissionDenied => StatusCode::FORBIDDEN,
+                _ => StatusCode::BAD_REQUEST,
+            };
+
+            let code = match err.kind() {
+                ErrorKind::NotFound => "404",
+                ErrorKind::PermissionDenied => "403",
+                _ => "400",
+            };
+
+            let response = HttpResponseBuilder::new()
+                .status(status)
+                .header(http::header::CONTENT_TYPE, "text/html")
+                .body(Body::from(Handlebars::new().render_template(
+                    include_str!("./template/error.hbs"),
+                    &json!({"error": err.to_string(), "code": code}),
+                )?))
+                .expect("Failed to build response");
+
+            Ok(response)
+        }
 
         let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
 
@@ -138,32 +163,7 @@ impl<'a> FileServer {
                     make_http_file_response(*file, CacheControlDirective::MaxAge(2500)).await
                 }
             },
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::NOT_FOUND)
-                    .header(http::header::CONTENT_TYPE, "text/html")
-                    .body(Body::from(Handlebars::new().render_template(
-                        include_str!("./template/error.hbs"),
-                        &json!({"error": err.to_string(), "code": "404"}),
-                    )?))
-                    .expect("Failed to build response")),
-                ErrorKind::PermissionDenied => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::FORBIDDEN)
-                    .header(http::header::CONTENT_TYPE, "text/html")
-                    .body(Body::from(Handlebars::new().render_template(
-                        include_str!("./template/error.hbs"),
-                        &json!({"error": err.to_string(), "code": "403"}),
-                    )?))
-                    .expect("Failed to build response")),
-                _ => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::BAD_REQUEST)
-                    .header(http::header::CONTENT_TYPE, "text/html")
-                    .body(Body::from(Handlebars::new().render_template(
-                        include_str!("./template/error.hbs"),
-                        &json!({"error": err.to_string(), "code": "400"}),
-                    )?))
-                    .expect("Failed to build response")),
-            },
+            Err(err) => create_error_response(err),
         }
     }
 
