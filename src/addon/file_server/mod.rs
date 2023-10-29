@@ -5,7 +5,6 @@ mod query_params;
 mod scoped_file_system;
 
 pub use file::{File, FILE_BUFFER_SIZE};
-
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
