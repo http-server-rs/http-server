@@ -19,7 +19,6 @@ use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
