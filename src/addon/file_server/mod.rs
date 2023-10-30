@@ -311,7 +311,7 @@ impl<'a> FileServer {
         Ok(DirectoryIndex {
             entries: directory_entries,
             breadcrumbs,
-            sort: Sort::Default,
+            sort: Sort::Directory,
         })
     }
 

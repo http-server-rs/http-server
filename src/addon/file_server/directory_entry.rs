@@ -66,7 +66,7 @@ pub struct DirectoryIndex {
 
 #[derive(Serialize, Debug, PartialEq, Deserialize)]
 pub enum Sort {
-    Default,
+    Directory,
     Name,
     Size,
     DateCreated,
