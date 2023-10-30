@@ -153,10 +153,54 @@ mod tests {
     }
 
     #[test]
-    fn with_quiet() {
+    fn with_quiet_long() {
         let from_args = Cli::from_str_args(vec!["http-server", "--quiet"]);
         let expect = Cli {
             quiet: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_quiet_short() {
+        let from_args = Cli::from_str_args(vec!["http-server", "-q"]);
+        let expect = Cli {
+            quiet: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_spa() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--spa"]);
+        let expect = Cli {
+            spa: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_use_index_long() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--use-index"]);
+        let expect = Cli {
+            use_index: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_use_index_short() {
+        let from_args = Cli::from_str_args(vec!["http-server", "-i"]);
+        let expect = Cli {
+            use_index: true,
             ..Default::default()
         };
 
