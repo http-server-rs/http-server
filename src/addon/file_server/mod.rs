@@ -274,22 +274,18 @@ impl<'a> FileServer {
 
         if let Some(query_params) = query_params {
             if let Some(sort_by) = query_params.sort_by {
-                type SortClosure = Box<dyn FnMut(&mut Vec<DirectoryEntry>)>;
-
-                let mut sort_function: SortClosure = match sort_by {
+                match sort_by {
                     SortBy::Name => {
-                        Box::new(|entries| entries.sort_by_key(|entry| entry.display_name.clone()))
+                        directory_entries.sort_by_key(|entry| entry.display_name.clone());
                     }
-                    SortBy::Size => Box::new(|entries| entries.sort_by_key(|entry| entry.len)),
+                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.len),
                     SortBy::DateCreated => {
-                        Box::new(|entries| entries.sort_by_key(|entry| entry.date_created))
+                        directory_entries.sort_by_key(|entry| entry.date_created)
                     }
                     SortBy::DateModified => {
-                        Box::new(|entries| entries.sort_by_key(|entry| entry.date_modified))
+                        directory_entries.sort_by_key(|entry| entry.date_modified)
                     }
                 };
-
-                sort_function(&mut directory_entries);
 
                 let sort_enum = match sort_by {
                     SortBy::Name => Sort::Name,
