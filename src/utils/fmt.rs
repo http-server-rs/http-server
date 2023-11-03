@@ -1,7 +1,3 @@
-use chrono::prelude::*;
-use chrono::{DateTime, Local};
-use std::time::SystemTime;
-
 /// Byte size units
 const BYTE_SIZE_UNIT: [&str; 9] = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
@@ -16,21 +12,6 @@ pub fn format_bytes(bytes: f64) -> String {
     let value = bytes / 1024_f64.powf(i);
 
     format!("{:.2} {}", value, BYTE_SIZE_UNIT[i as usize])
-}
-
-/// Formats a `SystemTime` into a YYYY/MM/DD HH:MM:SS time `String`
-pub fn format_system_date(system_time: SystemTime) -> String {
-    let datetime: DateTime<Local> = DateTime::from(system_time);
-
-    format!(
-        "{}/{:0>2}/{:0>2} {:0>2}:{:0>2}:{:0>2}",
-        datetime.year(),
-        datetime.month(),
-        datetime.day(),
-        datetime.hour(),
-        datetime.minute(),
-        datetime.second()
-    )
 }
 
 #[cfg(test)]
