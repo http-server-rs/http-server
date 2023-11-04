@@ -15,12 +15,12 @@ use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
+use size::Size;
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::utils::fmt::format_bytes;
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
@@ -67,6 +67,9 @@ impl<'a> FileServer {
             }
         });
         handlebars.register_helper("date", Box::new(date));
+
+        handlebars_helper!(size: |bytes: u64| Size::from_bytes(bytes).to_string());
+        handlebars.register_helper("size", Box::new(size));
 
         handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
         handlebars.register_helper("sort_name", Box::new(sort_name));
@@ -264,7 +267,7 @@ impl<'a> FileServer {
                     .context("Unable to gather file name into a String")?
                     .to_string(),
                 is_dir: metadata.is_dir(),
-                size: format_bytes(metadata.len() as f64),
+                size_bytes: metadata.len(),
                 len: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
                 date_created,

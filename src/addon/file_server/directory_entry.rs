@@ -9,7 +9,7 @@ use std::cmp::{Ord, Ordering};
 pub struct DirectoryEntry {
     pub(crate) display_name: String,
     pub(crate) is_dir: bool,
-    pub(crate) size: String,
+    pub(crate) size_bytes: u64,
     pub(crate) len: u64,
     pub(crate) entry_path: String,
     pub(crate) date_created: Option<DateTime<Local>>,
