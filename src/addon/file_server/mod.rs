@@ -268,7 +268,6 @@ impl<'a> FileServer {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size_bytes: metadata.len(),
-                len: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
                 date_created,
                 date_modified,
@@ -281,7 +280,7 @@ impl<'a> FileServer {
                     SortBy::Name => {
                         directory_entries.sort_by_key(|entry| entry.display_name.clone());
                     }
-                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.len),
+                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.size_bytes),
                     SortBy::DateCreated => {
                         directory_entries.sort_by_key(|entry| entry.date_created)
                     }
