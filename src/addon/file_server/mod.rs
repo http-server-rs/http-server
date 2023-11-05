@@ -7,6 +7,7 @@ mod scoped_file_system;
 use chrono::{DateTime, Local};
 
 pub use file::{File, FILE_BUFFER_SIZE};
+use humansize::{format_size, DECIMAL};
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
@@ -15,7 +16,6 @@ use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::{Body, Response};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-use size::Size;
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -68,7 +68,7 @@ impl<'a> FileServer {
         });
         handlebars.register_helper("date", Box::new(date));
 
-        handlebars_helper!(size: |bytes: u64| Size::from_bytes(bytes).to_string());
+        handlebars_helper!(size: |bytes: u64| format_size(bytes, DECIMAL));
         handlebars.register_helper("size", Box::new(size));
 
         handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
