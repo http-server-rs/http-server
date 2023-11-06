@@ -811,9 +811,9 @@ checksum = "57bcfdad1b858c2db7c38303a6d2ad4dfaf5eb53dfeb0910128b2c26d6158503"
 
 [[package]]
 name = "local-ip-address"
-version = "0.5.4"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "885efb07efcd6ae1c6af70be7565544121424fa9e5b1c3e4b58bbbf141a58cef"
+checksum = "66357e687a569abca487dc399a9c9ac19beb3f13991ed49f00c144e02cbd42ab"
 dependencies = [
  "libc",
  "neli",
