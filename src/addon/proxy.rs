@@ -1,10 +1,11 @@
+use std::str::FromStr;
+use std::sync::Arc;
+
 use http::header::USER_AGENT;
 use http::header::{HeaderName, HeaderValue};
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Response, Uri};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
-use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::server::middleware::Request;
 
@@ -17,7 +18,7 @@ impl Proxy {
     pub fn new(upstream: &str) -> Self {
         let https_connector = HttpsConnectorBuilder::new()
             .with_webpki_roots()
-            .https_only()
+            .https_or_http()
             .enable_http1()
             .build();
         let client = Client::builder().build::<_, hyper::Body>(https_connector);
