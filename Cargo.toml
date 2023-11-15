@@ -1,6 +1,6 @@
 [package]
 name = "http-server"
-version = "0.8.6"
+version = "0.8.8"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2021"
 description = "Simple and configurable command-line HTTP server"
@@ -30,29 +30,35 @@ dhat-profiling = ["dhat"]
 [dependencies]
 anyhow = "1.0.75"
 async-stream = "0.3.5"
-async-trait = "0.1.72"
-chrono = "0.4.31"
+async-trait = "0.1.74"
+chrono = { version = "0.4.31", features = ["serde"] }
 dhat = { version = "0.2.4", optional = true }
-futures = "0.3.28"
-flate2 = "1.0.26"
-http = "0.2.9"
+futures = "0.3.29"
+flate2 = "1.0.28"
+http = "0.2.11"
 http-auth-basic = "0.3.3"
 handlebars = "4.3.7"
 hyper = { version = "0.14.27", features = ["http1", "server", "stream", "tcp"] }
 hyper-rustls = { version = "0.23.0", features = ["webpki-roots"] }
-local-ip-address = "0.5.4"
+local-ip-address = "0.5.6"
 mime_guess = "2.0.4"
 percent-encoding = "2.2.0"
 rustls = "0.20.6"
-rustls-pemfile = "1.0.3"
-serde = { version = "1.0.189", features = ["derive"] }
-serde_json = "1.0.107"
+rustls-pemfile = "1.0.4"
+serde = { version = "1.0.192", features = ["derive"] }
+serde_json = "1.0.108"
 structopt = { version = "0.3.26", default-features = false }
 termcolor = "1.1.3"
-tokio = { version = "1.29.1", features = ["fs", "rt-multi-thread", "signal", "macros"] }
+tokio = { version = "1.29.1", features = [
+    "fs",
+    "rt-multi-thread",
+    "signal",
+    "macros",
+] }
 tokio-rustls = "0.23.4"
 toml = "0.7.6"
 colored = "2.0.4"
+humansize = "2.1.3"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["async_tokio", "html_reports"] }

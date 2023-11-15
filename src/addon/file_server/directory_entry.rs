@@ -1,4 +1,5 @@
-use serde::Serialize;
+use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, Ordering};
 
 /// A Directory entry used to display a File Explorer's entry.
@@ -8,11 +9,10 @@ use std::cmp::{Ord, Ordering};
 pub struct DirectoryEntry {
     pub(crate) display_name: String,
     pub(crate) is_dir: bool,
-    pub(crate) size: String,
-    pub(crate) len: u64,
+    pub(crate) size_bytes: u64,
     pub(crate) entry_path: String,
-    pub(crate) created_at: String,
-    pub(crate) updated_at: String,
+    pub(crate) date_created: Option<DateTime<Local>>,
+    pub(crate) date_modified: Option<DateTime<Local>>,
 }
 
 impl Ord for DirectoryEntry {
@@ -60,6 +60,14 @@ pub struct DirectoryIndex {
     /// Directory listing entry
     pub(crate) entries: Vec<DirectoryEntry>,
     pub(crate) breadcrumbs: Vec<BreadcrumbItem>,
-    pub(crate) sort_by_name: bool,
-    pub(crate) sort_by_size: bool,
+    pub(crate) sort: Sort,
+}
+
+#[derive(Serialize, Debug, PartialEq, Deserialize)]
+pub enum Sort {
+    Directory,
+    Name,
+    Size,
+    DateCreated,
+    DateModified,
 }

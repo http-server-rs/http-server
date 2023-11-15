@@ -6,6 +6,8 @@ use std::str::FromStr;
 pub enum SortBy {
     Name,
     Size,
+    DateCreated,
+    DateModified,
 }
 
 impl FromStr for SortBy {
@@ -16,8 +18,10 @@ impl FromStr for SortBy {
         let lower = lower.as_str();
 
         match lower {
-            "name" => Ok(SortBy::Name),
-            "size" => Ok(SortBy::Size),
+            "name" => Ok(Self::Name),
+            "size" => Ok(Self::Size),
+            "date_created" => Ok(Self::DateCreated),
+            "date_modified" => Ok(Self::DateModified),
             _ => Err(Error::msg("Value doesnt correspond")),
         }
     }
