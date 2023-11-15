@@ -7,6 +7,7 @@ mod scoped_file_system;
 use chrono::{DateTime, Local};
 
 pub use file::{File, FILE_BUFFER_SIZE};
+use humansize::{format_size, DECIMAL};
 pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
@@ -20,7 +21,6 @@ use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::utils::fmt::format_bytes;
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
@@ -67,6 +67,9 @@ impl<'a> FileServer {
             }
         });
         handlebars.register_helper("date", Box::new(date));
+
+        handlebars_helper!(size: |bytes: u64| format_size(bytes, DECIMAL));
+        handlebars.register_helper("size", Box::new(size));
 
         handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
         handlebars.register_helper("sort_name", Box::new(sort_name));
@@ -264,8 +267,7 @@ impl<'a> FileServer {
                     .context("Unable to gather file name into a String")?
                     .to_string(),
                 is_dir: metadata.is_dir(),
-                size: format_bytes(metadata.len() as f64),
-                len: metadata.len(),
+                size_bytes: metadata.len(),
                 entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
                 date_created,
                 date_modified,
@@ -278,7 +280,7 @@ impl<'a> FileServer {
                     SortBy::Name => {
                         directory_entries.sort_by_key(|entry| entry.display_name.clone());
                     }
-                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.len),
+                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.size_bytes),
                     SortBy::DateCreated => {
                         directory_entries.sort_by_key(|entry| entry.date_created)
                     }
