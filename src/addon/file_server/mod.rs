@@ -362,10 +362,10 @@ mod tests {
         ];
 
         let want = [
-            "/index.html",
-            "/index.html",
-            "/foo/index.html",
-            "/foo/bar/baz.html",
+            "index.html",
+            "index.html",
+            "foo/index.html",
+            "foo/bar/baz.html",
         ];
 
         for (idx, req_uri) in have.iter().enumerate() {

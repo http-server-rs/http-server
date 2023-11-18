@@ -193,8 +193,8 @@ mod tests {
         let normalized = ScopedFileSystem::normalize_path(&arbitrary_path);
 
         assert_eq!(
-            normalized.to_str().unwrap(),
-            "docs/collegue/cs50/code/voting_excecise"
+            normalized,
+            Path::new("docs/collegue/cs50/code/voting_excecise")
         );
     }
 

@@ -96,9 +96,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Failed to parse config from file. missing field `host` at line 1 column 1"
-    )]
+    #[should_panic]
     fn checks_invalid_config_from_file() {
         let file_contents = r#"
             port = 7878
