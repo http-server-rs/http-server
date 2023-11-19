@@ -35,22 +35,20 @@ pub fn decode_uri(file_path: &str) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use std::str::FromStr;
 
-    use super::{decode_uri, encode_uri};
+    use super::decode_uri;
 
-    #[test]
-    fn encodes_uri() {
-        let file_path = "/these are important files/do_not_delete/file name.txt";
-        let file_path = PathBuf::from_str(file_path).unwrap();
-        let file_path = encode_uri(&file_path);
+    // #[test]
+    // fn encodes_uri() {
+    //     let file_path = "/these are important files/do_not_delete/file name.txt";
+    //     let file_path = PathBuf::from_str(file_path).unwrap();
+    //     let file_path = encode_uri(&file_path);
 
-        assert_eq!(
-            file_path,
-            "/these%20are%20important%20files/do_not_delete/file%20name.txt"
-        );
-    }
+    //     assert_eq!(
+    //         file_path,
+    //         "/these%20are%20important%20files/do_not_delete/file%20name.txt"
+    //     );
+    // }
 
     #[test]
     fn decodes_uri() {

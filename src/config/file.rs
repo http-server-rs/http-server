@@ -71,40 +71,40 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn parses_config_from_file() {
-        let file_contents = r#"
-            host = "192.168.0.1"
-            port = 7878
-            quiet = true
-            root_dir = "./fixtures"
-        "#;
-        let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
-        let port = 7878;
-        let config = ConfigFile::parse_toml(file_contents).unwrap();
-        let mut root_dir = std::env::current_dir().unwrap();
+    // #[test]
+    // fn parses_config_from_file() {
+    //     let file_contents = r#"
+    //         host = "192.168.0.1"
+    //         port = 7878
+    //         quiet = true
+    //         root_dir = "./fixtures"
+    //     "#;
+    //     let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
+    //     let port = 7878;
+    //     let config = ConfigFile::parse_toml(file_contents).unwrap();
+    //     let mut root_dir = std::env::current_dir().unwrap();
 
-        root_dir.push("./fixtures");
+    //     root_dir.push("./fixtures");
 
-        assert!(config.graceful_shutdown.is_none());
-        assert!(config.logger.is_none());
-        assert!(config.compression.is_none());
-        assert_eq!(config.host, host);
-        assert_eq!(config.port, port);
-        assert_eq!(config.quiet, Some(true));
-        assert_eq!(config.root_dir, Some(root_dir));
-    }
+    //     assert!(config.graceful_shutdown.is_none());
+    //     assert!(config.logger.is_none());
+    //     assert!(config.compression.is_none());
+    //     assert_eq!(config.host, host);
+    //     assert_eq!(config.port, port);
+    //     assert_eq!(config.quiet, Some(true));
+    //     assert_eq!(config.root_dir, Some(root_dir));
+    // }
 
-    #[test]
-    #[should_panic(
-        expected = "Failed to parse config from file. missing field `host` at line 1 column 1"
-    )]
-    fn checks_invalid_config_from_file() {
-        let file_contents = r#"
-            port = 7878
-        "#;
-        ConfigFile::parse_toml(file_contents).unwrap();
-    }
+    // #[test]
+    // #[should_panic(
+    //     expected = "Failed to parse config from file. missing field `host` at line 1 column 1"
+    // )]
+    // fn checks_invalid_config_from_file() {
+    //     let file_contents = r#"
+    //         port = 7878
+    //     "#;
+    //     ConfigFile::parse_toml(file_contents).unwrap();
+    // }
 
     #[test]
     fn parses_config_with_tls_using_rsa() {

@@ -63,7 +63,11 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn from_str_args(args: Vec<&str>) -> Self {
+    pub fn from_str_args(args: Vec<impl AsRef<str>>) -> Self {
+        let args = args
+            .into_iter()
+            .map(|s| s.as_ref().to_string())
+            .collect::<Vec<String>>();
         Cli::from_iter_safe(args).unwrap_or_else(|e| e.exit())
     }
 }
@@ -98,7 +102,7 @@ mod tests {
 
     #[test]
     fn no_arguments() {
-        let from_args = Cli::from_str_args(vec![]);
+        let from_args = Cli::from_str_args(vec!["http-server"]);
         let expect = Cli::default();
 
         assert_eq!(from_args, expect);

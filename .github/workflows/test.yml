@@ -27,7 +27,7 @@ jobs:
         env:
           BIN: ./target/release/http-server
         run: |
-          bats tests/e2e
+          bats ./e2e
 
-      # - name: Run Unit Tests
-      #   run: cargo test
+      - name: Run Unit Tests
+        run: cargo test
