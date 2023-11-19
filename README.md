@@ -14,7 +14,7 @@
 ![Clippy](https://github.com/http-server-rs/http-server/workflows/clippy/badge.svg)
 ![Formatter](https://github.com/http-server-rs/http-server/workflows/fmt/badge.svg)
 ![Tests](https://github.com/http-server-rs/http-server/workflows/test/badge.svg)
-![Benchs](https://github.com/http-server-rs/http-server/workflows/bench/badge.svg)
+![Benches](https://github.com/http-server-rs/http-server/workflows/bench/badge.svg)
 
 </div>
 
@@ -132,7 +132,7 @@ http-server --host 127.0.0.1
 | Port               | `-p`  | `--port`              | Port to bind the server                                                                                     | `7878`        |
 | Configuration File | `-c`  | `--config`            | Configuration file. [Example](https://github.com/http-server-rs/http-server/blob/main/fixtures/config.toml) | N/A           |
 | TLS                | N/A   | `--tls`               | Enable TLS for HTTPS connections. Requires a Certificate and Key. [Reference](#tls-reference)               | N/A           |
-| TLS Ceritificate   | N/A   | `--tls-cert`          | Path to TLS certificate file. **Depends on `--tls`**                                                        | `cert.pem`    |
+| TLS Certificate    | N/A   | `--tls-cert`          | Path to TLS certificate file. **Depends on `--tls`**                                                        | `cert.pem`    |
 | TLS Key            | N/A   | `--tls-key`           | Path to TLS key file. **Depends on `--tls`**                                                                | `key.rsa`     |
 | TLS Key Algorithm  | N/A   | `--tls-key-algorithm` | Algorithm used to generate certificate key. **Depends on `--tls`**                                          | `rsa`         |
 | Username           | N/A   | `--username`          | Username to validate using basic authentication                                                             | N/A           |
@@ -291,7 +291,7 @@ open an issue to be assigned and track the progress there.
 
 - [x] Logging
   - [x] Request/Response Logging
-  - [x] Service Config Loggins
+  - [x] Service Config Logins
 - [ ] File Explorer
   - [x] Modified Date
   - [x] File Size
