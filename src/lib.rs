@@ -4,9 +4,6 @@ mod config;
 mod server;
 mod utils;
 
-#[cfg(test)]
-mod test;
-
 use anyhow::{Context, Result};
 use std::convert::TryFrom;
 use structopt::StructOpt;
