@@ -8,4 +8,4 @@ release:
 
 # Runs Bats E2E Tests
 e2e: release
-  BIN=./target/release/http-server bats e2e
+  BIN=./target/release/http-server bats test
