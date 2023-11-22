@@ -140,7 +140,7 @@ impl<'a> FileServer {
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
                 Entry::Directory(dir) => 'dir: {
-                    if self.config.use_index() {
+                    if self.config.index() {
                         let mut filepath = dir.path();
 
                         filepath.push("index.html");

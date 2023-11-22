@@ -22,8 +22,8 @@ pub struct Cli {
     #[structopt(short = "p", long = "port", default_value = "7878")]
     pub port: u16,
     /// Route directories to index.html if present
-    #[structopt(short = "i", long = "use-index")]
-    pub use_index: bool,
+    #[structopt(short = "i", long = "index")]
+    pub index: bool,
     /// Route non-existent files to /index.html
     #[structopt(long = "spa")]
     pub spa: bool,
@@ -80,7 +80,7 @@ impl Default for Cli {
             config: None,
             host: "127.0.0.1".parse().unwrap(),
             port: 7878_u16,
-            use_index: false,
+            index: false,
             spa: false,
             root_dir: PathBuf::from_str("./").unwrap(),
             quiet: false,
@@ -186,10 +186,10 @@ mod tests {
     }
 
     #[test]
-    fn with_use_index_long() {
-        let from_args = Cli::from_str_args(vec!["http-server", "--use-index"]);
+    fn with_index_long() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--index"]);
         let expect = Cli {
-            use_index: true,
+            index: true,
             ..Default::default()
         };
 
@@ -197,10 +197,10 @@ mod tests {
     }
 
     #[test]
-    fn with_use_index_short() {
+    fn with_index_short() {
         let from_args = Cli::from_str_args(vec!["http-server", "-i"]);
         let expect = Cli {
-            use_index: true,
+            index: true,
             ..Default::default()
         };
 
