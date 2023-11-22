@@ -49,7 +49,7 @@ FLAGS:
     -q, --quiet                Turns off stdout/stderr logging
         --spa                  Route non-existent files to /index.html
         --tls                  Enables HTTPS serving using TLS
-    -i, --use-index            Route directories to index.html if present
+    -i, --index            Route directories to index.html if present
     -V, --version              Prints version information
 
 OPTIONS:
@@ -87,7 +87,7 @@ or by providing CLI arguments described in the [usage](#usage) section.
 | CORS                 | Cross-Origin-Resource-Sharing headers support. Refer to [CORS](https://github.com/http-server-rs/http-server#cross-origin-resource-sharing-cors) reference | Disabled    |
 | Compression          | GZip compression for HTTP Response Bodies. Refer to [Compression](https://github.com/http-server-rs/http-server#compression) reference                     | Disabled    |
 | Quiet                | Don't print server details when running. This doesn't include any logging capabilities.                                                                    | Disabled    |
-| Use Index            | Route directories to index.html if present                                                                                                                 | Disabled    |
+| Index                | Route directories to index.html if present                                                                                                                 | Disabled    |
 | SPA                  | Route non-existent files to /index.html                                                                                                                    | Disabled    |
 | Basic Authentication | Authorize requests using Basic Authentication. Refer to [Basic Authentication](https://github.com/http-server-rs/http-server#basic-authentication)         | Disabled    |
 | Logger               | Prints HTTP request and response details to stdout                                                                                                         | Disabled    |
@@ -115,7 +115,7 @@ http-server --help
 | Logger                        | `-l`  | `--logger`            | Print HTTP request and response details to stdout                     |
 | Version                       | `-V`  | `--version`           | Print version information                                             |
 | Quiet                         | `-q`  | `--quiet`             | Don't print output to console                                         |
-| Use Index                     | `-i`  | `--use-index`         | Route directories to index.html if present                            |
+| Index                         | `-i`  | `--index`             | Route directories to index.html if present                            |
 | SPA                           | N/A   | `--spa`               | Route non-existent files to /index.html                               |
 
 ### Options

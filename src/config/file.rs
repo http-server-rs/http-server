@@ -16,7 +16,7 @@ pub struct ConfigFile {
     pub host: IpAddr,
     pub port: u16,
     pub quiet: Option<bool>,
-    pub use_index: Option<bool>,
+    pub index: Option<bool>,
     pub spa: Option<bool>,
     #[serde(default = "current_working_dir")]
     #[serde(deserialize_with = "canonicalize_some")]
@@ -80,7 +80,7 @@ mod tests {
             port = 7878
             quiet = true
             root_dir = "./fixtures"
-            use_index = true
+            index = true
             spa = true
         "#;
         let host = IpAddr::V4(Ipv4Addr::new(192, 168, 0, 1));
@@ -96,7 +96,7 @@ mod tests {
         assert_eq!(config.host, host);
         assert_eq!(config.port, port);
         assert_eq!(config.quiet, Some(true));
-        assert_eq!(config.use_index, Some(true));
+        assert_eq!(config.index, Some(true));
         assert_eq!(config.spa, Some(true));
         assert_eq!(config.root_dir, Some(root_dir));
     }
