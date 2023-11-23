@@ -6,7 +6,7 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
-pub use file::{File};
+pub use file::File;
 use humansize::{format_size, DECIMAL};
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
