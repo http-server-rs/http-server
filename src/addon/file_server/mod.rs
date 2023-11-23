@@ -6,9 +6,9 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
-pub use file::{File, FILE_BUFFER_SIZE};
+pub use file::{File};
 use humansize::{format_size, DECIMAL};
-pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
+pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
 use handlebars::{handlebars_helper, Handlebars};
