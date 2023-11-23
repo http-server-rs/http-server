@@ -6,7 +6,7 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
-pub use file::{File, FILE_BUFFER_SIZE};
+pub use file::File;
 use humansize::{format_size, DECIMAL};
 use mime_guess::mime::{HTML, TEXT_HTML};
 
