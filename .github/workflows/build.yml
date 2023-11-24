@@ -1,5 +1,6 @@
 name: build
 on:
+  merge_group:
   pull_request:
   push:
     branches:
