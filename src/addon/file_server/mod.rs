@@ -8,9 +8,9 @@ use chrono::{DateTime, Local};
 
 pub use file::File;
 use humansize::{format_size, DECIMAL};
-use mime_guess::mime::{HTML, TEXT_HTML};
 
-pub use scoped_file_system::{Directory, Entry, ScopedFileSystem};
+
+
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
