@@ -5,7 +5,6 @@ mod service;
 pub mod middleware;
 
 use anyhow::Error;
-use colored::Colorize;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::{Ipv4Addr, SocketAddr};
 use std::process::exit;
@@ -39,8 +38,7 @@ impl Server {
 
             if !index_html.exists() {
                 eprintln!(
-                    "{}",
-                    "SPA flag is enabled, but index.html in root does not exist. Quitting...".red()
+                    "SPA flag is enabled, but index.html in root does not exist. Quitting..."
                 );
                 exit(1);
             }
