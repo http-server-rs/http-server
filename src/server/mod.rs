@@ -7,6 +7,7 @@ pub mod middleware;
 use anyhow::Error;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::{Ipv4Addr, SocketAddr};
+use std::process::exit;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -30,6 +31,18 @@ impl Server {
         let handler = handler::HttpHandler::from(Arc::clone(&config));
         let server = Arc::new(self);
         let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
+
+        if config.spa() {
+            let mut index_html = config.root_dir();
+            index_html.push("index.html");
+
+            if !index_html.exists() {
+                eprintln!(
+                    "SPA flag is enabled, but index.html in root does not exist. Quitting..."
+                );
+                exit(1);
+            }
+        }
 
         if config.tls().is_some() {
             let https_config = config.tls().unwrap();

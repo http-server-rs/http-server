@@ -6,7 +6,9 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
+pub use file::File;
 use humansize::{format_size, DECIMAL};
+
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
@@ -20,6 +22,7 @@ use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::config::Config;
 use crate::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
@@ -33,11 +36,12 @@ pub struct FileServer {
     root_dir: PathBuf,
     handlebars: Arc<Handlebars<'static>>,
     scoped_file_system: ScopedFileSystem,
+    config: Arc<Config>,
 }
 
 impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
-    pub fn new(root_dir: PathBuf) -> Self {
+    pub fn new(root_dir: PathBuf, config: Arc<Config>) -> Self {
         let handlebars = FileServer::make_handlebars_engine();
         let scoped_file_system = ScopedFileSystem::new(root_dir.clone()).unwrap();
 
@@ -45,6 +49,7 @@ impl<'a> FileServer {
             root_dir,
             handlebars,
             scoped_file_system,
+            config,
         }
     }
 
@@ -128,33 +133,79 @@ impl<'a> FileServer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        use std::io::ErrorKind;
-
         let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
-                Entry::Directory(dir) => {
+                Entry::Directory(dir) => 'dir: {
+                    if self.config.index() {
+                        let mut filepath = dir.path();
+
+                        filepath.push("index.html");
+                        if let Ok(file) = tokio::fs::File::open(&filepath).await {
+                            break 'dir make_http_file_response(
+                                File {
+                                    path: filepath,
+                                    metadata: file.metadata().await?,
+                                    file,
+                                },
+                                CacheControlDirective::MaxAge(2500),
+                            )
+                            .await;
+                        }
+                    }
                     self.render_directory_index(dir.path(), query_params).await
                 }
                 Entry::File(file) => {
                     make_http_file_response(*file, CacheControlDirective::MaxAge(2500)).await
                 }
             },
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::NOT_FOUND)
-                    .body(Body::from(err.to_string()))
-                    .expect("Failed to build response")),
-                ErrorKind::PermissionDenied => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::FORBIDDEN)
-                    .body(Body::from(err.to_string()))
-                    .expect("Failed to build response")),
-                _ => Ok(HttpResponseBuilder::new()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(Body::from(err.to_string()))
-                    .expect("Failed to build response")),
-            },
+            Err(err) => {
+                if self.config.spa() {
+                    make_http_file_response(
+                        {
+                            let mut path = self.config.root_dir();
+                            path.push("index.html");
+
+                            let file = tokio::fs::File::open(&path).await?;
+
+                            let metadata = file.metadata().await?;
+
+                            File {
+                                path,
+                                metadata,
+                                file,
+                            }
+                        },
+                        CacheControlDirective::MaxAge(2500),
+                    )
+                    .await
+                } else {
+                    let status = match err.kind() {
+                        std::io::ErrorKind::NotFound => hyper::StatusCode::NOT_FOUND,
+                        std::io::ErrorKind::PermissionDenied => hyper::StatusCode::FORBIDDEN,
+                        _ => hyper::StatusCode::BAD_REQUEST,
+                    };
+
+                    let code = match err.kind() {
+                        std::io::ErrorKind::NotFound => "404",
+                        std::io::ErrorKind::PermissionDenied => "403",
+                        _ => "400",
+                    };
+
+                    let response = hyper::Response::builder()
+                        .status(status)
+                        .header(http::header::CONTENT_TYPE, "text/html")
+                        .body(hyper::Body::from(
+                            handlebars::Handlebars::new().render_template(
+                                include_str!("./template/error.hbs"),
+                                &serde_json::json!({"error": err.to_string(), "code": code}),
+                            )?,
+                        ))?;
+
+                    Ok(response)
+                }
+            }
         }
     }
 
