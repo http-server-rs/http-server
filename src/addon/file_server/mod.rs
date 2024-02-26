@@ -33,7 +33,6 @@ use self::query_params::{QueryParams, SortBy};
 const EXPLORER_TEMPLATE: &str = "explorer";
 
 pub struct FileServer {
-    root_dir: PathBuf,
     handlebars: Arc<Handlebars<'static>>,
     scoped_file_system: ScopedFileSystem,
     config: Arc<Config>,
@@ -41,12 +40,11 @@ pub struct FileServer {
 
 impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
-    pub fn new(root_dir: PathBuf, config: Arc<Config>) -> Self {
+    pub fn new(config: Arc<Config>) -> Self {
         let handlebars = FileServer::make_handlebars_engine();
-        let scoped_file_system = ScopedFileSystem::new(root_dir.clone()).unwrap();
+        let scoped_file_system = ScopedFileSystem::new(config.root_dir().clone()).unwrap();
 
         FileServer {
-            root_dir,
             handlebars,
             scoped_file_system,
             config,
@@ -137,13 +135,13 @@ impl<'a> FileServer {
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
-                Entry::Directory(dir) => 'dir: {
+                Entry::Directory(dir) => {
                     if self.config.index() {
                         let mut filepath = dir.path();
 
                         filepath.push("index.html");
                         if let Ok(file) = tokio::fs::File::open(&filepath).await {
-                            break 'dir make_http_file_response(
+                            return make_http_file_response(
                                 File {
                                     path: filepath,
                                     metadata: file.metadata().await?,
@@ -154,6 +152,7 @@ impl<'a> FileServer {
                             .await;
                         }
                     }
+
                     self.render_directory_index(dir.path(), query_params).await
                 }
                 Entry::File(file) => {
@@ -162,7 +161,7 @@ impl<'a> FileServer {
             },
             Err(err) => {
                 if self.config.spa() {
-                    make_http_file_response(
+                    return make_http_file_response(
                         {
                             let mut path = self.config.root_dir();
                             path.push("index.html");
@@ -179,32 +178,32 @@ impl<'a> FileServer {
                         },
                         CacheControlDirective::MaxAge(2500),
                     )
-                    .await
-                } else {
-                    let status = match err.kind() {
-                        std::io::ErrorKind::NotFound => hyper::StatusCode::NOT_FOUND,
-                        std::io::ErrorKind::PermissionDenied => hyper::StatusCode::FORBIDDEN,
-                        _ => hyper::StatusCode::BAD_REQUEST,
-                    };
-
-                    let code = match err.kind() {
-                        std::io::ErrorKind::NotFound => "404",
-                        std::io::ErrorKind::PermissionDenied => "403",
-                        _ => "400",
-                    };
-
-                    let response = hyper::Response::builder()
-                        .status(status)
-                        .header(http::header::CONTENT_TYPE, "text/html")
-                        .body(hyper::Body::from(
-                            handlebars::Handlebars::new().render_template(
-                                include_str!("./template/error.hbs"),
-                                &serde_json::json!({"error": err.to_string(), "code": code}),
-                            )?,
-                        ))?;
-
-                    Ok(response)
+                    .await;
                 }
+
+                let status = match err.kind() {
+                    std::io::ErrorKind::NotFound => hyper::StatusCode::NOT_FOUND,
+                    std::io::ErrorKind::PermissionDenied => hyper::StatusCode::FORBIDDEN,
+                    _ => hyper::StatusCode::BAD_REQUEST,
+                };
+
+                let code = match err.kind() {
+                    std::io::ErrorKind::NotFound => "404",
+                    std::io::ErrorKind::PermissionDenied => "403",
+                    _ => "400",
+                };
+
+                let response = hyper::Response::builder()
+                    .status(status)
+                    .header(http::header::CONTENT_TYPE, "text/html")
+                    .body(hyper::Body::from(
+                        handlebars::Handlebars::new().render_template(
+                            include_str!("./template/error.hbs"),
+                            &serde_json::json!({"error": err.to_string(), "code": code}),
+                        )?,
+                    ))?;
+
+                Ok(response)
             }
         }
     }
@@ -218,7 +217,7 @@ impl<'a> FileServer {
         query_params: Option<QueryParams>,
     ) -> Result<Response<Body>> {
         let directory_index =
-            FileServer::index_directory(self.root_dir.clone(), path, query_params)?;
+            FileServer::index_directory(self.config.root_dir().clone(), path, query_params)?;
         let html = self
             .handlebars
             .render(EXPLORER_TEMPLATE, &directory_index)
