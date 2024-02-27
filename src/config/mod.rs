@@ -26,6 +26,8 @@ pub struct Config {
     address: SocketAddr,
     host: IpAddr,
     port: u16,
+    index: bool,
+    spa: bool,
     root_dir: PathBuf,
     quiet: bool,
     tls: Option<TlsConfig>,
@@ -44,6 +46,14 @@ impl Config {
 
     pub fn port(&self) -> u16 {
         self.port
+    }
+
+    pub fn index(&self) -> bool {
+        self.index
+    }
+
+    pub fn spa(&self) -> bool {
+        self.spa
     }
 
     pub fn address(&self) -> SocketAddr {
@@ -97,6 +107,8 @@ impl Default for Config {
         Self {
             host,
             port,
+            index: false,
+            spa: false,
             address,
             root_dir,
             quiet: false,
@@ -176,10 +188,15 @@ impl TryFrom<Cli> for Config {
             None
         };
 
+        let index = cli_arguments.index;
+        let spa = cli_arguments.spa;
+
         Ok(Config {
             host: cli_arguments.host,
             port: cli_arguments.port,
             address: SocketAddr::new(cli_arguments.host, cli_arguments.port),
+            index,
+            spa,
             root_dir,
             quiet,
             tls,
@@ -208,11 +225,15 @@ impl TryFrom<ConfigFile> for Config {
         } else {
             None
         };
+        let index = file.index.unwrap_or(false);
+        let spa = file.spa.unwrap_or(false);
 
         Ok(Config {
             host: file.host,
             port: file.port,
             address: SocketAddr::new(file.host, file.port),
+            index,
+            spa,
             quiet,
             root_dir,
             tls,

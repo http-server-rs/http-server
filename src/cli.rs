@@ -21,6 +21,12 @@ pub struct Cli {
     /// Port to bind the server
     #[structopt(short = "p", long = "port", default_value = "7878")]
     pub port: u16,
+    /// Route directories to index.html if present
+    #[structopt(short = "i", long = "index")]
+    pub index: bool,
+    /// Route non-existent files to /index.html
+    #[structopt(long = "spa")]
+    pub spa: bool,
     /// Directory to serve files from
     #[structopt(parse(from_os_str), default_value = "./")]
     pub root_dir: PathBuf,
@@ -74,6 +80,8 @@ impl Default for Cli {
             config: None,
             host: "127.0.0.1".parse().unwrap(),
             port: 7878_u16,
+            index: false,
+            spa: false,
             root_dir: PathBuf::from_str("./").unwrap(),
             quiet: false,
             tls: false,
@@ -145,10 +153,54 @@ mod tests {
     }
 
     #[test]
-    fn with_quiet() {
+    fn with_quiet_long() {
         let from_args = Cli::from_str_args(vec!["http-server", "--quiet"]);
         let expect = Cli {
             quiet: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_quiet_short() {
+        let from_args = Cli::from_str_args(vec!["http-server", "-q"]);
+        let expect = Cli {
+            quiet: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_spa() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--spa"]);
+        let expect = Cli {
+            spa: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_index_long() {
+        let from_args = Cli::from_str_args(vec!["http-server", "--index"]);
+        let expect = Cli {
+            index: true,
+            ..Default::default()
+        };
+
+        assert_eq!(from_args, expect);
+    }
+
+    #[test]
+    fn with_index_short() {
+        let from_args = Cli::from_str_args(vec!["http-server", "-i"]);
+        let expect = Cli {
+            index: true,
             ..Default::default()
         };
 

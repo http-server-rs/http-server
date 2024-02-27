@@ -55,7 +55,7 @@ impl From<Arc<Config>> for HttpHandler {
             };
         }
 
-        let file_server = FileServer::new(config.root_dir());
+        let file_server = FileServer::new(config.clone());
         let request_handler = Arc::new(FileServerHandler::new(file_server));
         let middleware = Middleware::try_from(config).unwrap();
         let middleware = Arc::new(middleware);
