@@ -188,8 +188,8 @@ impl TryFrom<Cli> for Config {
             None
         };
 
-        let index = cli_arguments.index;
         let spa = cli_arguments.spa;
+        let index = spa || cli_arguments.index;
 
         Ok(Config {
             host: cli_arguments.host,
@@ -225,8 +225,9 @@ impl TryFrom<ConfigFile> for Config {
         } else {
             None
         };
-        let index = file.index.unwrap_or(false);
+
         let spa = file.spa.unwrap_or(false);
+        let index = spa || file.index.unwrap_or(false);
 
         Ok(Config {
             host: file.host,
