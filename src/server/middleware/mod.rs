@@ -102,25 +102,25 @@ impl TryFrom<Arc<Config>> for Middleware {
     fn try_from(config: Arc<Config>) -> std::result::Result<Self, Self::Error> {
         let mut middleware = Middleware::default();
 
-        if let Some(basic_auth_config) = config.basic_auth() {
+        if let Some(basic_auth_config) = config.basic_auth.clone() {
             let basic_auth_middleware = make_basic_auth_middleware(basic_auth_config);
 
             middleware.before(basic_auth_middleware);
         }
 
-        if let Some(cors_config) = config.cors() {
+        if let Some(cors_config) = config.cors.clone() {
             let cors_middleware = make_cors_middleware(cors_config);
 
             middleware.after(cors_middleware);
         }
 
-        if let Some(compression_config) = config.compression() {
+        if let Some(compression_config) = config.compression.clone() {
             if compression_config.gzip {
                 middleware.after(make_gzip_compression_middleware());
             }
         }
 
-        if let Some(should_log) = config.logger() {
+        if let Some(should_log) = config.logger {
             if should_log {
                 middleware.after(make_logger_middleware());
             }

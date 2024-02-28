@@ -27,13 +27,13 @@ impl Server {
 
     pub async fn run(self) {
         let config = Arc::clone(&self.config);
-        let address = config.address();
+        let address = config.address;
         let handler = handler::HttpHandler::from(Arc::clone(&config));
         let server = Arc::new(self);
         let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
 
-        if config.spa() {
-            let mut index_html = config.root_dir();
+        if config.spa {
+            let mut index_html = config.root_dir.clone();
             index_html.push("index.html");
 
             if !index_html.exists() {
@@ -44,11 +44,11 @@ impl Server {
             }
         }
 
-        if config.tls().is_some() {
-            let https_config = config.tls().unwrap();
+        if config.tls.is_some() {
+            let https_config = config.tls.clone().unwrap();
             let handler = handler.clone();
-            let host = config.address().ip();
-            let port = config.address().port().saturating_add(1);
+            let host = config.address.ip();
+            let port = config.address.port().saturating_add(1);
             let address = SocketAddr::new(host, port);
             let server = Arc::clone(&server);
             let task = tokio::spawn(async move {
@@ -86,17 +86,17 @@ impl Server {
             }
         }));
 
-        if !self.config.quiet() {
+        if !self.config.quiet {
             println!("Serving HTTP: http://{}", address);
 
-            if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
+            if self.config.address.ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
                 if let Ok(ip) = local_ip_address::local_ip() {
-                    println!("Local Network IP: http://{}:{}", ip, self.config.port());
+                    println!("Local Network IP: http://{}:{}", ip, self.config.port);
                 }
             }
         }
 
-        if self.config.graceful_shutdown() {
+        if self.config.graceful_shutdown {
             let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
             if let Err(e) = graceful.await {
@@ -131,17 +131,17 @@ impl Server {
             }
         }));
 
-        if !self.config.quiet() {
+        if !self.config.quiet {
             println!("Serving HTTPS: http://{}", address);
 
-            if self.config.address().ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
+            if self.config.address.ip() == Ipv4Addr::from_str("0.0.0.0").unwrap() {
                 if let Ok(ip) = local_ip_address::local_ip() {
-                    println!("Local Network IP: https://{}:{}", ip, self.config.port());
+                    println!("Local Network IP: https://{}:{}", ip, self.config.port);
                 }
             }
         }
 
-        if self.config.graceful_shutdown() {
+        if self.config.graceful_shutdown {
             let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
             if let Err(e) = graceful.await {

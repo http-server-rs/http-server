@@ -23,78 +23,20 @@ use self::tls::TlsConfig;
 
 /// Server instance configuration used on initialization
 pub struct Config {
-    address: SocketAddr,
-    host: IpAddr,
-    port: u16,
-    index: bool,
-    spa: bool,
-    root_dir: PathBuf,
-    quiet: bool,
-    tls: Option<TlsConfig>,
-    cors: Option<CorsConfig>,
-    compression: Option<CompressionConfig>,
-    basic_auth: Option<BasicAuthConfig>,
-    logger: Option<bool>,
-    proxy: Option<ProxyConfig>,
-    graceful_shutdown: bool,
-}
-
-impl Config {
-    pub fn host(&self) -> IpAddr {
-        self.host
-    }
-
-    pub fn port(&self) -> u16 {
-        self.port
-    }
-
-    pub fn index(&self) -> bool {
-        self.index
-    }
-
-    pub fn spa(&self) -> bool {
-        self.spa
-    }
-
-    pub fn address(&self) -> SocketAddr {
-        self.address
-    }
-
-    pub fn root_dir(&self) -> PathBuf {
-        self.root_dir.clone()
-    }
-
-    pub fn quiet(&self) -> bool {
-        self.quiet
-    }
-
-    pub fn tls(&self) -> Option<TlsConfig> {
-        self.tls.clone()
-    }
-
-    pub fn cors(&self) -> Option<CorsConfig> {
-        self.cors.clone()
-    }
-
-    pub fn compression(&self) -> Option<CompressionConfig> {
-        self.compression.clone()
-    }
-
-    pub fn basic_auth(&self) -> Option<BasicAuthConfig> {
-        self.basic_auth.clone()
-    }
-
-    pub fn logger(&self) -> Option<bool> {
-        self.logger
-    }
-
-    pub fn proxy(&self) -> Option<ProxyConfig> {
-        self.proxy.clone()
-    }
-
-    pub fn graceful_shutdown(&self) -> bool {
-        self.graceful_shutdown
-    }
+    pub address: SocketAddr,
+    pub host: IpAddr,
+    pub port: u16,
+    pub index: bool,
+    pub spa: bool,
+    pub root_dir: PathBuf,
+    pub quiet: bool,
+    pub tls: Option<TlsConfig>,
+    pub cors: Option<CorsConfig>,
+    pub compression: Option<CompressionConfig>,
+    pub basic_auth: Option<BasicAuthConfig>,
+    pub logger: Option<bool>,
+    pub proxy: Option<ProxyConfig>,
+    pub graceful_shutdown: bool,
 }
 
 impl Default for Config {

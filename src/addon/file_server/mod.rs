@@ -42,7 +42,7 @@ impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
     pub fn new(config: Arc<Config>) -> Self {
         let handlebars = FileServer::make_handlebars_engine();
-        let scoped_file_system = ScopedFileSystem::new(config.root_dir().clone()).unwrap();
+        let scoped_file_system = ScopedFileSystem::new(config.root_dir.clone()).unwrap();
 
         FileServer {
             handlebars,
@@ -136,7 +136,7 @@ impl<'a> FileServer {
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
                 Entry::Directory(dir) => {
-                    if self.config.index() {
+                    if self.config.index {
                         let mut filepath = dir.path();
 
                         filepath.push("index.html");
@@ -160,10 +160,10 @@ impl<'a> FileServer {
                 }
             },
             Err(err) => {
-                if self.config.spa() {
+                if self.config.spa {
                     return make_http_file_response(
                         {
-                            let mut path = self.config.root_dir();
+                            let mut path = self.config.root_dir.clone();
                             path.push("index.html");
 
                             let file = tokio::fs::File::open(&path).await?;
@@ -217,7 +217,7 @@ impl<'a> FileServer {
         query_params: Option<QueryParams>,
     ) -> Result<Response<Body>> {
         let directory_index =
-            FileServer::index_directory(self.config.root_dir().clone(), path, query_params)?;
+            FileServer::index_directory(self.config.root_dir.clone(), path, query_params)?;
         let html = self
             .handlebars
             .render(EXPLORER_TEMPLATE, &directory_index)
