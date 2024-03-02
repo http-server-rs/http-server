@@ -6,8 +6,8 @@ pub mod proxy;
 pub mod tls;
 pub mod util;
 
-use color_eyre::eyre::Context;
-use color_eyre::Report;
+use color_eyre::eyre::{eyre, Context};
+use color_eyre::{Report, Section};
 use http::Uri;
 use std::convert::TryFrom;
 use std::env::current_dir;
@@ -102,6 +102,13 @@ impl TryFrom<Cli> for Config {
         } else {
             None
         };
+
+        // If only one of both is given
+        if cli_arguments.username.is_some() ^ cli_arguments.password.is_some() {
+            return Err(eyre!(
+                "Only one of username or password is given. Expected none or both"
+            ).with_suggestion(|| "Use both the username and password flag.\nExample:\nhttp-server --username YOURUSERNAME --password YOURPASSWORD"));
+        }
 
         let basic_auth: Option<BasicAuthConfig> = if let (Some(username), Some(password)) =
             (cli_arguments.username, cli_arguments.password)
