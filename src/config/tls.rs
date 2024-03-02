@@ -1,3 +1,4 @@
+use color_eyre::eyre::Context;
 use rustls::{Certificate, PrivateKey};
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -26,8 +27,9 @@ impl TlsConfig {
         key_path: PathBuf,
         key_algorithm: PrivateKeyAlgorithm,
     ) -> color_eyre::Result<Self> {
-        let cert = load_cert(&cert_path)?;
-        let key = load_private_key(&key_path, &key_algorithm)?;
+        let cert = load_cert(&cert_path).context("Failed to load certificate")?;
+        let key =
+            load_private_key(&key_path, &key_algorithm).context("Failed to load private key")?;
 
         Ok(TlsConfig {
             cert,

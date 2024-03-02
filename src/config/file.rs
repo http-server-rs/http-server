@@ -1,4 +1,4 @@
-use color_eyre::eyre::eyre;
+use color_eyre::eyre::{eyre, Context};
 use serde::{Deserialize, Deserializer};
 use std::fs;
 use std::net::IpAddr;
@@ -32,8 +32,9 @@ pub struct ConfigFile {
 
 impl ConfigFile {
     pub fn from_file(file_path: PathBuf) -> color_eyre::Result<Self> {
-        let file = fs::read_to_string(file_path)?;
-        let config = ConfigFile::parse_toml(file.as_str())?;
+        let file = fs::read_to_string(file_path).context("Failed to read config file")?;
+        let config =
+            ConfigFile::parse_toml(file.as_str()).context("Failed to parse config file as TOML")?;
 
         Ok(config)
     }

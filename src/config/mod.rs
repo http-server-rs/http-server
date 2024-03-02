@@ -6,6 +6,7 @@ pub mod proxy;
 pub mod tls;
 pub mod util;
 
+use color_eyre::eyre::Context;
 use color_eyre::Report;
 use http::Uri;
 use std::convert::TryFrom;
@@ -71,14 +72,18 @@ impl TryFrom<Cli> for Config {
     type Error = Report;
 
     fn try_from(cli_arguments: Cli) -> Result<Self, Self::Error> {
-        let root_dir = cli_arguments.root_dir.canonicalize()?;
+        let root_dir = cli_arguments
+            .root_dir
+            .canonicalize()
+            .context("Cannot canonicalize root directory")?;
 
         let tls: Option<TlsConfig> = if cli_arguments.tls {
-            Some(TlsConfig::new(
+            TlsConfig::new(
                 cli_arguments.tls_cert,
                 cli_arguments.tls_key,
                 cli_arguments.tls_key_algorithm,
-            )?)
+            )
+            .ok()
         } else {
             None
         };
@@ -113,7 +118,9 @@ impl TryFrom<Cli> for Config {
         };
 
         let proxy = match cli_arguments.proxy {
-            Some(proxy_url) => Some(ProxyConfig::url(Uri::from_str(&proxy_url)?)),
+            Some(proxy_url) => Some(ProxyConfig::url(
+                Uri::from_str(&proxy_url).context("Cannot construct URI from proxy URI string")?,
+            )),
             None => None,
         };
 

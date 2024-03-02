@@ -3,7 +3,6 @@ pub mod cors;
 pub mod gzip;
 pub mod logger;
 
-
 use futures::Future;
 use hyper::Body;
 

@@ -1,6 +1,4 @@
-
 use hyper::header::{self, HeaderName, HeaderValue};
-
 
 use crate::config::cors::CorsConfig;
 
@@ -370,6 +368,6 @@ mod tests {
             request_method: Some(request_method),
         };
 
-        assert_eq!(cors, Cors::try_from(config).unwrap());
+        assert_eq!(cors, Cors::from(config));
     }
 }

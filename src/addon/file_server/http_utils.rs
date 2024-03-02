@@ -70,7 +70,9 @@ impl ResponseHeaders {
         file: &File,
         cache_control_directive: CacheControlDirective,
     ) -> color_eyre::Result<ResponseHeaders> {
-        let last_modified = file.last_modified()?;
+        let last_modified = file
+            .last_modified()
+            .context("Unable to get file's last modified date")?;
 
         Ok(ResponseHeaders {
             cache_control: cache_control_directive.to_string(),
@@ -112,7 +114,8 @@ pub async fn make_http_file_response(
     file: File,
     cache_control_directive: CacheControlDirective,
 ) -> color_eyre::Result<hyper::http::Response<Body>> {
-    let headers = ResponseHeaders::new(&file, cache_control_directive)?;
+    let headers = ResponseHeaders::new(&file, cache_control_directive)
+        .context("Failed to construct response headers")?;
     let builder = HttpResponseBuilder::new()
         .header(http::header::CONTENT_LENGTH, headers.content_length)
         .header(http::header::CACHE_CONTROL, headers.cache_control)

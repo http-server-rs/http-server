@@ -7,6 +7,7 @@ mod scoped_file_system;
 use chrono::{DateTime, Local};
 
 use color_eyre::eyre::{Context, ContextCompat};
+use color_eyre::Section;
 pub use file::File;
 use humansize::{format_size, DECIMAL};
 
@@ -90,13 +91,16 @@ impl<'a> FileServer {
     }
 
     fn parse_path(req_uri: &str) -> color_eyre::Result<(PathBuf, Option<QueryParams>)> {
-        let uri = Uri::from_str(req_uri)?;
+        let uri = Uri::from_str(req_uri).context("Cannot construct URI from request URI string")?;
         let uri_parts = uri.into_parts();
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
             let query_params = if let Some(query_str) = path_and_query.query() {
-                Some(QueryParams::from_str(query_str)?)
+                Some(
+                    QueryParams::from_str(query_str)
+                        .context("Cannot construct QueryParams from query parameters string")?,
+                )
             } else {
                 None
             };
@@ -104,7 +108,7 @@ impl<'a> FileServer {
             return Ok((decode_uri(path), query_params));
         }
 
-        Ok((PathBuf::from_str("/")?, None))
+        Ok((PathBuf::from_str("/").unwrap(), None))
     }
 
     /// Resolves a HTTP Request to a file or directory.
@@ -132,7 +136,8 @@ impl<'a> FileServer {
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
     pub async fn resolve(&self, req_path: String) -> color_eyre::Result<Response<Body>> {
-        let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
+        let (path, query_params) =
+            FileServer::parse_path(req_path.as_str()).context("Failed to parse request path")?;
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
@@ -145,7 +150,10 @@ impl<'a> FileServer {
                             return make_http_file_response(
                                 File {
                                     path: filepath,
-                                    metadata: file.metadata().await?,
+                                    metadata: file
+                                        .metadata()
+                                        .await
+                                        .context("Failed to get file metadata")?,
                                     file,
                                 },
                                 CacheControlDirective::MaxAge(2500),
@@ -167,7 +175,10 @@ impl<'a> FileServer {
                             let mut path = self.config.root_dir.clone();
                             path.push("index.html");
 
-                            let file = tokio::fs::File::open(&path).await?;
+                            let file = tokio::fs::File::open(&path)
+                                .await
+                                .with_context(|| format!("Failed to open index.html at {path:?}"))
+                                .with_suggestion(|| "Create index.html in root")?;
 
                             let metadata = file.metadata().await?;
 
@@ -295,13 +306,14 @@ impl<'a> FileServer {
         path: PathBuf,
         query_params: Option<QueryParams>,
     ) -> color_eyre::Result<DirectoryIndex> {
-        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)?;
+        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)
+            .context("Failed to create breadcrumbs")?;
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
         for entry in entries {
             let entry = entry.context("Unable to read entry")?;
-            let metadata = entry.metadata()?;
+            let metadata = entry.metadata().context("Unable to get entry metadata")?;
             let date_created = if let Ok(time) = metadata.created() {
                 Some(time.into())
             } else {
@@ -321,7 +333,8 @@ impl<'a> FileServer {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size_bytes: metadata.len(),
-                entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path())?,
+                entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path())
+                    .context("Failed to create directory entry link")?,
                 date_created,
                 date_modified,
             });
@@ -378,11 +391,11 @@ impl<'a> FileServer {
     /// This happens because links should behave relative to the `/` path
     /// which in this case is `http-server/src` instead of system's root path.
     fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> color_eyre::Result<String> {
-        let path = pathdiff::diff_paths(entry_path, root_dir).context(
-            "Unable to construct relative path between entry path and root directory path",
-        )?;
+        let path = entry_path.strip_prefix(root_dir).with_context(|| {
+            format!("Unable to construct relative path between entry path ({entry_path:?}) and root directory path ({root_dir:?})")
+        })?;
 
-        encode_uri(&path)
+        encode_uri(path)
     }
 }
 
