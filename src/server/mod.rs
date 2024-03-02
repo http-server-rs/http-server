@@ -4,7 +4,7 @@ mod service;
 
 pub mod middleware;
 
-use color_eyre::eyre::{bail, eyre, Context, Report};
+use color_eyre::eyre::{eyre, Context, Report};
 use color_eyre::Section;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::{Ipv4Addr, SocketAddr};
