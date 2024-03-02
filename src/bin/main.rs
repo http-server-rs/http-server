@@ -15,10 +15,11 @@ async fn main() -> color_eyre::Result<()> {
 
     color_eyre::install()?;
 
-    make_server()?
+    make_server()
+        .context("Failed to create server")?
         .run()
         .await
-        .context("Failed to make server")?;
+        .context("Error while running server")?;
 
     Ok(())
 }
