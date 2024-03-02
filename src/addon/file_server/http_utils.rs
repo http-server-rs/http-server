@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
+use color_eyre::eyre::Context;
 use futures::Stream;
 use http::response::Builder as HttpResponseBuilder;
 use hyper::body::Body;
@@ -69,7 +69,7 @@ impl ResponseHeaders {
     pub fn new(
         file: &File,
         cache_control_directive: CacheControlDirective,
-    ) -> Result<ResponseHeaders> {
+    ) -> color_eyre::Result<ResponseHeaders> {
         let last_modified = file.last_modified()?;
 
         Ok(ResponseHeaders {
@@ -111,7 +111,7 @@ impl ResponseHeaders {
 pub async fn make_http_file_response(
     file: File,
     cache_control_directive: CacheControlDirective,
-) -> Result<hyper::http::Response<Body>> {
+) -> color_eyre::Result<hyper::http::Response<Body>> {
     let headers = ResponseHeaders::new(&file, cache_control_directive)?;
     let builder = HttpResponseBuilder::new()
         .header(http::header::CONTENT_LENGTH, headers.content_length)
@@ -143,7 +143,7 @@ pub struct ByteStream {
 }
 
 impl Stream for ByteStream {
-    type Item = Result<Bytes>;
+    type Item = color_eyre::Result<Bytes>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
         let ByteStream {

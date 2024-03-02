@@ -4,10 +4,10 @@ mod service;
 
 pub mod middleware;
 
-use anyhow::Error;
+use color_eyre::eyre::{bail, Context, Report};
 use hyper::service::{make_service_fn, service_fn};
 use std::net::{Ipv4Addr, SocketAddr};
-use std::process::exit;
+
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -25,27 +25,24 @@ impl Server {
         Server { config }
     }
 
-    pub async fn run(self) {
+    pub async fn run(self) -> color_eyre::Result<()> {
         let config = Arc::clone(&self.config);
         let address = config.address;
-        let handler = handler::HttpHandler::from(Arc::clone(&config));
+        let handler = handler::HttpHandler::try_from(Arc::clone(&config))
+            .context("Failed to create HTTP handler")?;
         let server = Arc::new(self);
-        let mut server_instances: Vec<tokio::task::JoinHandle<()>> = Vec::new();
+        let mut server_instances: Vec<tokio::task::JoinHandle<color_eyre::Result<()>>> = Vec::new();
 
         if config.spa {
             let mut index_html = config.root_dir.clone();
             index_html.push("index.html");
 
             if !index_html.exists() {
-                eprintln!(
-                    "SPA flag is enabled, but index.html in root does not exist. Quitting..."
-                );
-                exit(1);
+                bail!("SPA flag is enabled, but index.html in root does not exist");
             }
         }
 
-        if config.tls.is_some() {
-            let https_config = config.tls.clone().unwrap();
+        if let Some(tls_config) = config.tls.clone() {
             let handler = handler.clone();
             let host = config.address.ip();
             let port = config.address.port().saturating_add(1);
@@ -54,7 +51,12 @@ impl Server {
             let task = tokio::spawn(async move {
                 let server = Arc::clone(&server);
 
-                server.serve_https(address, handler, https_config).await;
+                server
+                    .serve_https(address, handler, tls_config)
+                    .await
+                    .context("Failed to serve HTTPS")?;
+
+                Ok(())
             });
 
             server_instances.push(task);
@@ -65,13 +67,17 @@ impl Server {
             let server = Arc::clone(&server);
 
             server.serve(address, handler).await;
+
+            Ok(())
         });
 
         server_instances.push(task);
 
         for server_task in server_instances {
-            server_task.await.unwrap();
+            server_task.await?.context("Task failed")?;
         }
+
+        Ok(())
     }
 
     pub async fn serve(&self, address: SocketAddr, handler: handler::HttpHandler) {
@@ -80,7 +86,7 @@ impl Server {
             let handler = handler.clone();
 
             async {
-                Ok::<_, Error>(service_fn(move |req| {
+                Ok::<_, Report>(service_fn(move |req| {
                     service::main_service(handler.to_owned(), req)
                 }))
             }
@@ -116,16 +122,19 @@ impl Server {
         address: SocketAddr,
         handler: handler::HttpHandler,
         https_config: TlsConfig,
-    ) {
+    ) -> color_eyre::Result<()> {
         let (cert, key) = https_config.parts();
         let https_server_builder = https::Https::new(cert, key);
-        let server = https_server_builder.make_server(address).await.unwrap();
+        let server = https_server_builder
+            .make_server(address)
+            .await
+            .context("Could not build an HTTPS server")?;
         let server = server.serve(make_service_fn(|_| {
             // Move a clone of `handler` into the `service_fn`.
             let handler = handler.clone();
 
             async {
-                Ok::<_, Error>(service_fn(move |req| {
+                Ok::<_, Report>(service_fn(move |req| {
                     service::main_service(handler.to_owned(), req)
                 }))
             }
@@ -144,15 +153,13 @@ impl Server {
         if self.config.graceful_shutdown {
             let graceful = server.with_graceful_shutdown(crate::utils::signal::shutdown_signal());
 
-            if let Err(e) = graceful.await {
-                eprint!("Server Error: {}", e);
-            }
+            graceful.await.context("Server error")?;
 
-            return;
+            return Ok(());
         }
 
-        if let Err(e) = server.await {
-            eprint!("Server Error: {}", e);
-        }
+        server.await.context("Server error")?;
+
+        Ok(())
     }
 }

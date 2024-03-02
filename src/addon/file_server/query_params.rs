@@ -1,4 +1,4 @@
-use anyhow::Error;
+use color_eyre::eyre::{eyre, Report};
 use serde::Serialize;
 use std::str::FromStr;
 
@@ -11,7 +11,7 @@ pub enum SortBy {
 }
 
 impl FromStr for SortBy {
-    type Err = Error;
+    type Err = Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let lower = s.to_ascii_lowercase();
@@ -22,7 +22,7 @@ impl FromStr for SortBy {
             "size" => Ok(Self::Size),
             "date_created" => Ok(Self::DateCreated),
             "date_modified" => Ok(Self::DateModified),
-            _ => Err(Error::msg("Value doesnt correspond")),
+            _ => Err(eyre!("Value doesn't correspond")),
         }
     }
 }
@@ -33,7 +33,7 @@ pub struct QueryParams {
 }
 
 impl FromStr for QueryParams {
-    type Err = Error;
+    type Err = Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut query_params = QueryParams::default();

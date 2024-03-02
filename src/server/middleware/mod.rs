@@ -3,10 +3,10 @@ pub mod cors;
 pub mod gzip;
 pub mod logger;
 
-use anyhow::Error;
+
 use futures::Future;
 use hyper::Body;
-use std::convert::TryFrom;
+
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -96,10 +96,8 @@ impl Middleware {
     }
 }
 
-impl TryFrom<Arc<Config>> for Middleware {
-    type Error = Error;
-
-    fn try_from(config: Arc<Config>) -> std::result::Result<Self, Self::Error> {
+impl From<Arc<Config>> for Middleware {
+    fn from(config: Arc<Config>) -> Self {
         let mut middleware = Middleware::default();
 
         if let Some(basic_auth_config) = config.basic_auth.clone() {
@@ -126,6 +124,6 @@ impl TryFrom<Arc<Config>> for Middleware {
             }
         }
 
-        Ok(middleware)
+        middleware
     }
 }

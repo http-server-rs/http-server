@@ -1,6 +1,6 @@
 use http::{Request, Response};
 use hyper::Body;
-use std::convert::TryFrom;
+
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -24,7 +24,7 @@ use super::MiddlewareAfter;
 ///
 /// Also panics if any CORS header value is not a valid UTF-8 string
 pub fn make_cors_middleware(cors_config: CorsConfig) -> MiddlewareAfter {
-    let cors = Cors::try_from(cors_config).unwrap();
+    let cors = Cors::from(cors_config);
     let cors_headers = cors.make_http_headers();
 
     Box::new(

@@ -1,4 +1,4 @@
-use anyhow::{Error, Result};
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Deserializer};
 use std::fs;
 use std::net::IpAddr;
@@ -31,31 +31,28 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn from_file(file_path: PathBuf) -> Result<Self> {
+    pub fn from_file(file_path: PathBuf) -> color_eyre::Result<Self> {
         let file = fs::read_to_string(file_path)?;
         let config = ConfigFile::parse_toml(file.as_str())?;
 
         Ok(config)
     }
 
-    fn parse_toml(content: &str) -> Result<Self> {
+    fn parse_toml(content: &str) -> color_eyre::Result<Self> {
         match toml::from_str(content) {
             Ok(config) => Ok(config),
-            Err(err) => Err(Error::msg(format!(
-                "Failed to parse config from file. {}",
-                err
-            ))),
+            Err(err) => Err(eyre!("Failed to parse config from file. {}", err)),
         }
     }
 }
 
-fn canonicalize_some<'de, D>(deserializer: D) -> Result<Option<PathBuf>, D::Error>
+fn canonicalize_some<'de, D>(deserializer: D) -> color_eyre::Result<Option<PathBuf>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let value: &str = Deserialize::deserialize(deserializer)?;
-    let path = PathBuf::from_str(value).unwrap();
-    let canon = fs::canonicalize(path).unwrap();
+    let path = PathBuf::from_str(value).unwrap(); // Unreachable
+    let canon = fs::canonicalize(path).unwrap(); // Unreachable
 
     Ok(Some(canon))
 }
@@ -319,7 +316,7 @@ mod tests {
 
         let proxy = config.proxy.unwrap();
 
-        assert_eq!(proxy.url, "https://example.com");
+        assert_eq!(proxy.uri, "https://example.com");
     }
 
     #[test]

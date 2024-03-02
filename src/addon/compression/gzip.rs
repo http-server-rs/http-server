@@ -1,4 +1,4 @@
-use anyhow::{Error, Result};
+use color_eyre::eyre::eyre;
 use flate2::write::GzEncoder;
 use http::{HeaderValue, Request, Response};
 use hyper::body::aggregate;
@@ -18,7 +18,7 @@ const IGNORED_CONTENT_TYPE: [&str; 6] = [
     "video",
 ];
 
-pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> Result<bool> {
+pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> color_eyre::Result<bool> {
     if let Some(accept_encoding) = request
         .lock()
         .await
@@ -36,7 +36,9 @@ pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> Result<
     Ok(false)
 }
 
-pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Body>>>) -> Result<bool> {
+pub async fn is_compressible_content_type(
+    response: Arc<Mutex<Response<Body>>>,
+) -> color_eyre::Result<bool> {
     if let Some(content_type) = response
         .lock()
         .await
@@ -58,26 +60,26 @@ pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Body>>>) 
 pub async fn should_compress(
     request: Arc<Mutex<Request<Body>>>,
     response: Arc<Mutex<Response<Body>>>,
-) -> Result<bool> {
+) -> color_eyre::Result<bool> {
     Ok(is_encoding_accepted(request).await?
-        && is_compressable_content_type(Arc::clone(&response)).await?)
+        && is_compressible_content_type(Arc::clone(&response)).await?)
 }
 
-pub fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
+pub fn compress(bytes: &[u8]) -> color_eyre::Result<Vec<u8>> {
     let buffer: Vec<u8> = Vec::with_capacity(bytes.len());
     let mut compressor: GzEncoder<Vec<u8>> = GzEncoder::new(buffer, flate2::Compression::default());
 
     compressor.write_all(bytes)?;
 
-    compressor.finish().map_err(Error::from)
+    compressor.finish().map_err(|err| eyre!(err))
 }
 
 pub async fn compress_http_response(
     request: Arc<Mutex<Request<Body>>>,
     response: Arc<Mutex<Response<Body>>>,
-) -> Result<()> {
-    if let Ok(compressable) = should_compress(Arc::clone(&request), Arc::clone(&response)).await {
-        if compressable {
+) -> color_eyre::Result<()> {
+    if let Ok(compressible) = should_compress(Arc::clone(&request), Arc::clone(&response)).await {
+        if compressible {
             let mut buffer: Vec<u8> = Vec::new();
 
             {

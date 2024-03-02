@@ -1,4 +1,3 @@
-use anyhow::Result;
 use rustls::{Certificate, PrivateKey};
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -26,7 +25,7 @@ impl TlsConfig {
         cert_path: PathBuf,
         key_path: PathBuf,
         key_algorithm: PrivateKeyAlgorithm,
-    ) -> Result<Self> {
+    ) -> color_eyre::Result<Self> {
         let cert = load_cert(&cert_path)?;
         let key = load_private_key(&key_path, &key_algorithm)?;
 

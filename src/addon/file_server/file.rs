@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
+use color_eyre::eyre::Context;
 use futures::Stream;
 use hyper::body::Bytes;
 use mime_guess::{from_path, Mime};
@@ -40,7 +40,7 @@ impl File {
         self.metadata.len()
     }
 
-    pub fn last_modified(&self) -> Result<DateTime<Local>> {
+    pub fn last_modified(&self) -> color_eyre::Result<DateTime<Local>> {
         let modified = self
             .metadata
             .modified()
@@ -80,7 +80,7 @@ impl From<File> for ByteStream {
 }
 
 impl Stream for ByteStream {
-    type Item = Result<Bytes>;
+    type Item = color_eyre::Result<Bytes>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
         let ByteStream {

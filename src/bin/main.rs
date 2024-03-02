@@ -1,5 +1,5 @@
+use color_eyre::eyre::Context;
 use http_server_lib::make_server;
-use std::process::exit;
 
 #[cfg(feature = "dhat-profiling")]
 use dhat::{Dhat, DhatAlloc};
@@ -9,17 +9,16 @@ use dhat::{Dhat, DhatAlloc};
 static ALLOCATOR: DhatAlloc = DhatAlloc;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> color_eyre::Result<()> {
     #[cfg(feature = "dhat-profiling")]
     let _dhat = Dhat::start_heap_profiling();
 
-    match make_server() {
-        Ok(server) => {
-            server.run().await;
-        }
-        Err(error) => {
-            eprint!("{:?}", error);
-            exit(1);
-        }
-    }
+    color_eyre::install()?;
+
+    make_server()?
+        .run()
+        .await
+        .context("Failed to make server")?;
+
+    Ok(())
 }

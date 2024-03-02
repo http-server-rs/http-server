@@ -8,7 +8,6 @@
 //! The `Entry` is a wrapper on OS file system entries such as `File` and
 //! `Directory`. Both `File` and `Directory` are primitive types for
 //! `ScopedFileSystem`
-use anyhow::Result;
 use std::path::{Component, Path, PathBuf};
 use tokio::fs::OpenOptions;
 
@@ -58,8 +57,8 @@ impl ScopedFileSystem {
     /// Creates a new instance of `ScopedFileSystem` using the provided PathBuf
     /// as the root directory to serve files from.
     ///
-    /// Provided paths will resolve relartive to the provided `root` directory.
-    pub fn new(root: PathBuf) -> Result<Self> {
+    /// Provided paths will resolve relative to the provided `root` directory.
+    pub fn new(root: PathBuf) -> color_eyre::Result<Self> {
         Ok(ScopedFileSystem { root })
     }
 
