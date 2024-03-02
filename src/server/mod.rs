@@ -4,7 +4,8 @@ mod service;
 
 pub mod middleware;
 
-use color_eyre::eyre::{bail, Context, Report};
+use color_eyre::eyre::{bail, eyre, Context, Report};
+use color_eyre::Section;
 use hyper::service::{make_service_fn, service_fn};
 use std::net::{Ipv4Addr, SocketAddr};
 
@@ -38,7 +39,12 @@ impl Server {
             index_html.push("index.html");
 
             if !index_html.exists() {
-                bail!("SPA flag is enabled, but index.html in root does not exist");
+                return Err(
+                    eyre!("SPA flag is enabled, but index.html in root does not exist")
+                        .with_suggestion(|| {
+                            format!("Create index.html in root ({:?})", config.root_dir)
+                        }),
+                );
             }
         }
 
