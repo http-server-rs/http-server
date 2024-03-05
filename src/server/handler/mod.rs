@@ -1,11 +1,13 @@
 mod file_server;
 mod proxy;
 
-use anyhow::Result;
 use async_trait::async_trait;
+use color_eyre::eyre::Context;
+use color_eyre::Report;
 use http::{Request, Response};
 use hyper::Body;
 use std::convert::TryFrom;
+
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -32,7 +34,10 @@ pub struct HttpHandler {
 }
 
 impl HttpHandler {
-    pub async fn handle_request(self, request: Request<Body>) -> Result<Response<Body>> {
+    pub async fn handle_request(
+        self,
+        request: Request<Body>,
+    ) -> color_eyre::Result<Response<Body>> {
         let handler = Arc::clone(&self.request_handler);
         let middleware = Arc::clone(&self.middleware);
         let response = middleware.handle(request, handler).await;
@@ -41,28 +46,31 @@ impl HttpHandler {
     }
 }
 
-impl From<Arc<Config>> for HttpHandler {
-    fn from(config: Arc<Config>) -> Self {
+impl TryFrom<Arc<Config>> for HttpHandler {
+    type Error = Report;
+
+    fn try_from(config: Arc<Config>) -> Result<Self, Self::Error> {
         if let Some(proxy_config) = config.proxy.clone() {
-            let proxy = Proxy::new(&proxy_config.url);
+            let proxy = Proxy::new(proxy_config.uri);
             let request_handler = Arc::new(ProxyHandler::new(proxy));
-            let middleware = Middleware::try_from(config).unwrap();
+            let middleware = Middleware::from(config);
             let middleware = Arc::new(middleware);
 
-            return HttpHandler {
+            return Ok(HttpHandler {
                 request_handler,
                 middleware,
-            };
+            });
         }
 
-        let file_server = FileServer::new(config.clone());
+        let file_server =
+            FileServer::new(config.clone()).context("Failed to create file server")?;
         let request_handler = Arc::new(FileServerHandler::new(file_server));
-        let middleware = Middleware::try_from(config).unwrap();
+        let middleware = Middleware::from(config);
         let middleware = Arc::new(middleware);
 
-        HttpHandler {
+        Ok(HttpHandler {
             request_handler,
             middleware,
-        }
+        })
     }
 }

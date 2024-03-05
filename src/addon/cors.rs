@@ -1,6 +1,4 @@
-use anyhow::{Error, Result};
 use hyper::header::{self, HeaderName, HeaderValue};
-use std::convert::TryFrom;
 
 use crate::config::cors::CorsConfig;
 
@@ -211,10 +209,8 @@ impl CorsBuilder {
     }
 }
 
-impl TryFrom<CorsConfig> for Cors {
-    type Error = Error;
-
-    fn try_from(value: CorsConfig) -> Result<Self> {
+impl From<CorsConfig> for Cors {
+    fn from(value: CorsConfig) -> Self {
         let mut builder = Cors::builder();
 
         if value.allow_credentials {
@@ -249,7 +245,7 @@ impl TryFrom<CorsConfig> for Cors {
             builder = builder.request_method(request_method);
         }
 
-        Ok(builder.build())
+        builder.build()
     }
 }
 
@@ -341,7 +337,7 @@ mod tests {
             "content-length".to_string(),
             "request-id".to_string(),
         ];
-        let allow_mehtods = vec!["GET".to_string(), "POST".to_string(), "PUT".to_string()];
+        let allow_methods = vec!["GET".to_string(), "POST".to_string(), "PUT".to_string()];
         let allow_origin = String::from("github.com");
         let expose_headers = vec!["content-type".to_string(), "request-id".to_string()];
         let max_age = 5400;
@@ -354,7 +350,7 @@ mod tests {
         let config = CorsConfig {
             allow_credentials: true,
             allow_headers: Some(allow_headers.clone()),
-            allow_methods: Some(allow_mehtods.clone()),
+            allow_methods: Some(allow_methods.clone()),
             allow_origin: Some(allow_origin.clone()),
             expose_headers: Some(expose_headers.clone()),
             max_age: Some(max_age),
@@ -364,7 +360,7 @@ mod tests {
         let cors = Cors {
             allow_credentials: true,
             allow_headers: Some(allow_headers),
-            allow_methods: Some(allow_mehtods),
+            allow_methods: Some(allow_methods),
             allow_origin: Some(allow_origin),
             expose_headers: Some(expose_headers),
             max_age: Some(max_age),
@@ -372,6 +368,6 @@ mod tests {
             request_method: Some(request_method),
         };
 
-        assert_eq!(cors, Cors::try_from(config).unwrap());
+        assert_eq!(cors, Cors::from(config));
     }
 }

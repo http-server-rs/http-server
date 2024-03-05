@@ -1,4 +1,3 @@
-use anyhow::Result;
 use chrono::{DateTime, Utc};
 use http::header::USER_AGENT;
 use http::Method;
@@ -19,7 +18,11 @@ impl Logger {
         Logger { buffer_writer }
     }
 
-    pub async fn log(&mut self, request: Request<Body>, response: Response<Body>) -> Result<()> {
+    pub async fn log(
+        &mut self,
+        request: Request<Body>,
+        response: Response<Body>,
+    ) -> color_eyre::Result<()> {
         let mut buffer = self.buffer_writer.buffer();
         let request = request.lock().await;
         let response = response.lock().await;

@@ -6,11 +6,14 @@ pub mod proxy;
 pub mod tls;
 pub mod util;
 
-use anyhow::{Error, Result};
+use color_eyre::eyre::{eyre, Context};
+use color_eyre::{Report, Section};
+use http::Uri;
 use std::convert::TryFrom;
 use std::env::current_dir;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::cli::Cli;
 
@@ -44,7 +47,7 @@ impl Default for Config {
         let host = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
         let port = 7878;
         let address = SocketAddr::new(host, port);
-        let root_dir = current_dir().unwrap();
+        let root_dir = current_dir().unwrap_or_default();
 
         Self {
             host,
@@ -66,27 +69,21 @@ impl Default for Config {
 }
 
 impl TryFrom<Cli> for Config {
-    type Error = anyhow::Error;
+    type Error = Report;
 
     fn try_from(cli_arguments: Cli) -> Result<Self, Self::Error> {
-        let quiet = cli_arguments.quiet;
-        let root_dir = if cli_arguments.root_dir.to_str().unwrap() == "./" {
-            current_dir().unwrap()
-        } else {
-            let root_dir = cli_arguments.root_dir.to_str().unwrap();
-
-            cli_arguments
-                .root_dir
-                .canonicalize()
-                .unwrap_or_else(|_| panic!("Failed to find config on: {}", root_dir))
-        };
+        let root_dir = cli_arguments
+            .root_dir
+            .canonicalize()
+            .context("Cannot canonicalize root directory")?;
 
         let tls: Option<TlsConfig> = if cli_arguments.tls {
-            Some(TlsConfig::new(
+            TlsConfig::new(
                 cli_arguments.tls_cert,
                 cli_arguments.tls_key,
                 cli_arguments.tls_key_algorithm,
-            )?)
+            )
+            .ok()
         } else {
             None
         };
@@ -106,15 +103,20 @@ impl TryFrom<Cli> for Config {
             None
         };
 
-        let basic_auth: Option<BasicAuthConfig> =
-            if cli_arguments.username.is_some() && cli_arguments.password.is_some() {
-                Some(BasicAuthConfig::new(
-                    cli_arguments.username.unwrap(),
-                    cli_arguments.password.unwrap(),
-                ))
-            } else {
-                None
-            };
+        // If only one of both is given
+        if cli_arguments.username.is_some() ^ cli_arguments.password.is_some() {
+            return Err(eyre!(
+                "Only one of username or password is given. Expected none or both"
+            ).with_suggestion(|| "Use both the username and password flag.\nExample:\nhttp-server --username YOURUSERNAME --password YOURPASSWORD"));
+        }
+
+        let basic_auth: Option<BasicAuthConfig> = if let (Some(username), Some(password)) =
+            (cli_arguments.username, cli_arguments.password)
+        {
+            Some(BasicAuthConfig::new(username, password))
+        } else {
+            None
+        };
 
         let logger = if cli_arguments.logger {
             Some(true)
@@ -122,12 +124,11 @@ impl TryFrom<Cli> for Config {
             None
         };
 
-        let proxy = if cli_arguments.proxy.is_some() {
-            let proxy_url = cli_arguments.proxy.unwrap();
-
-            Some(ProxyConfig::url(proxy_url))
-        } else {
-            None
+        let proxy = match cli_arguments.proxy {
+            Some(proxy_url) => Some(ProxyConfig::url(
+                Uri::from_str(&proxy_url).context("Cannot construct URI from proxy URI string")?,
+            )),
+            None => None,
         };
 
         let spa = cli_arguments.spa;
@@ -140,7 +141,7 @@ impl TryFrom<Cli> for Config {
             index,
             spa,
             root_dir,
-            quiet,
+            quiet: cli_arguments.quiet,
             tls,
             cors,
             compression,
@@ -153,7 +154,7 @@ impl TryFrom<Cli> for Config {
 }
 
 impl TryFrom<ConfigFile> for Config {
-    type Error = Error;
+    type Error = Report;
 
     fn try_from(file: ConfigFile) -> Result<Self, Self::Error> {
         let root_dir = file.root_dir.unwrap_or_default();

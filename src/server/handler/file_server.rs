@@ -29,7 +29,21 @@ impl RequestHandler for FileServerHandler {
         let req_method = request_lock.method();
 
         if req_method == Method::GET {
-            let response = self.file_server.resolve(req_path).await.unwrap();
+            let response = match self.file_server.resolve(req_path).await {
+                Ok(response) => response,
+                Err(err) => hyper::Response::builder()
+                    .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
+                    .header(http::header::CONTENT_TYPE, "text/html")
+                    .body(hyper::Body::from(
+                        handlebars::Handlebars::new()
+                            .render_template(
+                                include_str!("../../addon/file_server/template/error.hbs"),
+                                &serde_json::json!({"error": err.to_string(), "code": 500}),
+                            )
+                            .unwrap(),
+                    ))
+                    .unwrap(),
+            };
 
             return Arc::new(Mutex::new(response));
         }

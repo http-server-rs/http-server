@@ -1,5 +1,5 @@
-use anyhow::Result;
 use async_stream::stream;
+use color_eyre::eyre::eyre;
 use futures::TryFutureExt;
 use hyper::server::accept::Accept;
 use hyper::server::Builder;
@@ -21,13 +21,13 @@ impl Https {
         Https { cert, key }
     }
 
-    fn make_tls_cfg(&self) -> Result<Arc<ServerConfig>> {
+    fn make_tls_cfg(&self) -> color_eyre::Result<Arc<ServerConfig>> {
         let (certs, private_key) = (self.cert.clone(), self.key.clone());
         let config = ServerConfig::builder()
             .with_safe_defaults()
             .with_no_client_auth()
             .with_single_cert(certs, private_key)
-            .map_err(anyhow::Error::new)?;
+            .map_err(|err| eyre!(err))?;
 
         Ok(Arc::new(config))
     }
@@ -35,7 +35,7 @@ impl Https {
     pub async fn make_server(
         &self,
         addr: SocketAddr,
-    ) -> Result<Builder<impl Accept<Conn = TlsStream<TcpStream>, Error = Error>>> {
+    ) -> color_eyre::Result<Builder<impl Accept<Conn = TlsStream<TcpStream>, Error = Error>>> {
         let tcp = TcpListener::bind(addr).await?;
         let tls_cfg = self.make_tls_cfg()?;
         let tls_acceptor = TlsAcceptor::from(tls_cfg);

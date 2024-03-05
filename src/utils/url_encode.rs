@@ -1,3 +1,4 @@
+use color_eyre::eyre::bail;
 use percent_encoding::{percent_decode, utf8_percent_encode, AsciiSet, NON_ALPHANUMERIC};
 use std::path::{Path, PathBuf};
 
@@ -7,10 +8,12 @@ pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'.')
     .remove(b'~');
 
-pub fn encode_uri(file_path: &Path) -> String {
-    assert!(!file_path.is_absolute());
+pub fn encode_uri(file_path: &Path) -> color_eyre::Result<String> {
+    if file_path.is_absolute() {
+        bail!("File path is not absolute: {file_path:?}");
+    }
 
-    file_path
+    Ok(file_path
         .iter()
         .flat_map(|component| {
             let component = component.to_str().unwrap();
@@ -18,7 +21,7 @@ pub fn encode_uri(file_path: &Path) -> String {
 
             std::iter::once("/").chain(segment)
         })
-        .collect::<String>()
+        .collect::<String>())
 }
 
 pub fn decode_uri(file_path: &str) -> PathBuf {
@@ -44,7 +47,7 @@ mod tests {
     fn encodes_uri() {
         let file_path = "/these are important files/do_not_delete/file name.txt";
         let file_path = PathBuf::from_str(file_path).unwrap();
-        let file_path = encode_uri(&file_path);
+        let file_path = encode_uri(&file_path).unwrap();
 
         assert_eq!(
             file_path,

@@ -6,12 +6,13 @@ mod scoped_file_system;
 
 use chrono::{DateTime, Local};
 
+use color_eyre::eyre::{Context, ContextCompat};
+use color_eyre::Section;
 pub use file::File;
 use humansize::{format_size, DECIMAL};
 
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
-use anyhow::{Context, Result};
 use handlebars::{handlebars_helper, Handlebars};
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
@@ -40,15 +41,16 @@ pub struct FileServer {
 
 impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
-    pub fn new(config: Arc<Config>) -> Self {
+    pub fn new(config: Arc<Config>) -> color_eyre::Result<Self> {
         let handlebars = FileServer::make_handlebars_engine();
-        let scoped_file_system = ScopedFileSystem::new(config.root_dir.clone()).unwrap();
+        let scoped_file_system = ScopedFileSystem::new(config.root_dir.clone())
+            .context("Could not create scoped file system")?;
 
-        FileServer {
+        Ok(FileServer {
             handlebars,
             scoped_file_system,
             config,
-        }
+        })
     }
 
     /// Creates a new `Handlebars` instance with templates registered
@@ -88,14 +90,17 @@ impl<'a> FileServer {
         Arc::new(handlebars)
     }
 
-    fn parse_path(req_uri: &str) -> Result<(PathBuf, Option<QueryParams>)> {
-        let uri = Uri::from_str(req_uri)?;
+    fn parse_path(req_uri: &str) -> color_eyre::Result<(PathBuf, Option<QueryParams>)> {
+        let uri = Uri::from_str(req_uri).context("Cannot construct URI from request URI string")?;
         let uri_parts = uri.into_parts();
 
         if let Some(path_and_query) = uri_parts.path_and_query {
             let path = path_and_query.path();
             let query_params = if let Some(query_str) = path_and_query.query() {
-                Some(QueryParams::from_str(query_str)?)
+                Some(
+                    QueryParams::from_str(query_str)
+                        .context("Cannot construct QueryParams from query parameters string")?,
+                )
             } else {
                 None
             };
@@ -103,7 +108,7 @@ impl<'a> FileServer {
             return Ok((decode_uri(path), query_params));
         }
 
-        Ok((PathBuf::from_str("/")?, None))
+        Ok((PathBuf::from_str("/").unwrap(), None))
     }
 
     /// Resolves a HTTP Request to a file or directory.
@@ -130,8 +135,9 @@ impl<'a> FileServer {
     ///
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
-    pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
-        let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
+    pub async fn resolve(&self, req_path: String) -> color_eyre::Result<Response<Body>> {
+        let (path, query_params) =
+            FileServer::parse_path(req_path.as_str()).context("Failed to parse request path")?;
 
         match self.scoped_file_system.resolve(path).await {
             Ok(entry) => match entry {
@@ -144,7 +150,10 @@ impl<'a> FileServer {
                             return make_http_file_response(
                                 File {
                                     path: filepath,
-                                    metadata: file.metadata().await?,
+                                    metadata: file
+                                        .metadata()
+                                        .await
+                                        .context("Failed to get file metadata")?,
                                     file,
                                 },
                                 CacheControlDirective::MaxAge(2500),
@@ -166,7 +175,10 @@ impl<'a> FileServer {
                             let mut path = self.config.root_dir.clone();
                             path.push("index.html");
 
-                            let file = tokio::fs::File::open(&path).await?;
+                            let file = tokio::fs::File::open(&path)
+                                .await
+                                .with_context(|| format!("Failed to open index.html at {path:?}"))
+                                .with_suggestion(|| "Create index.html in root")?;
 
                             let metadata = file.metadata().await?;
 
@@ -215,7 +227,7 @@ impl<'a> FileServer {
         &self,
         path: PathBuf,
         query_params: Option<QueryParams>,
-    ) -> Result<Response<Body>> {
+    ) -> color_eyre::Result<Response<Body>> {
         let directory_index =
             FileServer::index_directory(self.config.root_dir.clone(), path, query_params)?;
         let html = self
@@ -247,14 +259,17 @@ impl<'a> FileServer {
         utf8_percent_encode(component, PERCENT_ENCODE_SET).to_string()
     }
 
-    fn breadcrumbs_from_path(root_dir: &Path, path: &Path) -> Result<Vec<BreadcrumbItem>> {
+    fn breadcrumbs_from_path(
+        root_dir: &Path,
+        path: &Path,
+    ) -> color_eyre::Result<Vec<BreadcrumbItem>> {
         let root_dir_name = root_dir
             .components()
             .last()
-            .unwrap()
+            .context("Unable to get last root directory component")?
             .as_os_str()
             .to_str()
-            .expect("The first path component is not UTF-8 charset compliant.");
+            .context("The last path component is not UTF-8 charset compliant.")?;
         let stripped = path
             .strip_prefix(root_dir)?
             .components()
@@ -290,14 +305,15 @@ impl<'a> FileServer {
         root_dir: PathBuf,
         path: PathBuf,
         query_params: Option<QueryParams>,
-    ) -> Result<DirectoryIndex> {
-        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)?;
+    ) -> color_eyre::Result<DirectoryIndex> {
+        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &path)
+            .context("Failed to create breadcrumbs")?;
         let entries = read_dir(path).context("Unable to read directory")?;
         let mut directory_entries: Vec<DirectoryEntry> = Vec::new();
 
         for entry in entries {
             let entry = entry.context("Unable to read entry")?;
-            let metadata = entry.metadata()?;
+            let metadata = entry.metadata().context("Unable to get entry metadata")?;
             let date_created = if let Ok(time) = metadata.created() {
                 Some(time.into())
             } else {
@@ -317,7 +333,8 @@ impl<'a> FileServer {
                     .to_string(),
                 is_dir: metadata.is_dir(),
                 size_bytes: metadata.len(),
-                entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path()),
+                entry_path: FileServer::make_dir_entry_link(&root_dir, &entry.path())
+                    .context("Failed to create directory entry link")?,
                 date_created,
                 date_modified,
             });
@@ -373,8 +390,10 @@ impl<'a> FileServer {
     ///
     /// This happens because links should behave relative to the `/` path
     /// which in this case is `http-server/src` instead of system's root path.
-    fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> String {
-        let path = entry_path.strip_prefix(root_dir).unwrap();
+    fn make_dir_entry_link(root_dir: &Path, entry_path: &Path) -> color_eyre::Result<String> {
+        let path = entry_path.strip_prefix(root_dir).with_context(|| {
+            format!("Unable to construct relative path between entry path ({entry_path:?}) and root directory path ({root_dir:?})")
+        })?;
 
         encode_uri(path)
     }
@@ -397,7 +416,7 @@ mod tests {
 
         assert_eq!(
             "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
-            FileServer::make_dir_entry_link(&root_dir, &entry_path)
+            FileServer::make_dir_entry_link(&root_dir, &entry_path).unwrap()
         );
     }
 

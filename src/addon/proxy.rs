@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::sync::Arc;
 
 use http::header::USER_AGENT;
@@ -15,14 +14,13 @@ pub struct Proxy {
 }
 
 impl Proxy {
-    pub fn new(upstream: &str) -> Self {
+    pub fn new(upstream: Uri) -> Self {
         let https_connector = HttpsConnectorBuilder::new()
             .with_webpki_roots()
             .https_or_http()
             .enable_http1()
             .build();
         let client = Client::builder().build::<_, hyper::Body>(https_connector);
-        let upstream = Uri::from_str(upstream).unwrap();
 
         Proxy { client, upstream }
     }
@@ -153,7 +151,7 @@ impl Proxy {
         );
 
         // Specify Proxy as User Agent
-        headers.remove(USER_AGENT).unwrap();
+        headers.remove(USER_AGENT);
         headers.append(USER_AGENT, HeaderValue::from_static("Rust http-server/1.0"));
 
         request
@@ -184,7 +182,9 @@ mod tests {
         CONNECTION, PROXY_AUTHENTICATE, PROXY_AUTHORIZATION, TE, TRAILER, TRANSFER_ENCODING,
         UPGRADE,
     };
+    use http::Uri;
     use hyper::Body;
+    use std::str::FromStr;
     use std::sync::Arc;
     use tokio::sync::Mutex;
 
@@ -192,7 +192,7 @@ mod tests {
 
     #[tokio::test]
     async fn adds_via_header_if_not_present() {
-        let proxy = Proxy::new("https://example.com");
+        let proxy = Proxy::new(Uri::from_str("https://example.com").unwrap());
         let request = http::Request::new(Body::empty());
         let request = Arc::new(Mutex::new(request));
 
@@ -211,7 +211,7 @@ mod tests {
 
     #[tokio::test]
     async fn appends_via_header_if_another_is_present() {
-        let proxy = Proxy::new("https://example.com");
+        let proxy = Proxy::new(Uri::from_str("https://example.com").unwrap());
         let mut request = http::Request::new(Body::empty());
         let headers = request.headers_mut();
 
@@ -240,7 +240,7 @@ mod tests {
 
     #[tokio::test]
     async fn removes_hbh_headers() {
-        let proxy = Proxy::new("https://example.com");
+        let proxy = Proxy::new(Uri::from_str("https://example.com").unwrap());
         let mut request = http::Request::new(Body::empty());
         let headers = request.headers_mut();
         let headers_to_add = vec![
