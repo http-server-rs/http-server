@@ -35,7 +35,7 @@ chrono = { version = "0.4.31", features = ["serde"] }
 dhat = { version = "0.2.4", optional = true }
 futures = "0.3.29"
 flate2 = "1.0.28"
-http = "0.2.11"
+http = "1.1.0"
 http-auth-basic = "0.3.3"
 handlebars = "4.3.7"
 hyper = { version = "0.14.27", features = ["http1", "server", "stream", "tcp"] }
