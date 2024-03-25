@@ -55,7 +55,7 @@ tokio = { version = "1.29.1", features = [
     "signal",
     "macros",
 ] }
-tokio-rustls = "0.23.4"
+tokio-rustls = "0.26.0"
 toml = "0.7.6"
 humansize = "2.1.3"
 
