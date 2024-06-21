@@ -1,12 +1,14 @@
+use std::fmt::Display;
+use std::mem::MaybeUninit;
+use std::pin::Pin;
+use std::task::{self, Poll};
+
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
 use futures::Stream;
 use http::response::Builder as HttpResponseBuilder;
 use hyper::body::Body;
 use hyper::body::Bytes;
-use std::mem::MaybeUninit;
-use std::pin::Pin;
-use std::task::{self, Poll};
 use tokio::io::{AsyncRead, ReadBuf};
 
 use super::file::File;
@@ -41,9 +43,9 @@ pub enum CacheControlDirective {
     SMaxAge(u64),
 }
 
-impl ToString for CacheControlDirective {
-    fn to_string(&self) -> String {
-        match &self {
+impl Display for CacheControlDirective {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match &self {
             Self::MustRevalidate => String::from("must-revalidate"),
             Self::NoCache => String::from("no-cache"),
             Self::NoStore => String::from("no-store"),
@@ -53,7 +55,9 @@ impl ToString for CacheControlDirective {
             Self::ProxyRavalidate => String::from("proxy-revalidate"),
             Self::MaxAge(age) => format!("max-age={}", age),
             Self::SMaxAge(age) => format!("s-maxage={}", age),
-        }
+        };
+
+        write!(f, "{string}")
     }
 }
 
