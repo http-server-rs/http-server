@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Check if the user have OpenSSL in their system
 if ! [ -x "$(command -v openssl)" ]; then
