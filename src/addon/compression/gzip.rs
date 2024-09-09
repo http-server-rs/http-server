@@ -1,9 +1,7 @@
 use anyhow::{Error, Result};
 use flate2::write::GzEncoder;
 use http::{HeaderValue, Request, Response};
-use hyper::body::aggregate;
-use hyper::body::Buf;
-use hyper::Body;
+use hyper::body::Bytes;
 use std::io::Write;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -18,7 +16,7 @@ const IGNORED_CONTENT_TYPE: [&str; 6] = [
     "video",
 ];
 
-pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> Result<bool> {
+pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Bytes>>>) -> Result<bool> {
     if let Some(accept_encoding) = request
         .lock()
         .await
@@ -36,7 +34,7 @@ pub async fn is_encoding_accepted(request: Arc<Mutex<Request<Body>>>) -> Result<
     Ok(false)
 }
 
-pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Body>>>) -> Result<bool> {
+pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Bytes>>>) -> Result<bool> {
     if let Some(content_type) = response
         .lock()
         .await
@@ -56,8 +54,8 @@ pub async fn is_compressable_content_type(response: Arc<Mutex<Response<Body>>>) 
 }
 
 pub async fn should_compress(
-    request: Arc<Mutex<Request<Body>>>,
-    response: Arc<Mutex<Response<Body>>>,
+    request: Arc<Mutex<Request<Bytes>>>,
+    response: Arc<Mutex<Response<Bytes>>>,
 ) -> Result<bool> {
     Ok(is_encoding_accepted(request).await?
         && is_compressable_content_type(Arc::clone(&response)).await?)
@@ -73,8 +71,8 @@ pub fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
 }
 
 pub async fn compress_http_response(
-    request: Arc<Mutex<Request<Body>>>,
-    response: Arc<Mutex<Response<Body>>>,
+    request: Arc<Mutex<Request<Bytes>>>,
+    response: Arc<Mutex<Response<Bytes>>>,
 ) -> Result<()> {
     if let Ok(compressable) = should_compress(Arc::clone(&request), Arc::clone(&response)).await {
         if compressable {
@@ -90,11 +88,11 @@ pub async fn compress_http_response(
                 }
 
                 let body = response.body_mut();
-                let mut buffer_cursor = aggregate(body).await.unwrap();
+                // let mut buffer_cursor = aggregate(body).await.unwrap();
 
-                while buffer_cursor.has_remaining() {
-                    buffer.push(buffer_cursor.get_u8());
-                }
+                // while buffer_cursor.has_remaining() {
+                //     buffer.push(buffer_cursor.get_u8());
+                // }
             }
 
             let compressed = compress(&buffer)?;
@@ -108,7 +106,7 @@ pub async fn compress_http_response(
 
             response_headers.remove(http::header::CONTENT_LENGTH);
 
-            *response.body_mut() = Body::from(compressed);
+            *response.body_mut() = Bytes::from(compressed);
         }
     }
 
@@ -118,7 +116,8 @@ pub async fn compress_http_response(
 #[cfg(test)]
 mod tests {
     use http::response::Builder as HttpResponseBuilder;
-    use hyper::{Body, Request};
+    use hyper::Request;
+    use hyper::body::Bytes;
     use std::sync::Arc;
     use tokio::sync::Mutex;
 
@@ -130,10 +129,10 @@ mod tests {
     #[allow(dead_code)]
     fn make_gzip_request_response(
         accept_encoding_gzip: bool,
-    ) -> (middleware::Request<Body>, middleware::Response<Body>) {
+    ) -> (middleware::Request<Bytes>, middleware::Response<Bytes>) {
         let file = std::include_bytes!("../../../assets/test_file.hbs");
         let request = if accept_encoding_gzip {
-            let mut req = Request::new(Body::empty());
+            let mut req = Request::new(Bytes::empty());
 
             req.headers_mut().append(
                 http::header::ACCEPT_ENCODING,
@@ -142,11 +141,11 @@ mod tests {
 
             Arc::new(Mutex::new(req))
         } else {
-            Arc::new(Mutex::new(Request::new(Body::empty())))
+            Arc::new(Mutex::new(Request::new(Bytes::empty())))
         };
         let response_builder =
             HttpResponseBuilder::new().header(http::header::CONTENT_TYPE, "text/html");
-        let response_body = Body::from(file.to_vec());
+        let response_body = Bytes::from(file.to_vec());
 
         let response = response_builder.body(response_body).unwrap();
         let response = Arc::new(Mutex::new(response));
@@ -195,11 +194,11 @@ mod tests {
             let mut response = response.lock().await;
             let body = response.body_mut();
 
-            let mut buffer_cursor = aggregate(body).await.unwrap();
+            // let mut buffer_cursor = aggregate(body).await.unwrap();
 
-            while buffer_cursor.has_remaining() {
-                body_buffer.push(buffer_cursor.get_u8());
-            }
+            // while buffer_cursor.has_remaining() {
+            //     body_buffer.push(buffer_cursor.get_u8());
+            // }
         }
 
         compress_http_response(request, Arc::clone(&response))
@@ -210,11 +209,11 @@ mod tests {
             let mut compressed_response = response.lock().await;
             let compressed_body = compressed_response.body_mut();
 
-            let mut buffer_cursor = aggregate(compressed_body).await.unwrap();
+            // let mut buffer_cursor = aggregate(compressed_body).await.unwrap();
 
-            while buffer_cursor.has_remaining() {
-                compressed_body_buffer.push(buffer_cursor.get_u8());
-            }
+            // while buffer_cursor.has_remaining() {
+            //     compressed_body_buffer.push(buffer_cursor.get_u8());
+            // }
         }
 
         assert_eq!(body_buffer.len(), 6364);

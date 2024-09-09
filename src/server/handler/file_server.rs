@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use http::response::Builder as HttpResponseBuilder;
-use http::StatusCode;
-use hyper::{Body, Method, Request};
+use http::{Request, StatusCode};
+use hyper::Method;
+use hyper::body::Bytes;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -23,7 +24,7 @@ impl FileServerHandler {
 
 #[async_trait]
 impl RequestHandler for FileServerHandler {
-    async fn handle(&self, req: Arc<Mutex<Request<Body>>>) -> Arc<Mutex<http::Response<Body>>> {
+    async fn handle(&self, req: Arc<Mutex<Request<Bytes>>>) -> Arc<Mutex<http::Response<Bytes>>> {
         let request_lock = req.lock().await;
         let req_path = request_lock.uri().to_string();
         let req_method = request_lock.method();
@@ -37,7 +38,7 @@ impl RequestHandler for FileServerHandler {
         Arc::new(Mutex::new(
             HttpResponseBuilder::new()
                 .status(StatusCode::METHOD_NOT_ALLOWED)
-                .body(Body::empty())
+                .body(Bytes::empty())
                 .expect("Unable to build response"),
         ))
     }

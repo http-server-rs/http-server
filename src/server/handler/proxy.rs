@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use hyper::{Body, Request};
+use hyper::{body::Bytes, Request};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -21,7 +21,7 @@ impl ProxyHandler {
 
 #[async_trait]
 impl RequestHandler for ProxyHandler {
-    async fn handle(&self, req: Arc<Mutex<Request<Body>>>) -> Arc<Mutex<http::Response<Body>>> {
+    async fn handle(&self, req: Arc<Mutex<Request<Bytes>>>) -> Arc<Mutex<http::Response<Bytes>>> {
         let proxy = Arc::clone(&self.proxy);
         let request = Arc::clone(&req);
         let response = proxy.handle(request).await;

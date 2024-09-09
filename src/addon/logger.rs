@@ -2,7 +2,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use http::header::USER_AGENT;
 use http::Method;
-use hyper::Body;
+use hyper::body::Bytes;
 use std::io::Write;
 use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
 
@@ -19,7 +19,7 @@ impl Logger {
         Logger { buffer_writer }
     }
 
-    pub async fn log(&mut self, request: Request<Body>, response: Response<Body>) -> Result<()> {
+    pub async fn log(&mut self, request: Request<Bytes>, response: Response<Bytes>) -> Result<()> {
         let mut buffer = self.buffer_writer.buffer();
         let request = request.lock().await;
         let response = response.lock().await;

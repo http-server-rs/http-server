@@ -7,7 +7,6 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
 use futures::Stream;
 use http::response::Builder as HttpResponseBuilder;
-use hyper::body::Body;
 use hyper::body::Bytes;
 use tokio::io::{AsyncRead, ReadBuf};
 
@@ -115,7 +114,7 @@ impl ResponseHeaders {
 pub async fn make_http_file_response(
     file: File,
     cache_control_directive: CacheControlDirective,
-) -> Result<hyper::http::Response<Body>> {
+) -> Result<http::Response<Bytes>> {
     let headers = ResponseHeaders::new(&file, cache_control_directive)?;
     let builder = HttpResponseBuilder::new()
         .header(http::header::CONTENT_LENGTH, headers.content_length)
@@ -132,13 +131,14 @@ pub async fn make_http_file_response(
     Ok(response)
 }
 
-pub async fn file_bytes_into_http_body(file: File) -> Body {
+pub async fn file_bytes_into_http_body(file: File) -> Bytes {
     let byte_stream = ByteStream {
         file: file.file,
         buffer: Box::new([MaybeUninit::uninit(); FILE_BUFFER_SIZE]),
     };
 
-    Body::wrap_stream(byte_stream)
+    // Bytes::from(byte_stream)
+    todo!()
 }
 
 pub struct ByteStream {
