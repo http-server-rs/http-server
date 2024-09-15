@@ -25,7 +25,10 @@ pub struct Middleware {
 }
 
 impl Middleware {
-    #[allow(dead_code)]
+    pub fn new() -> Self {
+        Middleware::default()
+    }
+
     pub fn before(&mut self, middleware: MiddlewareBefore) {
         self.before.push(middleware);
     }

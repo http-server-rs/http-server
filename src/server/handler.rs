@@ -5,6 +5,7 @@ use http_body_util::Full;
 use hyper::{body::Bytes, service::Service};
 
 use crate::config::Config;
+use crate::middleware::basic_auth::make_basic_auth_middleware;
 
 use super::{HttpRequest, HttpResponse};
 use super::middleware::Middleware;
@@ -22,9 +23,13 @@ pub struct Handler {
 
 impl From<Config> for Handler {
     fn from(config: Config) -> Self {
-        let middleware = Arc::new(Middleware::default());
+        let mut middleware = Middleware::new();
 
-        Handler { config, middleware }
+        if let Some(basic_auth) = &config.basic_auth {
+            middleware.before(make_basic_auth_middleware(basic_auth));
+        }
+
+        Handler { config, middleware: Arc::new(middleware) }
     }
 }
 

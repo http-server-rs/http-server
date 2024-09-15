@@ -5,7 +5,8 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use super::basic_auth::BasicAuthConfig;
+use crate::middleware::basic_auth::BasicAuthConfig;
+
 use super::compression::CompressionConfig;
 use super::cors::CorsConfig;
 use super::proxy::ProxyConfig;

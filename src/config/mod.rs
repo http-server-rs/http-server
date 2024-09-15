@@ -1,4 +1,3 @@
-pub mod basic_auth;
 pub mod compression;
 pub mod cors;
 pub mod file;
@@ -14,7 +13,8 @@ use std::path::PathBuf;
 
 use crate::cli::Cli;
 
-use self::basic_auth::BasicAuthConfig;
+use crate::middleware::basic_auth::BasicAuthConfig;
+
 use self::compression::CompressionConfig;
 use self::cors::CorsConfig;
 use self::file::ConfigFile;
