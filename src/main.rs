@@ -5,8 +5,7 @@ use std::process::exit;
 
 use anyhow::Result;
 
-use crate::server::Server;
-
+use server::Server;
 #[tokio::main]
 async fn main() -> Result<()> {
     match Server::run().await {

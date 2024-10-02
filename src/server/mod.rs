@@ -1,67 +1,46 @@
-pub mod handler;
-
-use std::sync::Arc;
+use std::{convert::Infallible, net::SocketAddr};
 
 use anyhow::Result;
 use http_body_util::Full;
-use hyper::http::StatusCode;
-use hyper::{body::Bytes, server::conn::http1, Response};
-use hyper_util::rt::TokioIo;
-use serde::Serialize;
+use hyper::{
+    body::{Bytes, Incoming},
+    server::conn::http1,
+    Method, Request, Response,
+};
+use hyper_util::{rt::TokioIo, service::TowerToHyperService};
 use tokio::net::TcpListener;
+use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
 
-use self::handler::Handler;
-
-pub type HttpRequest = hyper::Request<hyper::body::Incoming>;
-
-pub type HttpResponse = hyper::Response<Full<Bytes>>;
-
-#[derive(Debug, Serialize)]
-pub struct HttpErrorResponse {
-    status_code: u16,
-    message: Option<String>,
+async fn hello(_: Request<Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+    Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
 }
 
-impl HttpErrorResponse {
-    pub fn new(status_code: StatusCode) -> Self {
-        HttpErrorResponse {
-            status_code: status_code.as_u16(),
-            message: None,
-        }
-    }
-
-    pub fn with_message(self, message: &str) -> Self {
-        HttpErrorResponse {
-            message: Some(message.to_string()),
-            ..self
-        }
-    }
-
-    pub fn into_response(self) -> HttpResponse {
-        let body = serde_json::ser::to_string(&self).unwrap();
-
-        Response::builder()
-            .status(self.status_code)
-            .body(Full::new(Bytes::from(body)))
-            .expect("Failed to build error response")
-    }
-}
-
-pub struct Server;
+pub struct Server {}
 
 impl Server {
     pub async fn run() -> Result<()> {
-        let listener = TcpListener::bind("127.0.0.1:7878").await?;
-        let handler = Arc::new(Handler {});
+        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+        let listener = TcpListener::bind(addr).await?;
 
         loop {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
-            let handler = Arc::clone(&handler);
 
-            tokio::task::spawn(async move {
-                if let Err(err) = http1::Builder::new().serve_connection(io, handler).await {
-                    eprintln!("Error: {}", err);
+            let cors = CorsLayer::new()
+                // allow `GET` and `POST` when accessing the resource
+                .allow_methods([Method::GET, Method::POST])
+                // allow requests from any origin
+                .allow_origin(Any);
+
+            tokio::spawn(async move {
+                // N.B. should use tower service_fn here, since it's reuqired to be implemented tower Service trait before convert to hyper Service!
+                let svc = tower::service_fn(hello);
+                let svc = ServiceBuilder::new().layer(cors).service(svc);
+                // Convert it to hyper service
+                let svc = TowerToHyperService::new(svc);
+                if let Err(err) = http1::Builder::new().serve_connection(io, svc).await {
+                    eprintln!("server error: {}", err);
                 }
             });
         }
