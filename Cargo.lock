@@ -474,20 +474,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dhat"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42c9f82890824583b2cfc03d524616ff7119d27b74bd1e74799c122d509df288"
-dependencies = [
- "backtrace",
- "lazy_static",
- "rustc-hash",
- "serde",
- "serde_json",
- "thousands",
-]
-
-[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -807,14 +793,13 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "0.8.9"
+version = "1.0.0-draft+1"
 dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
  "chrono",
  "criterion",
- "dhat",
  "flate2",
  "futures",
  "handlebars",
@@ -1869,12 +1854,6 @@ dependencies = [
  "quote",
  "syn 1.0.96",
 ]
-
-[[package]]
-name = "thousands"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bf63baf9f5039dadc247375c29eb13706706cfde997d0330d05aa63a77d8820"
 
 [[package]]
 name = "tinytemplate"

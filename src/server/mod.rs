@@ -1,17 +1,14 @@
 pub mod handler;
-pub mod middleware;
 
 use std::sync::Arc;
 
 use anyhow::Result;
 use http_body_util::Full;
-use hyper::{body::Bytes, server::conn::http1, Response};
 use hyper::http::StatusCode;
+use hyper::{body::Bytes, server::conn::http1, Response};
 use hyper_util::rt::TokioIo;
 use serde::Serialize;
 use tokio::net::TcpListener;
-
-use crate::config::Config;
 
 use self::handler::Handler;
 
@@ -42,7 +39,6 @@ impl HttpErrorResponse {
 
     pub fn into_response(self) -> HttpResponse {
         let body = serde_json::ser::to_string(&self).unwrap();
-        
 
         Response::builder()
             .status(self.status_code)
@@ -54,9 +50,9 @@ impl HttpErrorResponse {
 pub struct Server;
 
 impl Server {
-    pub async fn run(config: Config) -> Result<()> {
-        let listener = TcpListener::bind(config.address).await?;
-        let handler = Arc::new(Handler::from(config));
+    pub async fn run() -> Result<()> {
+        let listener = TcpListener::bind("127.0.0.1:7878").await?;
+        let handler = Arc::new(Handler {});
 
         loop {
             let (stream, _) = listener.accept().await?;
