@@ -1,0 +1,14 @@
+[package]
+name = "http-server-plugin"
+version = "1.0.0-draft+1"
+authors = ["Esteban Borai <estebanborai@gmail.com>"]
+edition = "2021"
+description = "HTTP Server RS Plugin Crate"
+repository = "https://github.com/http-server-rs/http-server"
+categories = ["web-programming", "web-programming::http-server"]
+keywords = ["sdk", "http", "server", "plugin", "dll"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+[build-dependencies]
+rustc_version = { workspace = true }

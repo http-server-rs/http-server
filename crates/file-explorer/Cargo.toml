@@ -1,0 +1,12 @@
+[package]
+name = "file-explorer"
+version = "0.0.0"
+authors = ["Esteban Borai <estebanborai@gmail.com>"]
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+http-server-plugin = { workspace = true }
