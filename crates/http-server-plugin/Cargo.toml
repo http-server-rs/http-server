@@ -10,5 +10,9 @@ keywords = ["sdk", "http", "server", "plugin", "dll"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 
+[dependencies]
+http-body-util = { workspace = true }
+hyper = { workspace = true }
+
 [build-dependencies]
 rustc_version = { workspace = true }

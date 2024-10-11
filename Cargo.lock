@@ -182,7 +182,9 @@ checksum = "88bffebc5d80432c9b140ee17875ff173a8ab62faad5b257da912bd2f6c1c0a1"
 name = "file-explorer"
 version = "0.0.0"
 dependencies = [
+ "http-body-util",
  "http-server-plugin",
+ "hyper",
 ]
 
 [[package]]
@@ -337,6 +339,8 @@ dependencies = [
 name = "http-server-plugin"
 version = "1.0.0-draft+1"
 dependencies = [
+ "http-body-util",
+ "hyper",
  "rustc_version",
 ]
 

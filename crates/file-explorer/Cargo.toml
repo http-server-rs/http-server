@@ -9,4 +9,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
+http-body-util = { workspace = true }
+hyper = { workspace = true }
+
 http-server-plugin = { workspace = true }
