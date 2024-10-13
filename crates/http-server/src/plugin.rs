@@ -9,6 +9,7 @@ use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::{Request, Response};
 use libloading::Library;
+use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
 
 use http_server_plugin::{
@@ -63,7 +64,11 @@ impl ExternalFunctions {
 
         let mut registrar = PluginRegistrar::new(Arc::clone(&library));
 
-        (decl.register)(config_path, &mut registrar);
+        (decl.register)(
+            config_path,
+            Arc::new(Runtime::new().unwrap()),
+            &mut registrar,
+        );
 
         self.functions.lock().await.extend(registrar.functions);
 

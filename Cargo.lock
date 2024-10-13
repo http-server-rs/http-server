@@ -527,6 +527,7 @@ dependencies = [
  "hyper",
  "rustc_version",
  "serde",
+ "tokio",
  "toml",
 ]
 

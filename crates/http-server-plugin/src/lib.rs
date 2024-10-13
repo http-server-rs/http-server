@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::{Request, Response};
+use tokio::runtime::Runtime;
 
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
@@ -26,7 +27,8 @@ pub enum InvocationError {
 pub struct PluginDeclaration {
     pub rustc_version: &'static str,
     pub core_version: &'static str,
-    pub register: unsafe extern "C" fn(config_path: PathBuf, &mut dyn PluginRegistrar),
+    pub register:
+        unsafe extern "C" fn(config_path: PathBuf, rt: Arc<Runtime>, &mut dyn PluginRegistrar),
 }
 
 pub trait PluginRegistrar {
