@@ -3,7 +3,9 @@ mod templater;
 mod utils;
 
 use std::cmp::{Ord, Ordering};
+use std::env::current_dir;
 use std::fs::read_dir;
+use std::io;
 use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -13,12 +15,14 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
-use http_body_util::Full;
+use futures::TryStreamExt;
+use http_body_util::{BodyStream, Full};
 use hyper::body::{Bytes, Incoming};
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Request, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::{Deserialize, Serialize};
+use tokio::io::AsyncWriteExt;
 use tokio::runtime::Runtime;
 
 use http_server_plugin::config::read_from_path;
@@ -98,7 +102,29 @@ impl Function for FileExplorer {
                         // ))?;
                     }
                 },
-                &Method::POST => Ok(Response::new(Full::new(Bytes::from("Prepare to upload")))),
+                &Method::POST => {
+                    let body = req.into_body();
+
+                    println!("GOt file upload request!");
+                    let stream_of_frames = BodyStream::new(body);
+                    let stream_of_bytes = stream_of_frames
+                        .try_filter_map(|frame| async move { Ok(frame.into_data().ok()) })
+                        .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
+                    let async_read = tokio_util::io::StreamReader::new(stream_of_bytes);
+                    let mut async_read = std::pin::pin!(async_read);
+                    println!("Got stream!");
+                    let mut upload_path = current_dir().unwrap();
+                    upload_path.push("Upload");
+                    let mut destination = tokio::fs::File::create(upload_path).await.unwrap();
+                    println!("Creates destination file!");
+
+                    tokio::io::copy_buf(&mut async_read, &mut destination)
+                        .await
+                        .unwrap();
+                    destination.flush().await.unwrap();
+
+                    Ok(Response::new(Full::new(Bytes::from("Upload Success!"))))
+                }
                 _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
             }
         })
