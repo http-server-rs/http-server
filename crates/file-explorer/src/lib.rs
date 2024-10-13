@@ -46,7 +46,16 @@ struct FileExplorer {
 impl Function for FileExplorer {
     async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
         match req.method() {
-            &Method::GET => Ok(Response::new(Full::new(Bytes::from("File Explorer")))),
+            &Method::GET => {
+                match self.fs.resolve(PathBuf::from("./assets")).await.expect("failed to execute") {
+                    fs::Entry::File(file) => {
+                        Ok(Response::new(Full::new(Bytes::from(file.bytes()))))
+                    },
+                    fs::Entry::Directory(dir) => {
+                        Ok(Response::new(Full::new(Bytes::from(format!("{:?}", dir)))))
+                    }
+                }
+            }
             &Method::POST => Ok(Response::new(Full::new(Bytes::from("Prepare to upload")))),
             _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
         }
