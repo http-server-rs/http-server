@@ -6,8 +6,8 @@ use std::path::{Component, Path, PathBuf};
 use anyhow::Result;
 use tokio::fs::OpenOptions;
 
-use self::directory::Directory;
-use self::file::File;
+pub use self::directory::Directory;
+pub use self::file::File;
 
 /// Any OS filesystem entry recognized by `ScopedFileSystem` is treated as a
 /// `Entry` both `File` and `Directory` are possible values with full support by
