@@ -23,6 +23,7 @@ impl Server {
         unsafe {
             functions
                 .load(config, plugin_library)
+                .await
                 .expect("Function loading failed");
         }
 
@@ -42,7 +43,7 @@ impl Server {
 
                 // N.B. should use tower service_fn here, since it's reuqired to be implemented tower Service trait before convert to hyper Service!
                 let svc = tower::service_fn(|req| async {
-                    match functions.call("file-explorer", req) {
+                    match functions.call("file-explorer", req).await {
                         Ok(res) => Ok::<
                             Response<http_body_util::Full<hyper::body::Bytes>>,
                             Infallible,

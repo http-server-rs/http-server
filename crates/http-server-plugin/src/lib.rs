@@ -3,6 +3,7 @@ pub mod config;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::{Request, Response};
@@ -10,8 +11,9 @@ use hyper::{Request, Response};
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 
+#[async_trait]
 pub trait Function: Send + Sync {
-    fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError>;
+    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError>;
 }
 
 #[derive(Debug)]

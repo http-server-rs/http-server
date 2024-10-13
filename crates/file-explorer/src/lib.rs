@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
+use async_trait::async_trait;
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::{Method, Request, Response};
@@ -41,8 +42,9 @@ struct FileExplorer {
     templater: Templater,
 }
 
+#[async_trait]
 impl Function for FileExplorer {
-    fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
+    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
         match req.method() {
             &Method::GET => Ok(Response::new(Full::new(Bytes::from("File Explorer")))),
             &Method::POST => Ok(Response::new(Full::new(Bytes::from("Prepare to upload")))),

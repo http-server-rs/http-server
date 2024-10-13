@@ -88,6 +88,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "async-trait"
+version = "0.1.83"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "721cae7de5c34fbb2acd27e21e6d2cf7b886dce0c27388d46c4e6c47ea4318dd"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -269,6 +280,7 @@ name = "file-explorer"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "futures",
  "handlebars",
@@ -492,6 +504,7 @@ name = "http-server"
 version = "1.0.0-draft+1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "clap",
  "http-auth-basic",
  "http-body-util",
@@ -509,6 +522,7 @@ name = "http-server-plugin"
 version = "1.0.0-draft+1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "http-body-util",
  "hyper",
  "rustc_version",

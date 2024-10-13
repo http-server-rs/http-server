@@ -2,12 +2,14 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
+use async_trait::async_trait;
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::{Request, Response};
 use libloading::Library;
+use tokio::sync::Mutex;
 
 use http_server_plugin::{
     Function, InvocationError, PluginDeclaration, CORE_VERSION, RUSTC_VERSION,
@@ -20,9 +22,10 @@ pub struct FunctionProxy {
     _lib: Arc<Library>,
 }
 
+#[async_trait]
 impl Function for FunctionProxy {
-    fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
-        self.function.call(req)
+    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
+        self.function.call(req).await
     }
 }
 
@@ -43,7 +46,7 @@ impl ExternalFunctions {
     ///
     /// This function is unsafe because it loads a shared library and calls
     /// functions from it.
-    pub unsafe fn load<P: AsRef<OsStr>>(
+    pub async unsafe fn load<P: AsRef<OsStr>>(
         &self,
         config_path: PathBuf,
         library_path: P,
@@ -62,31 +65,26 @@ impl ExternalFunctions {
 
         (decl.register)(config_path, &mut registrar);
 
-        self.functions
-            .lock()
-            .expect("Cannot lock Mutex")
-            .extend(registrar.functions);
+        self.functions.lock().await.extend(registrar.functions);
 
-        self.libraries
-            .lock()
-            .expect("Cannot lock Mutex")
-            .push(library);
+        self.libraries.lock().await.push(library);
 
         Ok(())
     }
 
-    pub fn call(
+    pub async fn call(
         &self,
         function: &str,
         req: Request<Incoming>,
     ) -> Result<Response<Full<Bytes>>, InvocationError> {
         self.functions
             .lock()
-            .expect("Cannot lock Mutex")
+            .await
             .get(function)
             .ok_or_else(|| format!("\"{}\" not found", function))
             .unwrap()
             .call(req)
+            .await
     }
 }
 

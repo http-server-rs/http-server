@@ -12,6 +12,7 @@ readme = "README.md"
 
 [dependencies]
 anyhow = { workspace = true }
+async-trait = { workspace = true }
 http-body-util = { workspace = true }
 hyper = { workspace = true }
 serde = { workspace = true }
