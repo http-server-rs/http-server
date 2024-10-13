@@ -1,3 +1,4 @@
+mod fs;
 mod templater;
 
 use std::path::PathBuf;
@@ -12,16 +13,19 @@ use serde::Deserialize;
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
 
+use self::fs::FileSystem;
 use self::templater::Templater;
 
 export_plugin!(register);
 
+const PLUGIN_NAME: &str = "file-explorer";
+
 #[allow(improper_ctypes_definitions)]
 extern "C" fn register(config_path: PathBuf, registrar: &mut dyn PluginRegistrar) {
-    let config: FileExplorerConfig = read_from_path(config_path, "file-explorer").unwrap();
+    let config: FileExplorerConfig = read_from_path(config_path, PLUGIN_NAME).unwrap();
 
     registrar.register_function(
-        "file-explorer",
+        PLUGIN_NAME,
         Arc::new(FileExplorer::new(config.path).expect("Failed to create FileExplorer")),
     );
 }
@@ -32,8 +36,9 @@ struct FileExplorerConfig {
 }
 
 struct FileExplorer {
-    pub path: PathBuf,
-    pub templater: Templater,
+    fs: FileSystem,
+    path: PathBuf,
+    templater: Templater,
 }
 
 impl Function for FileExplorer {
@@ -48,8 +53,13 @@ impl Function for FileExplorer {
 
 impl FileExplorer {
     fn new(path: PathBuf) -> Result<Self> {
+        let fs = FileSystem::new(path.clone())?;
         let templater = Templater::new()?;
 
-        Ok(Self { path, templater })
+        Ok(Self {
+            fs,
+            path,
+            templater,
+        })
     }
 }
