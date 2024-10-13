@@ -15,7 +15,8 @@ handlebars = { workspace = true }
 http-body-util = { workspace = true }
 humansize = { workspace = true }
 hyper = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+toml = { workspace = true }
 
 http-server-plugin = { workspace = true }

@@ -1,3 +1,6 @@
+pub mod config;
+
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use http_body_util::Full;
@@ -21,7 +24,7 @@ pub enum InvocationError {
 pub struct PluginDeclaration {
     pub rustc_version: &'static str,
     pub core_version: &'static str,
-    pub register: unsafe extern "C" fn(&mut dyn PluginRegistrar),
+    pub register: unsafe extern "C" fn(config_path: PathBuf, &mut dyn PluginRegistrar),
 }
 
 pub trait PluginRegistrar {

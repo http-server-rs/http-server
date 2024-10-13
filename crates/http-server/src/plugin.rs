@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use http_body_util::Full;
@@ -42,7 +43,11 @@ impl ExternalFunctions {
     ///
     /// This function is unsafe because it loads a shared library and calls
     /// functions from it.
-    pub unsafe fn load<P: AsRef<OsStr>>(&self, library_path: P) -> io::Result<()> {
+    pub unsafe fn load<P: AsRef<OsStr>>(
+        &self,
+        config_path: PathBuf,
+        library_path: P,
+    ) -> io::Result<()> {
         let library = Arc::new(Library::new(library_path).unwrap());
         let decl = library
             .get::<*mut PluginDeclaration>(b"PLUGIN_DECLARATION\0")
@@ -55,7 +60,7 @@ impl ExternalFunctions {
 
         let mut registrar = PluginRegistrar::new(Arc::clone(&library));
 
-        (decl.register)(&mut registrar);
+        (decl.register)(config_path, &mut registrar);
 
         self.functions
             .lock()

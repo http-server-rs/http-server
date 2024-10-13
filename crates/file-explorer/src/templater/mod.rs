@@ -41,8 +41,6 @@ impl Templater {
         // handlebars_helper!(sort_date_modified: |sort: Sort| sort == Sort::DateModified);
         // hbs.register_helper("sort_date_modified", Box::new(sort_date_modified));
 
-        Ok(Self {
-            backend: hbs,
-        })
+        Ok(Self { backend: hbs })
     }
 }

@@ -11,8 +11,11 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
+anyhow = { workspace = true }
 http-body-util = { workspace = true }
 hyper = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
 
 [build-dependencies]
 rustc_version = { workspace = true }

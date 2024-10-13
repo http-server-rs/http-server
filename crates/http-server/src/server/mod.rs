@@ -18,10 +18,11 @@ impl Server {
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
         let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer.dylib").unwrap();
+        let config = PathBuf::from_str("./config.toml").unwrap();
 
         unsafe {
             functions
-                .load(plugin_library)
+                .load(config, plugin_library)
                 .expect("Function loading failed");
         }
 
