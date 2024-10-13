@@ -45,7 +45,7 @@ impl ExternalFunctions {
     pub unsafe fn load<P: AsRef<OsStr>>(&self, library_path: P) -> io::Result<()> {
         let library = Arc::new(Library::new(library_path).unwrap());
         let decl = library
-            .get::<*mut PluginDeclaration>(b"plugin_declaration\0")
+            .get::<*mut PluginDeclaration>(b"PLUGIN_DECLARATION\0")
             .unwrap()
             .read();
 
