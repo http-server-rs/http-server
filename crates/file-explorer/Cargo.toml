@@ -23,5 +23,7 @@ serde_json = { workspace = true }
 percent-encoding = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tokio-util = { workspace = true, features = ["io"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 http-server-plugin = { workspace = true }

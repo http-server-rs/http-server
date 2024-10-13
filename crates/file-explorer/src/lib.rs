@@ -3,7 +3,6 @@ mod templater;
 mod utils;
 
 use std::cmp::{Ord, Ordering};
-use std::env::current_dir;
 use std::fs::read_dir;
 use std::io;
 use std::mem::MaybeUninit;
@@ -15,8 +14,8 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
-use futures::TryStreamExt;
-use http_body_util::{BodyStream, Full};
+use futures::{StreamExt, TryStreamExt};
+use http_body_util::{BodyExt, BodyStream, Full};
 use hyper::body::{Bytes, Incoming};
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Request, Response, StatusCode, Uri};
@@ -27,6 +26,7 @@ use tokio::runtime::Runtime;
 
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
+use tracing::info;
 
 use self::fs::{File, FileSystem};
 use self::templater::Templater;
@@ -46,6 +46,10 @@ extern "C" fn register(
     rt: Arc<Runtime>,
     registrar: &mut dyn PluginRegistrar,
 ) {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
     let config: FileExplorerConfig = read_from_path(config_path, PLUGIN_NAME).unwrap();
 
     registrar.register_function(
@@ -104,21 +108,18 @@ impl Function for FileExplorer {
                 },
                 &Method::POST => {
                     let body = req.into_body();
-
-                    println!("GOt file upload request!");
                     let stream_of_frames = BodyStream::new(body);
                     let stream_of_bytes = stream_of_frames
                         .try_filter_map(|frame| async move { Ok(frame.into_data().ok()) })
                         .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
                     let async_read = tokio_util::io::StreamReader::new(stream_of_bytes);
                     let mut async_read = std::pin::pin!(async_read);
-                    println!("Got stream!");
-                    let mut upload_path = current_dir().unwrap();
-                    upload_path.push("Upload");
-                    let mut destination = tokio::fs::File::create(upload_path).await.unwrap();
-                    println!("Creates destination file!");
 
-                    tokio::io::copy_buf(&mut async_read, &mut destination)
+                    info!("Uploading file");
+
+                    let mut destination = tokio::fs::File::create("Testing").await.unwrap();
+
+                    tokio::io::copy(&mut async_read, &mut destination)
                         .await
                         .unwrap();
                     destination.flush().await.unwrap();

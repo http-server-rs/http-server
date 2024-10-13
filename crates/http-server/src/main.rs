@@ -11,6 +11,10 @@ use self::server::Server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
     match Server::run().await {
         Ok(_) => {
             println!("Server exited successfuly");

@@ -7,6 +7,7 @@ use hyper_util::{rt::TokioIo, service::TowerToHyperService};
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
+use tracing::info;
 
 use crate::plugin::ExternalFunctions;
 
@@ -14,6 +15,8 @@ pub struct Server {}
 
 impl Server {
     pub async fn run() -> Result<()> {
+        info!("Initializing server");
+
         let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
