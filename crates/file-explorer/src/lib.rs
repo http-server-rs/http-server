@@ -4,7 +4,7 @@ mod utils;
 
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
-use std::io;
+use std::io::{self};
 use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -14,14 +14,14 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
-use futures::{StreamExt, TryStreamExt};
-use http_body_util::{BodyExt, BodyStream, Full};
+use futures::TryStreamExt;
+use http_body_util::{BodyStream, Full};
 use hyper::body::{Bytes, Incoming};
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Request, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::runtime::Runtime;
 
 use http_server_plugin::config::read_from_path;
@@ -76,8 +76,8 @@ impl Function for FileExplorer {
         self.rt.block_on(async move {
             let path = Self::parse_req_uri(req.uri().clone()).unwrap();
 
-            match req.method() {
-                &Method::GET => match self.fs.resolve(path).await {
+            match *req.method() {
+                Method::GET => match self.fs.resolve(path).await {
                     Ok(entry) => match entry {
                         Entry::Directory(dir) => {
                             Ok(self.render_directory_index(dir.path()).await.unwrap())
@@ -85,19 +85,8 @@ impl Function for FileExplorer {
                         Entry::File(file) => Ok(Self::make_http_file_response(file).await.unwrap()),
                     },
                     Err(err) => {
-                        let status = match err.kind() {
-                            std::io::ErrorKind::NotFound => hyper::StatusCode::NOT_FOUND,
-                            std::io::ErrorKind::PermissionDenied => hyper::StatusCode::FORBIDDEN,
-                            _ => hyper::StatusCode::BAD_REQUEST,
-                        };
-
-                        let code = match err.kind() {
-                            std::io::ErrorKind::NotFound => "404",
-                            std::io::ErrorKind::PermissionDenied => "403",
-                            _ => "400",
-                        };
-
-                        Ok(Response::new(Full::new(Bytes::from("Unsupported method"))))
+                        let message = format!("Failed to resolve path: {}", err);
+                        Ok(Response::new(Full::new(Bytes::from(message))))
                         // .body(hyper::Body::from(
                         //     handlebars::Handlebars::new().render_template(
                         //         include_str!("./template/error.hbs"),
@@ -106,19 +95,30 @@ impl Function for FileExplorer {
                         // ))?;
                     }
                 },
-                &Method::POST => {
+                Method::POST => {
+                    let length = req
+                        .headers()
+                        .get("Content-Length")
+                        .and_then(|v| v.to_str().ok())
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(0);
+
+                    info!("Got {} bytes to process", length);
+                    info!("Preparing...");
                     let body = req.into_body();
                     let stream_of_frames = BodyStream::new(body);
+                    info!("Got body stream...");
                     let stream_of_bytes = stream_of_frames
                         .try_filter_map(|frame| async move { Ok(frame.into_data().ok()) })
                         .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
+                    info!("Got stream of bytes...");
                     let async_read = tokio_util::io::StreamReader::new(stream_of_bytes);
                     let mut async_read = std::pin::pin!(async_read);
-
                     info!("Uploading file");
+                    let mut buf = Vec::with_capacity(length as usize);
+                    async_read.read_exact(&mut buf).await.unwrap();
 
-                    let mut destination = tokio::fs::File::create("Testing").await.unwrap();
-
+                    let mut destination = tokio::fs::File::create("test.png").await.unwrap();
                     tokio::io::copy(&mut async_read, &mut destination)
                         .await
                         .unwrap();
