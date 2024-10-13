@@ -29,21 +29,20 @@ impl Templater {
         handlebars_helper!(size: |bytes: u64| format_size(bytes, DECIMAL));
         hbs.register_helper("size", Box::new(size));
 
-        handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
-        hbs.register_helper("sort_name", Box::new(sort_name));
+        // handlebars_helper!(sort_name: |sort: Sort| sort == Sort::Name);
+        // hbs.register_helper("sort_name", Box::new(sort_name));
 
-        handlebars_helper!(sort_size: |sort: Sort| sort == Sort::Size);
-        hbs.register_helper("sort_size", Box::new(sort_size));
+        // handlebars_helper!(sort_size: |sort: Sort| sort == Sort::Size);
+        // hbs.register_helper("sort_size", Box::new(sort_size));
 
-        handlebars_helper!(sort_date_created: |sort: Sort| sort == Sort::DateCreated);
-        hbs.register_helper("sort_date_created", Box::new(sort_date_created));
+        // handlebars_helper!(sort_date_created: |sort: Sort| sort == Sort::DateCreated);
+        // hbs.register_helper("sort_date_created", Box::new(sort_date_created));
 
-        handlebars_helper!(sort_date_modified: |sort: Sort| sort == Sort::DateModified);
-        hbs.register_helper("sort_date_modified", Box::new(sort_date_modified));
+        // handlebars_helper!(sort_date_modified: |sort: Sort| sort == Sort::DateModified);
+        // hbs.register_helper("sort_date_modified", Box::new(sort_date_modified));
 
         Ok(Self {
-            path,
-            handlebars: hbs,
+            backend: hbs,
         })
     }
 }
