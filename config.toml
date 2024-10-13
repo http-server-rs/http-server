@@ -2,4 +2,4 @@ host = "127.0.0.1"
 port = "7878"
 
 [file-explorer]
-path = "./assets"
+path = "./"

@@ -1,14 +1,16 @@
 mod fs;
 mod templater;
+mod utils;
 
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
-use hyper::{Method, Request, Response};
+use hyper::{Method, Request, Response, Uri};
 use serde::Deserialize;
 use tokio::runtime::Runtime;
 
@@ -17,6 +19,7 @@ use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistr
 
 use self::fs::FileSystem;
 use self::templater::Templater;
+use self::utils::decode_uri;
 
 export_plugin!(register);
 
@@ -52,22 +55,17 @@ struct FileExplorer {
 impl Function for FileExplorer {
     async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
         self.rt.block_on(async move {
+            let path = Self::parse_req_uri(req.uri().clone()).unwrap();
+
             match req.method() {
-                &Method::GET => {
-                    match self
-                        .fs
-                        .resolve(PathBuf::new())
-                        .await
-                        .expect("failed to execute")
-                    {
-                        fs::Entry::File(file) => {
-                            Ok(Response::new(Full::new(Bytes::from(file.bytes()))))
-                        }
-                        fs::Entry::Directory(dir) => {
-                            Ok(Response::new(Full::new(Bytes::from(format!("{:?}", dir)))))
-                        }
+                &Method::GET => match self.fs.resolve(path).await.expect("failed to execute") {
+                    fs::Entry::File(file) => {
+                        Ok(Response::new(Full::new(Bytes::from(file.bytes()))))
                     }
-                }
+                    fs::Entry::Directory(dir) => {
+                        Ok(Response::new(Full::new(Bytes::from(format!("{:?}", dir)))))
+                    }
+                },
                 &Method::POST => Ok(Response::new(Full::new(Bytes::from("Prepare to upload")))),
                 _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
             }
@@ -86,5 +84,22 @@ impl FileExplorer {
             path,
             templater,
         })
+    }
+
+    fn parse_req_uri(uri: Uri) -> Result<PathBuf> {
+        let uri_parts = uri.into_parts();
+
+        if let Some(path_and_query) = uri_parts.path_and_query {
+            let path = path_and_query.path();
+            // let query_params = if let Some(query_str) = path_and_query.query() {
+            //     Some(QueryParams::from_str(query_str)?)
+            // } else {
+            //     None
+            // };
+
+            return Ok(decode_uri(path));
+        }
+
+        PathBuf::from_str("/").context("Failed to parse URI")
     }
 }

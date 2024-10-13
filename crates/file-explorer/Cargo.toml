@@ -20,6 +20,7 @@ hyper = { workspace = true }
 mime_guess = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+percent-encoding = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
 
 http-server-plugin = { workspace = true }
