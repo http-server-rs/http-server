@@ -21,12 +21,12 @@ use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Request, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::{Deserialize, Serialize};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::runtime::Runtime;
 
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
-use tracing::info;
+use tracing::error;
 
 use self::fs::{File, FileSystem};
 use self::templater::Templater;
@@ -96,30 +96,17 @@ impl Function for FileExplorer {
                     }
                 },
                 Method::POST => {
-                    let length = req
-                        .headers()
-                        .get("Content-Length")
-                        .and_then(|v| v.to_str().ok())
-                        .and_then(|v| v.parse().ok())
-                        .unwrap_or(0);
-
-                    info!("Got {} bytes to process", length);
-                    info!("Preparing...");
-                    let body = req.into_body();
-                    let stream_of_frames = BodyStream::new(body);
-                    info!("Got body stream...");
+                    let stream_of_frames = BodyStream::new(req.into_body());
                     let stream_of_bytes = stream_of_frames
                         .try_filter_map(|frame| async move { Ok(frame.into_data().ok()) })
-                        .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
-                    info!("Got stream of bytes...");
-                    let async_read = tokio_util::io::StreamReader::new(stream_of_bytes);
-                    let mut async_read = std::pin::pin!(async_read);
-                    info!("Uploading file");
-                    let mut buf = Vec::with_capacity(length as usize);
-                    async_read.read_exact(&mut buf).await.unwrap();
-
+                        .map_err(|err| {
+                            error!(?err, "Error while processing stream of frames");
+                            io::Error::new(io::ErrorKind::Other, err)
+                        });
+                    let stream_reader = tokio_util::io::StreamReader::new(stream_of_bytes);
+                    let mut stream_reader = std::pin::pin!(stream_reader);
                     let mut destination = tokio::fs::File::create("test.png").await.unwrap();
-                    tokio::io::copy(&mut async_read, &mut destination)
+                    tokio::io::copy(&mut stream_reader, &mut destination)
                         .await
                         .unwrap();
                     destination.flush().await.unwrap();
