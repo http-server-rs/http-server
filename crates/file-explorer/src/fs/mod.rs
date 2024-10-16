@@ -18,6 +18,7 @@ pub enum Entry {
     Directory(Directory),
 }
 
+#[derive(Debug, Clone)]
 pub struct FileSystem {
     pub path: PathBuf,
 }

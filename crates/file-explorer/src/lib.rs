@@ -4,7 +4,6 @@ mod utils;
 
 use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
-use std::io::{self};
 use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
@@ -14,19 +13,16 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
-use futures::TryStreamExt;
-use http_body_util::{BodyStream, Full};
+use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Request, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
 
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
-use tracing::error;
 
 use self::fs::{File, FileSystem};
 use self::templater::Templater;
@@ -41,13 +37,9 @@ export_plugin!(register);
 const PLUGIN_NAME: &str = "file-explorer";
 
 #[allow(improper_ctypes_definitions)]
-extern "C" fn register(
-    config_path: PathBuf,
-    rt: Arc<Runtime>,
-    registrar: &mut dyn PluginRegistrar,
-) {
+extern "C" fn register(config_path: PathBuf, rt: Arc<Handle>, registrar: &mut dyn PluginRegistrar) {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::INFO)
         .init();
 
     let config: FileExplorerConfig = read_from_path(config_path, PLUGIN_NAME).unwrap();
@@ -64,7 +56,7 @@ struct FileExplorerConfig {
 }
 
 struct FileExplorer {
-    rt: Arc<Runtime>,
+    rt: Arc<Handle>,
     fs: FileSystem,
     path: PathBuf,
     templater: Templater,
@@ -73,9 +65,9 @@ struct FileExplorer {
 #[async_trait]
 impl Function for FileExplorer {
     async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
-        self.rt.block_on(async move {
-            let path = Self::parse_req_uri(req.uri().clone()).unwrap();
+        let path = Self::parse_req_uri(req.uri().clone()).unwrap();
 
+        self.rt.block_on(async move {
             match *req.method() {
                 Method::GET => match self.fs.resolve(path).await {
                     Ok(entry) => match entry {
@@ -87,32 +79,8 @@ impl Function for FileExplorer {
                     Err(err) => {
                         let message = format!("Failed to resolve path: {}", err);
                         Ok(Response::new(Full::new(Bytes::from(message))))
-                        // .body(hyper::Body::from(
-                        //     handlebars::Handlebars::new().render_template(
-                        //         include_str!("./template/error.hbs"),
-                        //         &serde_json::json!({"error": err.to_string(), "code": code}),
-                        //     )?,
-                        // ))?;
                     }
                 },
-                Method::POST => {
-                    let stream_of_frames = BodyStream::new(req.into_body());
-                    let stream_of_bytes = stream_of_frames
-                        .try_filter_map(|frame| async move { Ok(frame.into_data().ok()) })
-                        .map_err(|err| {
-                            error!(?err, "Error while processing stream of frames");
-                            io::Error::new(io::ErrorKind::Other, err)
-                        });
-                    let stream_reader = tokio_util::io::StreamReader::new(stream_of_bytes);
-                    let mut stream_reader = std::pin::pin!(stream_reader);
-                    let mut destination = tokio::fs::File::create("test.png").await.unwrap();
-                    tokio::io::copy(&mut stream_reader, &mut destination)
-                        .await
-                        .unwrap();
-                    destination.flush().await.unwrap();
-
-                    Ok(Response::new(Full::new(Bytes::from("Upload Success!"))))
-                }
                 _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
             }
         })
@@ -120,7 +88,7 @@ impl Function for FileExplorer {
 }
 
 impl FileExplorer {
-    fn new(rt: Arc<Runtime>, path: PathBuf) -> Result<Self> {
+    fn new(rt: Arc<Handle>, path: PathBuf) -> Result<Self> {
         let fs = FileSystem::new(path.clone())?;
         let templater = Templater::new()?;
 

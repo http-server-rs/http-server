@@ -5,6 +5,7 @@ use http_body_util::Full;
 use hyper::{body::Bytes, server::conn::http1, Method, Response};
 use hyper_util::{rt::TokioIo, service::TowerToHyperService};
 use tokio::net::TcpListener;
+use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
@@ -14,7 +15,7 @@ use crate::plugin::ExternalFunctions;
 pub struct Server {}
 
 impl Server {
-    pub async fn run() -> Result<()> {
+    pub async fn run(rt: Arc<Runtime>) -> Result<()> {
         info!("Initializing server");
 
         let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -22,10 +23,11 @@ impl Server {
         let functions = Arc::new(ExternalFunctions::new());
         let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer.dylib").unwrap();
         let config = PathBuf::from_str("./config.toml").unwrap();
+        let handle = Arc::new(rt.handle().to_owned());
 
         unsafe {
             functions
-                .load(config, plugin_library)
+                .load(Arc::clone(&handle), config, plugin_library)
                 .await
                 .expect("Function loading failed");
         }
@@ -41,10 +43,11 @@ impl Server {
                 // allow requests from any origin
                 .allow_origin(Any);
 
-            tokio::spawn(async move {
+            handle.spawn(async move {
                 let functions = Arc::clone(&functions);
 
-                // N.B. should use tower service_fn here, since it's reuqired to be implemented tower Service trait before convert to hyper Service!
+                // N.B. should use tower service_fn here, since it's reuqired to be implemented tower
+                // Service trait before convert to hyper Service!
                 let svc = tower::service_fn(|req| async {
                     match functions.call("file-explorer", req).await {
                         Ok(res) => Ok::<
@@ -60,7 +63,7 @@ impl Server {
                     }
                 });
                 let svc = ServiceBuilder::new().layer(cors).service(svc);
-                // Convert it to hyper service
+
                 let svc = TowerToHyperService::new(svc);
                 if let Err(err) = http1::Builder::new().serve_connection(io, svc).await {
                     eprintln!("server error: {}", err);
