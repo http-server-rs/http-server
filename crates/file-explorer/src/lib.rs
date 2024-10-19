@@ -13,12 +13,14 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
+use http::request::Parts;
 use http_body_util::Full;
-use hyper::body::{Bytes, Incoming};
+use hyper::body::Bytes;
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
-use hyper::{Method, Request, Response, StatusCode, Uri};
+use hyper::{Method, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::{Deserialize, Serialize};
+use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
 use http_server_plugin::config::read_from_path;
@@ -64,11 +66,15 @@ struct FileExplorer {
 
 #[async_trait]
 impl Function for FileExplorer {
-    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
-        let path = Self::parse_req_uri(req.uri().clone()).unwrap();
+    async fn call(
+        &self,
+        parts: Parts,
+        body: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        let path = Self::parse_req_uri(parts.uri).unwrap();
 
         self.rt.block_on(async move {
-            match *req.method() {
+            match parts.method {
                 Method::GET => match self.fs.resolve(path).await {
                     Ok(entry) => match entry {
                         Entry::Directory(dir) => {
@@ -81,6 +87,13 @@ impl Function for FileExplorer {
                         Ok(Response::new(Full::new(Bytes::from(message))))
                     }
                 },
+                Method::POST => {
+                    let mut file = tokio::fs::File::create("output.png").await.unwrap();
+                    file.write_all(&body).await.unwrap();
+                    Ok(Response::new(Full::new(Bytes::from(
+                        "POST method is not supported",
+                    ))))
+                }
                 _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
             }
         })

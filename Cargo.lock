@@ -290,9 +290,11 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bytes",
  "chrono",
  "futures",
  "handlebars",
+ "http",
  "http-body-util",
  "http-server-plugin",
  "humansize",
@@ -518,7 +520,9 @@ version = "1.0.0-draft+1"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bytes",
  "clap",
+ "http",
  "http-auth-basic",
  "http-body-util",
  "http-server-plugin",
@@ -538,6 +542,8 @@ version = "1.0.0-draft+1"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bytes",
+ "http",
  "http-body-util",
  "hyper",
  "rustc_version",

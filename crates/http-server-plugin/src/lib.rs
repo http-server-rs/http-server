@@ -4,9 +4,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use http::request::Parts;
 use http_body_util::Full;
-use hyper::body::{Bytes, Incoming};
-use hyper::{Request, Response};
+use hyper::body::Bytes;
+use hyper::Response;
 use tokio::runtime::Handle;
 
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -14,7 +15,11 @@ pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 
 #[async_trait]
 pub trait Function: Send + Sync {
-    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError>;
+    async fn call(
+        &self,
+        parts: Parts,
+        body: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError>;
 }
 
 #[derive(Debug)]

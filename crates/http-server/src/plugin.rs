@@ -5,9 +5,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use http::request::Parts;
 use http_body_util::Full;
-use hyper::body::{Bytes, Incoming};
-use hyper::{Request, Response};
+use hyper::body::Bytes;
+use hyper::Response;
 use libloading::Library;
 use tokio::runtime::Handle;
 use tokio::sync::Mutex;
@@ -26,8 +27,12 @@ pub struct FunctionProxy {
 
 #[async_trait]
 impl Function for FunctionProxy {
-    async fn call(&self, req: Request<Incoming>) -> Result<Response<Full<Bytes>>, InvocationError> {
-        self.function.call(req).await
+    async fn call(
+        &self,
+        parts: Parts,
+        bytes: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        self.function.call(parts, bytes).await
     }
 }
 
@@ -93,12 +98,13 @@ impl ExternalFunctions {
     pub async fn call(
         &self,
         func: &str,
-        req: Request<Incoming>,
+        parts: Parts,
+        bytes: Bytes,
     ) -> Result<Response<Full<Bytes>>, InvocationError> {
         let function_proxy = self.get_function(func).await.unwrap();
         let join_handle = self
             .handle
-            .spawn(async move { function_proxy.call(req).await })
+            .spawn(async move { function_proxy.call(parts, bytes).await })
             .await;
 
         join_handle.unwrap()

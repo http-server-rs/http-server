@@ -1,8 +1,12 @@
 use std::{convert::Infallible, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 
 use anyhow::Result;
-use http_body_util::Full;
-use hyper::{body::Bytes, server::conn::http1, Method, Response};
+use http_body_util::{BodyExt, Full};
+use hyper::{
+    body::{Bytes, Incoming},
+    server::conn::http1,
+    Method, Request, Response,
+};
 use hyper_util::{rt::TokioIo, service::TowerToHyperService};
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
@@ -36,20 +40,17 @@ impl Server {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
             let functions = Arc::clone(&functions);
-
             let cors = CorsLayer::new()
-                // allow `GET` and `POST` when accessing the resource
                 .allow_methods([Method::GET, Method::POST])
-                // allow requests from any origin
                 .allow_origin(Any);
 
             handle.spawn(async move {
                 let functions = Arc::clone(&functions);
+                let svc = tower::service_fn(|req: Request<Incoming>| async {
+                    let (parts, body) = req.into_parts();
+                    let body = body.collect().await.unwrap().to_bytes();
 
-                // N.B. should use tower service_fn here, since it's reuqired to be implemented tower
-                // Service trait before convert to hyper Service!
-                let svc = tower::service_fn(|req| async {
-                    match functions.call("file-explorer", req).await {
+                    match functions.call("file-explorer", parts, body).await {
                         Ok(res) => Ok::<
                             Response<http_body_util::Full<hyper::body::Bytes>>,
                             Infallible,
@@ -62,9 +63,10 @@ impl Server {
                         }
                     }
                 });
-                let svc = ServiceBuilder::new().layer(cors).service(svc);
 
+                let svc = ServiceBuilder::new().layer(cors).service(svc);
                 let svc = TowerToHyperService::new(svc);
+
                 if let Err(err) = http1::Builder::new().serve_connection(io, svc).await {
                     eprintln!("server error: {}", err);
                 }

@@ -11,9 +11,11 @@ crate-type = ["cdylib"]
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
+bytes = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 futures = { workspace = true }
 handlebars = { workspace = true }
+http = { workspace = true }
 http-body-util = { workspace = true }
 humansize = { workspace = true }
 hyper = { workspace = true }
