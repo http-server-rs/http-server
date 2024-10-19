@@ -88,7 +88,8 @@ impl Function for FileExplorer {
                     }
                 },
                 Method::POST => {
-                    let mut file = tokio::fs::File::create("output.png").await.unwrap();
+                    let filename = path.file_name().unwrap().to_str().unwrap();
+                    let mut file = tokio::fs::File::create(filename).await.unwrap();
                     file.write_all(&body).await.unwrap();
                     Ok(Response::new(Full::new(Bytes::from(
                         "POST method is not supported",
