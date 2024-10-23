@@ -6,7 +6,6 @@ use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
 use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
-use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
@@ -71,33 +70,8 @@ impl Function for FileExplorer {
         parts: Parts,
         body: Bytes,
     ) -> Result<Response<Full<Bytes>>, InvocationError> {
-        let path = Self::parse_req_uri(parts.uri).unwrap();
-
-        self.rt.block_on(async move {
-            match parts.method {
-                Method::GET => match self.fs.resolve(path).await {
-                    Ok(entry) => match entry {
-                        Entry::Directory(dir) => {
-                            Ok(self.render_directory_index(dir.path()).await.unwrap())
-                        }
-                        Entry::File(file) => Ok(Self::make_http_file_response(file).await.unwrap()),
-                    },
-                    Err(err) => {
-                        let message = format!("Failed to resolve path: {}", err);
-                        Ok(Response::new(Full::new(Bytes::from(message))))
-                    }
-                },
-                Method::POST => {
-                    let filename = path.file_name().unwrap().to_str().unwrap();
-                    let mut file = tokio::fs::File::create(filename).await.unwrap();
-                    file.write_all(&body).await.unwrap();
-                    Ok(Response::new(Full::new(Bytes::from(
-                        "POST method is not supported",
-                    ))))
-                }
-                _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
-            }
-        })
+        self.rt
+            .block_on(async move { self.handle(parts, body).await })
     }
 }
 
@@ -114,21 +88,55 @@ impl FileExplorer {
         })
     }
 
-    fn parse_req_uri(uri: Uri) -> Result<PathBuf> {
-        let uri_parts = uri.into_parts();
-
-        if let Some(path_and_query) = uri_parts.path_and_query {
-            let path = path_and_query.path();
-            // let query_params = if let Some(query_str) = path_and_query.query() {
-            //     Some(QueryParams::from_str(query_str)?)
-            // } else {
-            //     None
-            // };
-
-            return Ok(decode_uri(path));
+    async fn handle(
+        &self,
+        parts: Parts,
+        body: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        if parts.uri.path().starts_with("/api/v1") {
+            self.handle_api(parts, body).await
+        } else {
+            Ok(Response::new(Full::new(Bytes::from("Unsupported method"))))
         }
+    }
 
-        PathBuf::from_str("/").context("Failed to parse URI")
+    async fn handle_api(
+        &self,
+        parts: Parts,
+        body: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        let path = Self::parse_req_uri(parts.uri).unwrap();
+
+        match parts.method {
+            Method::GET => match self.fs.resolve(path).await {
+                Ok(entry) => match entry {
+                    Entry::Directory(dir) => {
+                        Ok(self.render_directory_index(dir.path()).await.unwrap())
+                    }
+                    Entry::File(file) => Ok(Self::make_http_file_response(file).await.unwrap()),
+                },
+                Err(err) => {
+                    let message = format!("Failed to resolve path: {}", err);
+                    Ok(Response::new(Full::new(Bytes::from(message))))
+                }
+            },
+            Method::POST => {
+                let filename = path.file_name().unwrap().to_str().unwrap();
+                let mut file = tokio::fs::File::create(filename).await.unwrap();
+                file.write_all(&body).await.unwrap();
+                Ok(Response::new(Full::new(Bytes::from(
+                    "POST method is not supported",
+                ))))
+            }
+            _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
+        }
+    }
+
+    fn parse_req_uri(uri: Uri) -> Result<PathBuf> {
+        let parts: Vec<&str> = uri.path().split('/').collect();
+        let path = &parts[3..].join("/");
+
+        Ok(decode_uri(path))
     }
 
     /// Encodes a `PathBuf` component using `PercentEncode` with UTF-8 charset.
