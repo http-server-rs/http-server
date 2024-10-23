@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/file-explorer",
+    "crates/file-explorer-ui",
     "crates/http-server",
     "crates/http-server-plugin",
 ]
@@ -23,6 +24,10 @@ http-auth-basic = "0.3.3"
 http-body-util = "0.1"
 hyper = "1.4"
 hyper-util = "0.1.9"
+leptos = "0.6"
+leptos_meta = "0.6"
+leptos_router = "0.6"
+leptos-use = "0.10"
 libloading = "0.8.5"
 mime_guess = "2.0.5"
 percent-encoding = "2.3.1"
