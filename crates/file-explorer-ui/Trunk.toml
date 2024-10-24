@@ -1,0 +1,9 @@
+[build]
+# The index HTML file to drive the bundling process.
+target = "./public/index.html"
+
+[watch]
+# Paths to watch. The `build.target`'s parent folder is watched by default.
+watch = ["./src"]
+# Paths to ignore.
+ignore = []

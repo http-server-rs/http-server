@@ -57,3 +57,7 @@ Thumbs.db
 # Tests #
 #########
 dhat-heap.json
+
+# Web #
+#######
+dist
