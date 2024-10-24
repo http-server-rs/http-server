@@ -13,6 +13,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Local};
 use fs::Entry;
 use http::request::Parts;
+use http::HeaderValue;
 use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
@@ -22,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
+use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
 
@@ -96,6 +98,22 @@ impl FileExplorer {
         if parts.uri.path().starts_with("/api/v1") {
             self.handle_api(parts, body).await
         } else {
+            let path = parts.uri.path();
+            let path = path.strip_prefix('/').unwrap_or(path);
+
+            if let Some(file) = Assets::get(path) {
+                let content_type = mime_guess::from_path(path).first_or_octet_stream();
+                let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
+                let body = Full::new(Bytes::from(file.data.to_vec()));
+                let mut response = Response::new(body);
+                let mut headers = response.headers().clone();
+
+                headers.append(CONTENT_TYPE, content_type);
+                *response.headers_mut() = headers;
+
+                return Ok(response);
+            }
+
             Ok(Response::new(Full::new(Bytes::from("Unsupported method"))))
         }
     }
