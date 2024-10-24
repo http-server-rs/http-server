@@ -19,6 +19,8 @@ anyhow = { workspace = true }
 leptos =  { workspace = true, features = ["csr"] }
 leptos_meta = { workspace = true, features = ["csr"] }
 leptos_router = { workspace = true, features = ["csr"] }
+reqwest = { workspace = true }
+rust-embed = { workspace = true }
 
 [dev-dependencies]
 wasm-bindgen = "0.2"
