@@ -557,6 +557,8 @@ name = "file-explorer-ui"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "chrono",
+ "file-explorer-proto",
  "leptos",
  "leptos_meta",
  "leptos_router",

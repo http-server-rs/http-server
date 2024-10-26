@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// A Directory entry used to display a File Explorer's entry.
 /// This struct is directly related to the Handlebars template used
 /// to power the File Explorer's UI
-#[derive(Debug, Eq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 pub struct DirectoryEntry {
     pub display_name: String,
     pub is_dir: bool,
@@ -47,7 +47,7 @@ impl PartialEq for DirectoryEntry {
 }
 
 /// A Breadcrumb Item used to navigate to previous path components
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BreadcrumbItem {
     pub entry_name: String,
     pub entry_link: String,
@@ -56,14 +56,14 @@ pub struct BreadcrumbItem {
 /// The value passed to the Handlebars template engine.
 /// All references contained in File Explorer's UI are provided
 /// via the `DirectoryIndex` struct
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DirectoryIndex {
     pub entries: Vec<DirectoryEntry>,
     pub breadcrumbs: Vec<BreadcrumbItem>,
     pub sort: Sort,
 }
 
-#[derive(Serialize, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Serialize, Debug, PartialEq, Deserialize)]
 pub enum Sort {
     Directory,
     Name,

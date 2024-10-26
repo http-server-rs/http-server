@@ -14,6 +14,7 @@ use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::header::CONTENT_TYPE;
 use hyper::{Method, Response, StatusCode, Uri};
+use mime_guess::mime::APPLICATION_JSON;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
@@ -88,6 +89,8 @@ impl FileExplorerPlugin {
         parts: Parts,
         body: Bytes,
     ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        tracing::info!("Handling request: {:?}", parts);
+
         if parts.uri.path().starts_with("/api/v1") {
             self.handle_api(parts, body).await
         } else {
@@ -132,8 +135,14 @@ impl FileExplorerPlugin {
                         let directory_index =
                             self.marshall_directory_index(dir.path()).await.unwrap();
                         let json = serde_json::to_string(&directory_index).unwrap();
+                        let body = Full::new(Bytes::from(json));
+                        let mut response = Response::new(body);
+                        let mut headers = response.headers().clone();
 
-                        Ok(Response::new(Full::new(Bytes::from(json))))
+                        headers.append(CONTENT_TYPE, "application/json".try_into().unwrap());
+                        *response.headers_mut() = headers;
+
+                        return Ok(response);
                     }
                     Entry::File(_) => Ok(Response::new(Full::new(Bytes::from("Found but WIP")))),
                 },
