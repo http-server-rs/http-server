@@ -1,5 +1,4 @@
 mod fs;
-mod templater;
 mod utils;
 
 use std::fs::read_dir;
@@ -28,7 +27,6 @@ use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
 
 use self::fs::{File, FileSystem};
-use self::templater::Templater;
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 const FILE_BUFFER_SIZE: usize = 8 * 1024;
@@ -62,7 +60,6 @@ struct FileExplorer {
     rt: Arc<Handle>,
     fs: FileSystem,
     path: PathBuf,
-    templater: Templater,
 }
 
 #[async_trait]
@@ -80,13 +77,11 @@ impl Function for FileExplorer {
 impl FileExplorer {
     fn new(rt: Arc<Handle>, path: PathBuf) -> Result<Self> {
         let fs = FileSystem::new(path.clone())?;
-        let templater = Templater::new()?;
 
         Ok(Self {
             rt,
             fs,
             path,
-            templater,
         })
     }
 
@@ -309,20 +304,6 @@ impl FileExplorer {
             breadcrumbs,
             sort: Sort::Directory,
         })
-    }
-
-    /// Indexes the directory by creating a `DirectoryIndex`. Such `DirectoryIndex`
-    /// is used to build the Handlebars "Explorer" template using the Handlebars
-    /// engine and builds an HTTP Response containing such file
-    async fn render_directory_index(&self, path: PathBuf) -> Result<Response<Full<Bytes>>> {
-        let directory_index = Self::index_directory(self.path.clone(), path)?;
-        let html = self.templater.render(&directory_index).unwrap();
-
-        Response::builder()
-            .header(CONTENT_TYPE, "text/html")
-            .status(StatusCode::OK)
-            .body(Full::new(Bytes::from(html)))
-            .context("Failed to build response")
     }
 
     async fn marshall_directory_index(&self, path: PathBuf) -> Result<DirectoryIndex> {
