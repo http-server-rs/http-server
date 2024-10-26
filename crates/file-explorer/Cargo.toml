@@ -29,5 +29,6 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 http-server-plugin = { workspace = true }
+file-explorer-core = { workspace = true }
 file-explorer-proto = { workspace = true }
 file-explorer-ui = { workspace = true }

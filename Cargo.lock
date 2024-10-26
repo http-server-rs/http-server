@@ -514,6 +514,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "file-explorer-core",
  "file-explorer-proto",
  "file-explorer-ui",
  "futures",
@@ -531,6 +532,16 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "file-explorer-core"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "mime_guess",
+ "tokio",
 ]
 
 [[package]]

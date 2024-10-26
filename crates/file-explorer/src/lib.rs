@@ -1,4 +1,3 @@
-mod fs;
 mod utils;
 
 use std::fs::read_dir;
@@ -8,25 +7,24 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use fs::Entry;
 use http::header::LOCATION;
 use http::request::Parts;
 use http::HeaderValue;
 use http_body_util::Full;
 use hyper::body::Bytes;
-use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
+use hyper::header::CONTENT_TYPE;
 use hyper::{Method, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
+use file_explorer_core::{Entry, FileExplorer};
 use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
 use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
 
-use self::fs::{File, FileSystem};
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 const FILE_BUFFER_SIZE: usize = 8 * 1024;
@@ -47,7 +45,7 @@ extern "C" fn register(config_path: PathBuf, rt: Arc<Handle>, registrar: &mut dy
 
     registrar.register_function(
         PLUGIN_NAME,
-        Arc::new(FileExplorer::new(rt, config.path).expect("Failed to create FileExplorer")),
+        Arc::new(FileExplorerPlugin::new(rt, config.path)),
     );
 }
 
@@ -56,14 +54,14 @@ struct FileExplorerConfig {
     pub path: PathBuf,
 }
 
-struct FileExplorer {
-    rt: Arc<Handle>,
-    fs: FileSystem,
+struct FileExplorerPlugin {
+    file_explorer: FileExplorer,
     path: PathBuf,
+    rt: Arc<Handle>,
 }
 
 #[async_trait]
-impl Function for FileExplorer {
+impl Function for FileExplorerPlugin {
     async fn call(
         &self,
         parts: Parts,
@@ -74,15 +72,15 @@ impl Function for FileExplorer {
     }
 }
 
-impl FileExplorer {
-    fn new(rt: Arc<Handle>, path: PathBuf) -> Result<Self> {
-        let fs = FileSystem::new(path.clone())?;
+impl FileExplorerPlugin {
+    fn new(rt: Arc<Handle>, path: PathBuf) -> Self {
+        let file_explorer = FileExplorer::new(path.clone());
 
-        Ok(Self {
-            rt,
-            fs,
+        Self {
+            file_explorer,
             path,
-        })
+            rt,
+        }
     }
 
     async fn handle(
@@ -128,7 +126,7 @@ impl FileExplorer {
         let path = Self::parse_req_uri(parts.uri).unwrap();
 
         match parts.method {
-            Method::GET => match self.fs.resolve(path).await {
+            Method::GET => match self.file_explorer.peek(path).await {
                 Ok(entry) => match entry {
                     Entry::Directory(dir) => {
                         let directory_index =
@@ -137,7 +135,7 @@ impl FileExplorer {
 
                         Ok(Response::new(Full::new(Bytes::from(json))))
                     }
-                    Entry::File(file) => Ok(Self::make_http_file_response(file).await.unwrap()),
+                    Entry::File(_) => Ok(Response::new(Full::new(Bytes::from("Found but WIP")))),
                 },
                 Err(err) => {
                     let message = format!("Failed to resolve path: {}", err);
@@ -310,20 +308,20 @@ impl FileExplorer {
         Self::index_directory(self.path.clone(), path)
     }
 
-    pub async fn make_http_file_response(file: Box<File>) -> Result<Response<Full<Bytes>>> {
-        Response::builder()
-            .header(CONTENT_TYPE, file.mime().to_string())
-            .header(
-                ETAG,
-                format!(
-                    "W/\"{0:x}-{1:x}.{2:x}\"",
-                    file.size(),
-                    file.last_modified().unwrap().timestamp(),
-                    file.last_modified().unwrap().timestamp_subsec_nanos(),
-                ),
-            )
-            .header(LAST_MODIFIED, file.last_modified().unwrap().to_rfc2822())
-            .body(Full::new(Bytes::from(file.bytes())))
-            .context("Failed to build HTTP File Response")
-    }
+    // pub async fn make_http_file_response(file: Box<File>) -> Result<Response<Full<Bytes>>> {
+    //     Response::builder()
+    //         .header(CONTENT_TYPE, file.mime().to_string())
+    //         .header(
+    //             ETAG,
+    //             format!(
+    //                 "W/\"{0:x}-{1:x}.{2:x}\"",
+    //                 file.size(),
+    //                 file.last_modified().unwrap().timestamp(),
+    //                 file.last_modified().unwrap().timestamp_subsec_nanos(),
+    //             ),
+    //         )
+    //         .header(LAST_MODIFIED, file.last_modified().unwrap().to_rfc2822())
+    //         .body(Full::new(Bytes::from(file.bytes())))
+    //         .context("Failed to build HTTP File Response")
+    // }
 }
