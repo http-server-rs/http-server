@@ -36,6 +36,8 @@ impl Server {
                 .expect("Function loading failed");
         }
 
+        info!(%addr, "Server Listening");
+
         loop {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);

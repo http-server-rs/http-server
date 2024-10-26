@@ -514,6 +514,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "file-explorer-proto",
  "file-explorer-ui",
  "futures",
  "handlebars",
@@ -531,6 +532,14 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "file-explorer-proto"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "serde",
 ]
 
 [[package]]

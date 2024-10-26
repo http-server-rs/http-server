@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/file-explorer",
+    "crates/file-explorer-proto",
     "crates/file-explorer-ui",
     "crates/http-server",
     "crates/http-server-plugin",
@@ -45,5 +46,6 @@ tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
 # Workspace Crates
+file-explorer-proto = { path = "crates/file-explorer-proto" }
 file-explorer-ui = { path = "crates/file-explorer-ui" }
 http-server-plugin = { path = "crates/http-server-plugin" }

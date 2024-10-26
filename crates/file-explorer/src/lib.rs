@@ -2,7 +2,6 @@ mod fs;
 mod templater;
 mod utils;
 
-use std::cmp::{Ord, Ordering};
 use std::fs::read_dir;
 use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
@@ -10,8 +9,8 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use chrono::{DateTime, Local};
 use fs::Entry;
+use http::header::LOCATION;
 use http::request::Parts;
 use http::HeaderValue;
 use http_body_util::Full;
@@ -19,10 +18,11 @@ use hyper::body::Bytes;
 use hyper::header::{CONTENT_TYPE, ETAG, LAST_MODIFIED};
 use hyper::{Method, Response, StatusCode, Uri};
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
+use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
 use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
@@ -114,7 +114,14 @@ impl FileExplorer {
                 return Ok(response);
             }
 
-            Ok(Response::new(Full::new(Bytes::from("Unsupported method"))))
+            let mut response = Response::new(Full::new(Bytes::default()));
+            let mut headers = response.headers().clone();
+
+            headers.append(LOCATION, "/index.html".try_into().unwrap());
+            *response.headers_mut() = headers;
+            *response.status_mut() = StatusCode::TEMPORARY_REDIRECT;
+
+            Ok(response)
         }
     }
 
@@ -129,7 +136,11 @@ impl FileExplorer {
             Method::GET => match self.fs.resolve(path).await {
                 Ok(entry) => match entry {
                     Entry::Directory(dir) => {
-                        Ok(self.render_directory_index(dir.path()).await.unwrap())
+                        let directory_index =
+                            self.marshall_directory_index(dir.path()).await.unwrap();
+                        let json = serde_json::to_string(&directory_index).unwrap();
+
+                        Ok(Response::new(Full::new(Bytes::from(json))))
                     }
                     Entry::File(file) => Ok(Self::make_http_file_response(file).await.unwrap()),
                 },
@@ -314,6 +325,10 @@ impl FileExplorer {
             .context("Failed to build response")
     }
 
+    async fn marshall_directory_index(&self, path: PathBuf) -> Result<DirectoryIndex> {
+        Self::index_directory(self.path.clone(), path)
+    }
+
     pub async fn make_http_file_response(file: Box<File>) -> Result<Response<Full<Bytes>>> {
         Response::builder()
             .header(CONTENT_TYPE, file.mime().to_string())
@@ -330,74 +345,4 @@ impl FileExplorer {
             .body(Full::new(Bytes::from(file.bytes())))
             .context("Failed to build HTTP File Response")
     }
-}
-
-/// A Directory entry used to display a File Explorer's entry.
-/// This struct is directly related to the Handlebars template used
-/// to power the File Explorer's UI
-#[derive(Debug, Eq, Serialize)]
-pub struct DirectoryEntry {
-    pub(crate) display_name: String,
-    pub(crate) is_dir: bool,
-    pub(crate) size_bytes: u64,
-    pub(crate) entry_path: String,
-    pub(crate) date_created: Option<DateTime<Local>>,
-    pub(crate) date_modified: Option<DateTime<Local>>,
-}
-
-impl Ord for DirectoryEntry {
-    fn cmp(&self, other: &Self) -> Ordering {
-        if self.is_dir && other.is_dir {
-            return self.display_name.cmp(&other.display_name);
-        }
-
-        if self.is_dir && !other.is_dir {
-            return Ordering::Less;
-        }
-
-        Ordering::Greater
-    }
-}
-
-impl PartialOrd for DirectoryEntry {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for DirectoryEntry {
-    fn eq(&self, other: &Self) -> bool {
-        if self.is_dir && other.is_dir {
-            return self.display_name == other.display_name;
-        }
-
-        self.display_name == other.display_name
-    }
-}
-
-/// A Breadcrumb Item used to navigate to previous path components
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
-pub struct BreadcrumbItem {
-    pub(crate) entry_name: String,
-    pub(crate) entry_link: String,
-}
-
-/// The value passed to the Handlebars template engine.
-/// All references contained in File Explorer's UI are provided
-/// via the `DirectoryIndex` struct
-#[derive(Debug, Serialize)]
-pub struct DirectoryIndex {
-    /// Directory listing entry
-    pub(crate) entries: Vec<DirectoryEntry>,
-    pub(crate) breadcrumbs: Vec<BreadcrumbItem>,
-    pub(crate) sort: Sort,
-}
-
-#[derive(Serialize, Debug, PartialEq, Deserialize)]
-pub enum Sort {
-    Directory,
-    Name,
-    Size,
-    DateCreated,
-    DateModified,
 }
