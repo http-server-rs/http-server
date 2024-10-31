@@ -1,6 +1,7 @@
 mod api;
 mod components;
 
+use components::file_upload::FileUpload;
 use leptos::{
     component, create_memo, create_signal, spawn_local, view, IntoView, SignalGet, SignalSet,
 };
@@ -37,6 +38,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <div>
+            <FileUpload />
             <FileList entries={entries} />
         </div>
     }

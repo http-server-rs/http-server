@@ -14,7 +14,7 @@ use http_body_util::Full;
 use hyper::body::Bytes;
 use hyper::header::CONTENT_TYPE;
 use hyper::{Method, Response, StatusCode, Uri};
-use mime_guess::mime::APPLICATION_JSON;
+use multer::Multipart;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
@@ -126,7 +126,7 @@ impl FileExplorerPlugin {
         parts: Parts,
         body: Bytes,
     ) -> Result<Response<Full<Bytes>>, InvocationError> {
-        let path = Self::parse_req_uri(parts.uri).unwrap();
+        let path = Self::parse_req_uri(parts.uri.clone()).unwrap();
 
         match parts.method {
             Method::GET => match self.file_explorer.peek(path).await {
@@ -142,7 +142,7 @@ impl FileExplorerPlugin {
                         headers.append(CONTENT_TYPE, "application/json".try_into().unwrap());
                         *response.headers_mut() = headers;
 
-                        return Ok(response);
+                        Ok(response)
                     }
                     Entry::File(_) => Ok(Response::new(Full::new(Bytes::from("Found but WIP")))),
                 },
@@ -152,15 +152,82 @@ impl FileExplorerPlugin {
                 }
             },
             Method::POST => {
-                let filename = path.file_name().unwrap().to_str().unwrap();
-                let mut file = tokio::fs::File::create(filename).await.unwrap();
-                file.write_all(&body).await.unwrap();
+                self.handle_file_upload(parts, body).await?;
                 Ok(Response::new(Full::new(Bytes::from(
                     "POST method is not supported",
                 ))))
             }
             _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
         }
+    }
+
+    async fn handle_file_upload(
+        &self,
+        parts: Parts,
+        body: Bytes,
+    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+        // Extract the `multipart/form-data` boundary from the headers.
+        let boundary = parts
+            .headers
+            .get(CONTENT_TYPE)
+            .and_then(|ct| ct.to_str().ok())
+            .and_then(|ct| multer::parse_boundary(ct).ok());
+
+        // Send `BAD_REQUEST` status if the content-type is not multipart/form-data.
+        if boundary.is_none() {
+            return Ok(Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(Full::from("BAD REQUEST"))
+                .unwrap());
+        }
+
+        // Process the multipart e.g. you can store them in files.
+        if let Err(err) = self.process_multipart(body, boundary.unwrap()).await {
+            return Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Full::from(format!("INTERNAL SERVER ERROR: {}", err)))
+                .unwrap());
+        }
+
+        Ok(Response::new(Full::from("Success")))
+    }
+
+    async fn process_multipart(&self, bytes: Bytes, boundary: String) -> multer::Result<()> {
+        let cursor = std::io::Cursor::new(bytes);
+        let bytes_stream = tokio_util::io::ReaderStream::new(cursor);
+        let mut multipart = Multipart::new(bytes_stream, boundary);
+
+        // Iterate over the fields, `next_field` method will return the next field if
+        // available.
+        while let Some(mut field) = multipart.next_field().await? {
+            // Get the field name.
+            let name = field.name();
+
+            // Get the field's filename if provided in "Content-Disposition" header.
+            let file_name = field.file_name().to_owned().unwrap_or("default.png");
+
+            // Get the "Content-Type" header as `mime::Mime` type.
+            let content_type = field.content_type();
+
+            let mut file = tokio::fs::File::create(file_name).await.unwrap();
+
+            println!(
+                "\n\nName: {:?}, FileName: {:?}, Content-Type: {:?}\n\n",
+                name, file_name, content_type
+            );
+
+            // Process the field data chunks e.g. store them in a file.
+            let mut field_bytes_len = 0;
+            while let Some(field_chunk) = field.chunk().await? {
+                // Do something with field chunk.
+                field_bytes_len += field_chunk.len();
+                file.write_all(&field_chunk).await.unwrap();
+            }
+
+            println!("Field Bytes Length: {:?}", field_bytes_len);
+        }
+
+        Ok(())
     }
 
     fn parse_req_uri(uri: Uri) -> Result<PathBuf> {

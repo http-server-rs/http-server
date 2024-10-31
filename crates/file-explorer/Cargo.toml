@@ -19,6 +19,7 @@ http-body-util = { workspace = true }
 humansize = { workspace = true }
 hyper = { workspace = true }
 mime_guess = { workspace = true }
+multer = { workspace = true }
 rust-embed = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

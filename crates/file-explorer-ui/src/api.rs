@@ -1,4 +1,5 @@
 use anyhow::Result;
+use gloo::utils::window;
 use reqwest::Url;
 
 use file_explorer_proto::DirectoryIndex;
@@ -9,7 +10,7 @@ pub struct Api {
 
 impl Api {
     pub fn new() -> Self {
-        let base_url = Url::parse("http://localhost:3000").unwrap();
+        let base_url = Url::parse(&window().location().href().unwrap()).unwrap();
 
         Self { base_url }
     }

@@ -22,12 +22,13 @@ impl Server {
     pub async fn run(rt: Arc<Runtime>) -> Result<()> {
         info!("Initializing server");
 
-        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+        let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
         let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer.dylib").unwrap();
         let config = PathBuf::from_str("./config.toml").unwrap();
         let handle = Arc::new(rt.handle().to_owned());
+        let local_ip = local_ip_address::local_ip();
 
         unsafe {
             functions
@@ -37,6 +38,7 @@ impl Server {
         }
 
         info!(%addr, "Server Listening");
+        info!(?local_ip, "Local Network");
 
         loop {
             let (stream, _) = listener.accept().await?;
