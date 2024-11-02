@@ -1,4 +1,5 @@
 mod entry;
+mod entry_icon;
 
 use leptos::{component, view, For, IntoView, Signal, SignalGet};
 
@@ -13,7 +14,7 @@ pub fn FileList(#[prop(into)] entries: Signal<Vec<DirectoryEntry>>) -> impl Into
             <table class="border-t border-x w-full text-sm text-left rtl:text-right text-gray-600">
                 <thead class="border-b text-gray-700 bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3" />
+                        <th scope="col" class="px-6 py-3 w-10" />
                         <th scope="col" class="px-6 py-3">
                             "Name"
                         </th>
@@ -34,7 +35,13 @@ pub fn FileList(#[prop(into)] entries: Signal<Vec<DirectoryEntry>>) -> impl Into
                      key=|counter| counter.entry_path.clone()
                      children=move |dir_entry: DirectoryEntry| {
                         view! {
-                            <Entry name={dir_entry.display_name} />
+                            <Entry
+                                name={dir_entry.display_name}
+                                size={dir_entry.size_bytes}
+                                entry_type={dir_entry.entry_type}
+                                date_created={dir_entry.date_created}
+                                date_modified={dir_entry.date_modified}
+                            />
                         }
                      }
                    />

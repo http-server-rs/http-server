@@ -3,6 +3,17 @@ use std::cmp::Ordering;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+pub enum EntryType {
+    Directory,
+    File,
+    Git,
+    Justfile,
+    Markdown,
+    Rust,
+    Toml,
+}
+
 /// A Directory entry used to display a File Explorer's entry.
 /// This struct is directly related to the Handlebars template used
 /// to power the File Explorer's UI
@@ -12,6 +23,7 @@ pub struct DirectoryEntry {
     pub is_dir: bool,
     pub size_bytes: u64,
     pub entry_path: String,
+    pub entry_type: EntryType,
     pub date_created: Option<DateTime<Local>>,
     pub date_modified: Option<DateTime<Local>>,
 }

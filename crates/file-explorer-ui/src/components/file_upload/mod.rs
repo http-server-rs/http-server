@@ -4,6 +4,8 @@ use leptos::wasm_bindgen::JsCast;
 use leptos::{component, create_action, create_node_ref, html, view, IntoView};
 use web_sys::{Event, FormData, HtmlInputElement};
 
+use crate::api::Api;
+
 #[component]
 pub fn FileUpload() -> impl IntoView {
     let file_input_el = create_node_ref::<html::Input>();
@@ -14,23 +16,18 @@ pub fn FileUpload() -> impl IntoView {
         form_data.append_with_blob("file", &file).unwrap();
 
         async move {
-            log!("Uploading file...");
-
-            let response = gloo::net::http::Request::post(&format!(
-                "{}/api/v1",
-                &window().location().origin().unwrap()
-            ))
-            .body(form_data)
-            .unwrap() // result can't be error
-            .send()
-            .await;
-
-            match response {
+            match Api::new().upload(form_data).await {
                 Ok(_) => {
-                    log!("File successfully uploaded!");
+                    log!("File uploaded successfully");
+                    window()
+                        .alert_with_message("File uploaded successfully")
+                        .unwrap();
                 }
-                Err(err) => {
-                    log!("Error uploading file: {}", err);
+                Err(e) => {
+                    log!("Failed to upload file: {:?}", e);
+                    window()
+                        .alert_with_message("Failed to upload file")
+                        .unwrap();
                 }
             }
         }

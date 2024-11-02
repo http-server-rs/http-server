@@ -7,3 +7,7 @@ target = "./public/index.html"
 watch = ["./src"]
 # Paths to ignore.
 ignore = []
+
+[[proxy]]
+backend = "http://127.0.0.1:3000/api/v1"
+rewrite = "/api/v1"

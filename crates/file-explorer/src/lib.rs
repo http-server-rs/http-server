@@ -21,7 +21,7 @@ use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
 use file_explorer_core::{Entry, FileExplorer};
-use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
+use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
 use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
@@ -316,26 +316,46 @@ impl FileExplorerPlugin {
         for entry in entries {
             let entry = entry.context("Unable to read entry")?;
             let metadata = entry.metadata()?;
+
+            let display_name = entry
+                .file_name()
+                .to_str()
+                .context("Unable to gather file name into a String")?
+                .to_string();
+
             let date_created = if let Ok(time) = metadata.created() {
                 Some(time.into())
             } else {
                 None
             };
+
             let date_modified = if let Ok(time) = metadata.modified() {
                 Some(time.into())
             } else {
                 None
             };
 
+            let entry_type = if metadata.is_dir() {
+                EntryType::Directory
+            } else if let Some(ext) = display_name.split(".").last() {
+                match ext.to_ascii_lowercase().as_str() {
+                    "gitignore" | "gitkeep" => EntryType::Git,
+                    "justfile" => EntryType::Justfile,
+                    "md" => EntryType::Markdown,
+                    "rs" => EntryType::Rust,
+                    "toml" => EntryType::Toml,
+                    _ => EntryType::File,
+                }
+            } else {
+                EntryType::File
+            };
+
             directory_entries.push(DirectoryEntry {
-                display_name: entry
-                    .file_name()
-                    .to_str()
-                    .context("Unable to gather file name into a String")?
-                    .to_string(),
                 is_dir: metadata.is_dir(),
                 size_bytes: metadata.len(),
                 entry_path: Self::make_dir_entry_link(&root_dir, &entry.path()),
+                display_name,
+                entry_type,
                 date_created,
                 date_modified,
             });
