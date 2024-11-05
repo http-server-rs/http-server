@@ -21,3 +21,6 @@ ui-dev:
 # Builds File Explorer UI for Production
 ui-build:
   cd ./crates/file-explorer-ui && trunk build --release --locked --config ./Trunk.toml
+
+dev: ui-build
+  cargo b --all && cargo r

@@ -110,14 +110,15 @@ impl FileExplorerPlugin {
                 return Ok(response);
             }
 
-            let mut response = Response::new(Full::new(Bytes::default()));
+            let index = Assets::get("index.html").unwrap();
+            let body = Full::new(Bytes::from(index.data.to_vec()));
+            let mut response = Response::new(body);
             let mut headers = response.headers().clone();
 
-            headers.append(LOCATION, "/index.html".try_into().unwrap());
+            headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
             *response.headers_mut() = headers;
-            *response.status_mut() = StatusCode::TEMPORARY_REDIRECT;
 
-            Ok(response)
+            return Ok(response);
         }
     }
 

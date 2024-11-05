@@ -1,9 +1,9 @@
 use anyhow::Result;
 use gloo::utils::window;
 use reqwest::Url;
+use web_sys::FormData;
 
 use file_explorer_proto::DirectoryIndex;
-use web_sys::FormData;
 
 pub struct Api {
     base_url: Url,
@@ -17,7 +17,8 @@ impl Api {
     }
 
     pub async fn peek(&self, path: &str) -> Result<DirectoryIndex> {
-        let url = self.base_url.join(&format!("api/v1/{path}"))?;
+        let path = path.strip_prefix("/").unwrap();
+        let url = self.base_url.join(&format!("/api/v1/{path}"))?;
         let index = reqwest::get(url).await?.json::<DirectoryIndex>().await?;
 
         Ok(index)

@@ -10,6 +10,7 @@ pub fn Entry(
     #[prop(into)] name: String,
     #[prop(into)] size: u64,
     #[prop(into)] entry_type: EntryType,
+    #[prop(into)] entry_path: String,
     #[prop(into)] date_created: Option<DateTime<Local>>,
     #[prop(into)] date_modified: Option<DateTime<Local>>,
 ) -> impl IntoView {
@@ -24,7 +25,9 @@ pub fn Entry(
                 <EntryIcon entry_type={entry_type} />
             </td>
             <th scope="row" class="px-6 py-2 font-semibold whitespace-nowrap text-gray-800">
-                {name}
+                <a href={entry_path} class="hover:text-blue-500">
+                    {name}
+                </a>
             </th>
             <th scope="row" class="px-6 py-2 font-mono  font-normal">
                 {size}

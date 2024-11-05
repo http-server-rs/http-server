@@ -7,6 +7,7 @@ use leptos::{
 };
 use leptos_meta::provide_meta_context;
 use rust_embed::Embed;
+use gloo::utils::window;
 
 use file_explorer_proto::DirectoryIndex;
 
@@ -31,7 +32,15 @@ pub fn App() -> impl IntoView {
 
     spawn_local(async move {
         leptos::logging::warn!("Performing a request to the server");
-        let index = Api::new().peek("").await.unwrap();
+        let Ok(pathname) = window().location().pathname() else {
+            leptos::logging::error!("Failed to get the pathname");
+            return;
+        };
+
+        let Ok(index) = Api::new().peek(&pathname).await else {
+            leptos::logging::error!("Failed to fetch the directory index");
+            return;
+        };
 
         index_setter.set(Some(index));
     });
