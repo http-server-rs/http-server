@@ -576,6 +576,7 @@ dependencies = [
  "chrono",
  "file-explorer-proto",
  "gloo",
+ "gloo-file",
  "leptos",
  "leptos_meta",
  "leptos_router",

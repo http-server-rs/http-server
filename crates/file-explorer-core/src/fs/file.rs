@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
+use tokio::io::AsyncReadExt;
 
 use std::fs::Metadata;
 use std::mem::MaybeUninit;
@@ -45,5 +46,11 @@ impl File {
         let modified: DateTime<Local> = modified.into();
 
         Ok(modified)
+    }
+
+    pub async fn bytes(&mut self) -> Result<Vec<u8>> {
+        let mut buf = Vec::with_capacity(self.size() as usize);
+        self.file.read_to_end(&mut buf).await?;
+        Ok(buf)
     }
 }

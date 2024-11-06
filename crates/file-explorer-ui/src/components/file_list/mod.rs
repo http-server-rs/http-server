@@ -1,3 +1,4 @@
+mod download_button;
 mod entry;
 mod entry_icon;
 

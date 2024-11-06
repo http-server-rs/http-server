@@ -1,8 +1,9 @@
 use chrono::{DateTime, Local};
-use leptos::{component, view, IntoView};
+use leptos::{component, view, IntoView, Show};
 
 use file_explorer_proto::EntryType;
 
+use super::download_button::DownloadButton;
 use super::entry_icon::EntryIcon;
 
 #[component]
@@ -22,12 +23,17 @@ pub fn Entry(
     view! {
         <tr class="bg-white border-b hover:bg-blue-50 text-gray-600">
             <td scope="row" class="px-6 py-2 text-zinc-400">
-                <EntryIcon entry_type={entry_type} />
+                <EntryIcon entry_type={entry_type.clone()} />
             </td>
             <th scope="row" class="px-6 py-2 font-semibold whitespace-nowrap text-gray-800">
-                <a href={entry_path} class="hover:text-blue-500">
-                    {name}
-                </a>
+                <span class="flex items-center justify-between">
+                    <a href={entry_path.clone()} class="hover:text-blue-500">
+                        {name}
+                    </a>
+                    <Show when={move || matches!(entry_type, EntryType::File)}>
+                        <DownloadButton entry_path={entry_path.clone()} />
+                    </Show>
+                </span>
             </th>
             <th scope="row" class="px-6 py-2 font-mono  font-normal">
                 {size}

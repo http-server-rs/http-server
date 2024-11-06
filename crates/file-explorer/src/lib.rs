@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use http::header::LOCATION;
 use http::request::Parts;
 use http::HeaderValue;
 use http_body_util::Full;
@@ -118,7 +117,7 @@ impl FileExplorerPlugin {
             headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
             *response.headers_mut() = headers;
 
-            return Ok(response);
+            Ok(response)
         }
     }
 
@@ -145,7 +144,16 @@ impl FileExplorerPlugin {
 
                         Ok(response)
                     }
-                    Entry::File(_) => Ok(Response::new(Full::new(Bytes::from("Found but WIP")))),
+                    Entry::File(mut file) => {
+                        let body = Full::new(Bytes::from(file.bytes().await.unwrap()));
+                        let mut response = Response::new(body);
+                        let mut headers = response.headers().clone();
+
+                        headers.append(CONTENT_TYPE, file.mime().to_string().try_into().unwrap());
+                        *response.headers_mut() = headers;
+
+                        Ok(response)
+                    }
                 },
                 Err(err) => {
                     let message = format!("Failed to resolve path: {}", err);

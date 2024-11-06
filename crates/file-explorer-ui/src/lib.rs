@@ -2,12 +2,12 @@ mod api;
 mod components;
 
 use components::file_upload::FileUpload;
+use gloo::utils::window;
 use leptos::{
     component, create_memo, create_signal, spawn_local, view, IntoView, SignalGet, SignalSet,
 };
 use leptos_meta::provide_meta_context;
 use rust_embed::Embed;
-use gloo::utils::window;
 
 use file_explorer_proto::DirectoryIndex;
 

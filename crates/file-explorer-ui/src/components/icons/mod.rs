@@ -1,3 +1,4 @@
+mod download;
 mod file;
 mod folder;
 mod git;
@@ -6,6 +7,7 @@ mod markdown;
 mod rust;
 mod toml;
 
+pub use download::Download;
 pub use file::File;
 pub use folder::Folder;
 pub use git::Git;
