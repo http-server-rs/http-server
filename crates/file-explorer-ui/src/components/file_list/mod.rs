@@ -11,7 +11,7 @@ use self::entry::Entry;
 #[component]
 pub fn FileList(#[prop(into)] entries: Signal<Vec<DirectoryEntry>>) -> impl IntoView {
     view! {
-        <div class="relative overflow-x-auto p-4">
+        <div class="relative overflow-x-auto px-4 pb-4">
             <table class="border-t border-x w-full text-sm text-left rtl:text-right text-gray-600">
                 <thead class="border-b text-gray-700 bg-gray-50">
                     <tr>

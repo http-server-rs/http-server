@@ -1,3 +1,3 @@
+pub mod action_bar;
 pub mod file_list;
-pub mod file_upload;
 pub mod icons;
