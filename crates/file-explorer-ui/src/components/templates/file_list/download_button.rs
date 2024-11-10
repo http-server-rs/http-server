@@ -1,10 +1,8 @@
 use gloo_file::{Blob, ObjectUrl};
 use leptos::{component, create_node_ref, html::A, spawn_local, view, IntoView};
 
-use crate::{
-    api::{Api, FileDownload},
-    components::icons::Download,
-};
+use crate::api::{Api, FileDownload};
+use crate::components::atoms::icons::Download;
 
 #[component]
 pub fn DownloadButton(#[prop(into)] entry_path: String) -> impl IntoView {

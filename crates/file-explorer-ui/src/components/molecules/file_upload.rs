@@ -5,6 +5,7 @@ use leptos::{component, create_action, create_node_ref, html, view, IntoView};
 use web_sys::{Event, FormData, HtmlInputElement};
 
 use crate::api::Api;
+use crate::components::atoms::button::Button;
 
 #[component]
 pub fn FileUpload() -> impl IntoView {
@@ -33,10 +34,19 @@ pub fn FileUpload() -> impl IntoView {
         }
     });
 
+    let handle_button_click = {
+        let file_input_el = file_input_el.clone();
+        move |_| {
+            file_input_el.get_untracked().unwrap().click();
+        }
+    };
+
     view! {
         <div>
+            <Button on:click={handle_button_click}>"Upload a File"</Button>
             <input
                 type="file"
+                hidden="true"
                 node_ref=file_input_el
                 on:change=move |ev: Event| {
                     let el = ev.target().expect("Failed to retrieve target").unchecked_into::<HtmlInputElement>();

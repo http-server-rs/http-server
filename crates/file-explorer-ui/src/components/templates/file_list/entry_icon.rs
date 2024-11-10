@@ -2,7 +2,7 @@ use leptos::{component, view, IntoView};
 
 use file_explorer_proto::EntryType;
 
-use crate::components::icons::{File, Folder, Git, Justfile, Markdown, Rust, Toml};
+use crate::components::atoms::icons::{File, Folder, Git, Justfile, Markdown, Rust, Toml};
 
 #[component]
 pub fn EntryIcon(#[prop(into)] entry_type: EntryType) -> impl IntoView {
