@@ -35,7 +35,7 @@ pub fn FileUpload() -> impl IntoView {
     });
 
     let handle_button_click = {
-        let file_input_el = file_input_el.clone();
+        let file_input_el = file_input_el;
         move |_| {
             file_input_el.get_untracked().unwrap().click();
         }

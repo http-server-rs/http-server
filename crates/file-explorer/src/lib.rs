@@ -344,7 +344,7 @@ impl FileExplorerPlugin {
                 None
             };
 
-            let entry_type = if metadata.is_dir() {
+            let entry_type = if metadata.file_type().is_dir() {
                 EntryType::Directory
             } else if let Some(ext) = display_name.split(".").last() {
                 match ext.to_ascii_lowercase().as_str() {

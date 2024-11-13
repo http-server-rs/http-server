@@ -10,11 +10,13 @@ use super::entry_icon::EntryIcon;
 pub fn Entry(
     #[prop(into)] name: String,
     #[prop(into)] size: u64,
+    #[prop(into)] is_dir: bool,
     #[prop(into)] entry_type: EntryType,
     #[prop(into)] entry_path: String,
     #[prop(into)] date_created: Option<DateTime<Local>>,
     #[prop(into)] date_modified: Option<DateTime<Local>>,
 ) -> impl IntoView {
+    let download_name = name.clone();
     let format_date_or_default = |date: Option<DateTime<Local>>| {
         date.map(|d| d.format("%Y-%m-%d %H:%M:%S").to_string())
             .unwrap_or_else(|| "Unknown".to_string())
@@ -30,8 +32,11 @@ pub fn Entry(
                     <a href={entry_path.clone()} class="hover:text-blue-500">
                         {name}
                     </a>
-                    <Show when={move || matches!(entry_type, EntryType::File)}>
-                        <DownloadButton entry_path={entry_path.clone()} />
+                    <Show when=move || !is_dir>
+                        <DownloadButton
+                            entry_path={entry_path.clone()}
+                            download_name={download_name.clone()}
+                        />
                     </Show>
                 </span>
             </th>

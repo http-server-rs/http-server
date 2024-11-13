@@ -37,8 +37,9 @@ pub fn FileList(#[prop(into)] entries: Signal<Vec<DirectoryEntry>>) -> impl Into
                         children=move |dir_entry: DirectoryEntry| {
                             view! {
                                 <Entry
-                                    name={dir_entry.display_name}
+                                    is_dir={dir_entry.is_dir}
                                     size={dir_entry.size_bytes}
+                                    name={dir_entry.display_name}
                                     entry_type={dir_entry.entry_type}
                                     entry_path={dir_entry.entry_path}
                                     date_created={dir_entry.date_created}

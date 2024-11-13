@@ -1,6 +1,6 @@
 use gloo::utils::window;
 use leptos::{
-    component, create_memo, create_read_slice, create_signal, create_slice, spawn_local, view, IntoView, SignalGet, SignalSet
+    component, create_memo, create_signal, spawn_local, view, IntoView, SignalGet, SignalSet,
 };
 
 use file_explorer_proto::DirectoryIndex;
