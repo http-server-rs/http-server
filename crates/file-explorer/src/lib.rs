@@ -279,6 +279,7 @@ impl FileExplorerPlugin {
             .iter()
             .enumerate()
             .map(|(idx, entry_name)| BreadcrumbItem {
+                depth: (idx + 1) as u8,
                 entry_name: percent_decode_str(entry_name)
                     .decode_utf8()
                     .expect("The path name is not UTF-8 compliant")
@@ -290,6 +291,7 @@ impl FileExplorerPlugin {
         breadcrumbs.insert(
             0,
             BreadcrumbItem {
+                depth: 0,
                 entry_name: String::from(root_dir_name),
                 entry_link: String::from("/"),
             },

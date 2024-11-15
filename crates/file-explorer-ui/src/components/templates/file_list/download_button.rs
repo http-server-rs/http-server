@@ -41,7 +41,7 @@ pub fn DownloadButton(
             class="flex justify-center items-center h-6 w-6"
             on:click={download_file}
         >
-            <Download />
+            <Download class="h-6 w-6" />
         </button>
         <a hidden="true" _ref={anchor_ref} />
     }

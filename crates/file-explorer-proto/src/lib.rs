@@ -61,6 +61,7 @@ impl PartialEq for DirectoryEntry {
 /// A Breadcrumb Item used to navigate to previous path components
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BreadcrumbItem {
+    pub depth: u8,
     pub entry_name: String,
     pub entry_link: String,
 }
