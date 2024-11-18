@@ -34,6 +34,11 @@ Verify successful installation.
 http-server --help
 ```
 
+## Development
+
+Since November the 17th of 2024 the version `v0.x` is now LTS and will not receive
+further updates. The current version is `v1.x` and is on active development.
+
 ## Release
 
 In order to create a release you must push a Git tag as follows
