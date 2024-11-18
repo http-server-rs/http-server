@@ -372,36 +372,6 @@ impl FileExplorerPlugin {
             });
         }
 
-        // if let Some(query_params) = query_params {
-        //     if let Some(sort_by) = query_params.sort_by {
-        //         match sort_by {
-        //             SortBy::Name => {
-        //                 directory_entries.sort_by_key(|entry| entry.display_name.clone());
-        //             }
-        //             SortBy::Size => directory_entries.sort_by_key(|entry| entry.size_bytes),
-        //             SortBy::DateCreated => {
-        //                 directory_entries.sort_by_key(|entry| entry.date_created)
-        //             }
-        //             SortBy::DateModified => {
-        //                 directory_entries.sort_by_key(|entry| entry.date_modified)
-        //             }
-        //         };
-
-        //         let sort_enum = match sort_by {
-        //             SortBy::Name => Sort::Name,
-        //             SortBy::Size => Sort::Size,
-        //             SortBy::DateCreated => Sort::DateCreated,
-        //             SortBy::DateModified => Sort::DateModified,
-        //         };
-
-        //         return Ok(DirectoryIndex {
-        //             entries: directory_entries,
-        //             breadcrumbs,
-        //             sort: sort_enum,
-        //         });
-        //     }
-        // }
-
         directory_entries.sort();
 
         Ok(DirectoryIndex {
@@ -414,21 +384,4 @@ impl FileExplorerPlugin {
     async fn marshall_directory_index(&self, path: PathBuf) -> Result<DirectoryIndex> {
         Self::index_directory(self.path.clone(), path)
     }
-
-    // pub async fn make_http_file_response(file: Box<File>) -> Result<Response<Full<Bytes>>> {
-    //     Response::builder()
-    //         .header(CONTENT_TYPE, file.mime().to_string())
-    //         .header(
-    //             ETAG,
-    //             format!(
-    //                 "W/\"{0:x}-{1:x}.{2:x}\"",
-    //                 file.size(),
-    //                 file.last_modified().unwrap().timestamp(),
-    //                 file.last_modified().unwrap().timestamp_subsec_nanos(),
-    //             ),
-    //         )
-    //         .header(LAST_MODIFIED, file.last_modified().unwrap().to_rfc2822())
-    //         .body(Full::new(Bytes::from(file.bytes())))
-    //         .context("Failed to build HTTP File Response")
-    // }
 }
