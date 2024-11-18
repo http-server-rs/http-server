@@ -1,4 +1,8 @@
-use std::{convert::Infallible, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
+use std::convert::Infallible;
+use std::net::SocketAddr;
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::Result;
 use http_body_util::{BodyExt, Full};
@@ -7,28 +11,32 @@ use hyper::{
     server::conn::http1,
     Method, Request, Response,
 };
-use hyper_util::{rt::TokioIo, service::TowerToHyperService};
+use hyper_util::rt::TokioIo;
+use hyper_util::service::TowerToHyperService;
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::info;
 
+use crate::config::Config;
 use crate::plugin::ExternalFunctions;
 
-pub struct Server {}
+pub struct Server {
+    config: Config,
+}
 
 impl Server {
-    pub async fn run(rt: Arc<Runtime>) -> Result<()> {
-        info!("Initializing server");
+    pub fn new(config: Config) -> Self {
+        Server { config }
+    }
 
-        let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    pub async fn run(self, rt: Arc<Runtime>) -> Result<()> {
+        let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
         let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer.dylib").unwrap();
         let config = PathBuf::from_str("./config.toml").unwrap();
         let handle = Arc::new(rt.handle().to_owned());
-        let local_ip = local_ip_address::local_ip();
 
         unsafe {
             functions
@@ -36,9 +44,6 @@ impl Server {
                 .await
                 .expect("Function loading failed");
         }
-
-        info!(%addr, "Server Listening");
-        info!(?local_ip, "Local Network");
 
         loop {
             let (stream, _) = listener.accept().await?;

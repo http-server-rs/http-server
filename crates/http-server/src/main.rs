@@ -3,34 +3,21 @@ pub mod config;
 pub mod plugin;
 pub mod server;
 
-use std::{process::exit, sync::Arc};
-
 use anyhow::Result;
-use tokio::runtime::Builder;
+use clap::Parser;
 
-use self::server::Server;
+use self::cli::command::Command;
+use self::cli::Cli;
 
 fn main() -> Result<()> {
-    let rt = Builder::new_multi_thread()
-        .enable_all()
-        .thread_name("http-server")
-        .build()?;
-    let rt = Arc::new(rt);
-
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
+    let args = Cli::parse();
 
-    rt.block_on(async {
-        match Server::run(Arc::clone(&rt)).await {
-            Ok(_) => {
-                println!("Server exited successfuly");
-                Ok(())
-            }
-            Err(error) => {
-                eprint!("{:?}", error);
-                exit(1);
-            }
-        }
-    })
+    match args.command {
+        Command::Start(opt) => opt.exec()?,
+    }
+
+    Ok(())
 }
