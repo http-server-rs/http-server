@@ -5,4 +5,6 @@ pub struct Config {
     pub host: IpAddr,
     /// The port to bind to.
     pub port: u16,
+    /// Enable CORS with a permissive policy.
+    pub cors: bool,
 }

@@ -20,6 +20,19 @@ pub struct StartOpt {
     /// Port to bind the server
     #[clap(short = 'p', long, default_value = "7878")]
     pub port: u16,
+    /// Enable CORS with a permissive policy
+    #[clap(long, default_value = "false")]
+    pub cors: bool,
+}
+
+impl From<&StartOpt> for Config {
+    fn from(val: &StartOpt) -> Self {
+        Config {
+            host: val.host,
+            port: val.port,
+            cors: val.cors,
+        }
+    }
 }
 
 impl StartOpt {
@@ -29,10 +42,7 @@ impl StartOpt {
             .thread_name(THREAD_NAME)
             .build()?;
         let rt = Arc::new(rt);
-        let config = Config {
-            host: self.host,
-            port: self.port,
-        };
+        let config: Config = self.into();
         let server = Server::new(config);
 
         rt.block_on(async {
