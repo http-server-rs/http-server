@@ -10,6 +10,14 @@ keywords = ["configurable", "http", "server", "serve", "static"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 
+[[bin]]
+name = "http-server"
+path = "src/bin/main.rs"
+
+[lib]
+name = "http_server_rs"
+path = "src/lib.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -18,7 +26,6 @@ async-trait = { workspace = true }
 bytes = { workspace = true }
 clap = { workspace = true, features = ["env", "derive", "std"] }
 http = { workspace = true }
-http-auth-basic = { workspace = true }
 http-body-util = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true, features = ["full"] }
@@ -27,6 +34,7 @@ local-ip-address = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tower-http = { workspace = true, features = ["cors"] }
 tower = { workspace = true, features = ["util"] }
+tower-layer = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
