@@ -7,8 +7,8 @@ use clap::Parser;
 use tokio::runtime::Builder;
 use tracing::{error, info};
 
-use crate::config::Config;
-use crate::server::Server;
+use http_server_rs::server::config::Config;
+use http_server_rs::server::Server;
 
 const THREAD_NAME: &str = "http-server";
 

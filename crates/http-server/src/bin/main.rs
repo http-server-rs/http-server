@@ -1,7 +1,4 @@
 pub mod cli;
-pub mod config;
-pub mod plugin;
-pub mod server;
 
 use anyhow::Result;
 use clap::Parser;

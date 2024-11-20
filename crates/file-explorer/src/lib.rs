@@ -113,7 +113,7 @@ impl FileExplorerPlugin {
             let body = Full::new(Bytes::from(index.data.to_vec()));
             let mut response = Response::new(body);
             let mut headers = response.headers().clone();
-
+            println!("{headers:?}");
             headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
             *response.headers_mut() = headers;
 

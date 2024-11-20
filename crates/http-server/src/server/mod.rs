@@ -1,3 +1,6 @@
+pub mod config;
+pub mod plugin;
+
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -6,11 +9,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use http_body_util::{BodyExt, Full};
-use hyper::{
-    body::{Bytes, Incoming},
-    server::conn::http1,
-    Method, Request, Response,
-};
+use hyper::body::{Bytes, Incoming};
+use hyper::server::conn::http1;
+use hyper::{Method, Request, Response};
 use hyper_util::rt::TokioIo;
 use hyper_util::service::TowerToHyperService;
 use tokio::net::TcpListener;
@@ -18,8 +19,8 @@ use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::config::Config;
-use crate::plugin::ExternalFunctions;
+use self::config::Config;
+use self::plugin::ExternalFunctions;
 
 pub struct Server {
     config: Config,
@@ -48,9 +49,18 @@ impl Server {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
             let functions = Arc::clone(&functions);
-            let cors = CorsLayer::new()
-                .allow_methods([Method::GET, Method::POST])
-                .allow_origin(Any);
+
+            println!("{:#?}", self.config);
+
+            let cors = if self.config.cors {
+                Some(
+                    CorsLayer::new()
+                        .allow_methods([Method::GET, Method::POST])
+                        .allow_origin(Any),
+                )
+            } else {
+                None
+            };
 
             handle.spawn(async move {
                 let functions = Arc::clone(&functions);
@@ -72,7 +82,8 @@ impl Server {
                     }
                 });
 
-                let svc = ServiceBuilder::new().layer(cors).service(svc);
+                let svc = ServiceBuilder::new().option_layer(cors).service(svc);
+
                 let svc = TowerToHyperService::new(svc);
 
                 if let Err(err) = http1::Builder::new().serve_connection(io, svc).await {
