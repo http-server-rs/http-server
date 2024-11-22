@@ -2,7 +2,7 @@ pub mod config;
 pub mod plugin;
 
 use std::convert::Infallible;
-use std::net::SocketAddr;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -14,6 +14,7 @@ use hyper::server::conn::http1;
 use hyper::{Method, Request, Response};
 use hyper_util::rt::TokioIo;
 use hyper_util::service::TowerToHyperService;
+use local_ip_address::local_ip;
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
@@ -21,6 +22,8 @@ use tower_http::cors::{Any, CorsLayer};
 
 use self::config::Config;
 use self::plugin::ExternalFunctions;
+
+const ALL_INTERFACES_IPV4: Ipv4Addr = Ipv4Addr::new(0, 0, 0, 0);
 
 pub struct Server {
     config: Config,
@@ -39,6 +42,14 @@ impl Server {
         let config = PathBuf::from_str("./config.toml")?;
         let handle = Arc::new(rt.handle().to_owned());
 
+        println!("Listening on http://{}", addr);
+
+        if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4)) {
+            if let Ok(local_ip) = local_ip() {
+                println!("Local Network on http://{}", local_ip);
+            }
+        }
+
         unsafe {
             functions
                 .load(Arc::clone(&handle), config, plugin_library)
@@ -49,9 +60,6 @@ impl Server {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
             let functions = Arc::clone(&functions);
-
-            println!("{:#?}", self.config);
-
             let cors = if self.config.cors {
                 Some(
                     CorsLayer::new()
