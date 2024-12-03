@@ -46,7 +46,7 @@ impl Server {
 
         if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4)) {
             if let Ok(local_ip) = local_ip() {
-                println!("Local Network on http://{}", local_ip);
+                println!("Local Network on http://{}:{}", local_ip, self.config.port);
             }
         }
 
