@@ -5,5 +5,5 @@ default:
 
 release:
 	@echo Building file-explorer-plugin…
-	cargo b --release
-	cp ../../target/release/libfile_explorer_plugin.dylib ../http-server/inline/file_explorer.plugin.httprs
+	cargo b
+	cp ../../target/debug/libfile_explorer_plugin.dylib ../http-server/inline/file_explorer.plugin.httprs

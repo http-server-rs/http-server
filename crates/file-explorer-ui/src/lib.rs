@@ -1,7 +1,7 @@
 mod api;
 mod components;
 
-use leptos::{component, view, IntoView, SignalGet};
+use leptos::{component, view, IntoView};
 use leptos_meta::provide_meta_context;
 use rust_embed::Embed;
 
