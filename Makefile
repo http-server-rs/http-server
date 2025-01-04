@@ -13,7 +13,6 @@ plugin-build: ui-release
 	make -C ./crates/file-explorer-plugin release
 
 ui-build:
-	@echo Building File Explorer UI…
 	make -C ./crates/file-explorer-ui build
 
 ui-dev:
