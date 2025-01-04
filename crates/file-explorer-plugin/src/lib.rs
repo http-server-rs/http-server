@@ -19,7 +19,7 @@ use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::runtime::Handle;
 
-use file_explorer_core::{Entry, FileExplorer};
+use file_explorer::{Entry, FileExplorer};
 use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
