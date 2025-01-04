@@ -14,6 +14,7 @@ fn main() -> Result<()> {
 
     match args.command {
         Command::Start(opt) => opt.exec()?,
+        Command::Setup(opt) => opt.exec()?,
     }
 
     Ok(())

@@ -20,6 +20,8 @@ use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
+use crate::plugins_path;
+
 use self::config::Config;
 use self::plugin::ExternalFunctions;
 
@@ -38,7 +40,7 @@ impl Server {
         let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
-        let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer_plugin.dylib")?;
+        let plugin_library = plugins_path()?.join("file_explorer.plugin.httprs");
         let config = PathBuf::from_str("./config.toml")?;
         let handle = Arc::new(rt.handle().to_owned());
 
