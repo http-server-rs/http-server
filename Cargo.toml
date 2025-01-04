@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "crates/file-explorer",
     "crates/file-explorer-core",
+    "crates/file-explorer-plugin",
     "crates/file-explorer-proto",
     "crates/file-explorer-ui",
     "crates/http-server",

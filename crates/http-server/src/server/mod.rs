@@ -38,7 +38,7 @@ impl Server {
         let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
         let functions = Arc::new(ExternalFunctions::new());
-        let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer.dylib")?;
+        let plugin_library = PathBuf::from_str("./target/debug/libfile_explorer_plugin.dylib")?;
         let config = PathBuf::from_str("./config.toml")?;
         let handle = Arc::new(rt.handle().to_owned());
 

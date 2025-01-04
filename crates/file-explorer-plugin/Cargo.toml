@@ -1,5 +1,5 @@
 [package]
-name = "file-explorer"
+name = "file-explorer-plugin"
 version = "0.0.0"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2021"
