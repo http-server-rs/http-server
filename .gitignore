@@ -61,3 +61,8 @@ dhat-heap.json
 # Web #
 #######
 dist
+
+# Plugins #
+###########
+crates/http-server/inline/*
+!crates/http-server/inline/.gitkeep
