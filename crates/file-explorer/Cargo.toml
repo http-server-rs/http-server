@@ -5,31 +5,8 @@ authors = ["Esteban Borai <estebanborai@gmail.com>"]
 edition = "2021"
 publish = false
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
 anyhow = { workspace = true }
-async-trait = { workspace = true }
-bytes = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
-futures = { workspace = true }
-http = { workspace = true }
-http-body-util = { workspace = true }
-humansize = { workspace = true }
-hyper = { workspace = true }
 mime_guess = { workspace = true }
-multer = { workspace = true }
-rust-embed = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
-percent-encoding = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
-tokio-util = { workspace = true, features = ["io"] }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
-
-http-server-plugin = { workspace = true }
-file-explorer-core = { workspace = true }
-file-explorer-proto = { workspace = true }
-file-explorer-ui = { workspace = true }
