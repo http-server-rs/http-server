@@ -23,7 +23,7 @@ use file_explorer::{Entry, FileExplorer};
 use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use file_explorer_ui::Assets;
 use http_server_plugin::config::read_from_path;
-use http_server_plugin::{export_plugin, Function, InvocationError, PluginRegistrar};
+use http_server_plugin::{export_plugin, Plugin, PluginError, PluginRegistrar};
 
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
@@ -61,12 +61,8 @@ struct FileExplorerPlugin {
 }
 
 #[async_trait]
-impl Function for FileExplorerPlugin {
-    async fn call(
-        &self,
-        parts: Parts,
-        body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+impl Plugin for FileExplorerPlugin {
+    async fn call(&self, parts: Parts, body: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
         self.rt
             .block_on(async move { self.handle(parts, body).await })
     }
@@ -87,7 +83,7 @@ impl FileExplorerPlugin {
         &self,
         parts: Parts,
         body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+    ) -> Result<Response<Full<Bytes>>, PluginError> {
         tracing::info!("Handling request: {:?}", parts);
 
         if parts.uri.path().starts_with("/api/v1") {
@@ -125,7 +121,7 @@ impl FileExplorerPlugin {
         &self,
         parts: Parts,
         body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+    ) -> Result<Response<Full<Bytes>>, PluginError> {
         let path = Self::parse_req_uri(parts.uri.clone()).unwrap();
 
         match parts.method {
@@ -174,7 +170,7 @@ impl FileExplorerPlugin {
         &self,
         parts: Parts,
         body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+    ) -> Result<Response<Full<Bytes>>, PluginError> {
         // Extract the `multipart/form-data` boundary from the headers.
         let boundary = parts
             .headers

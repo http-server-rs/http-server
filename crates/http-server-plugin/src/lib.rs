@@ -14,17 +14,13 @@ pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 
 #[async_trait]
-pub trait Function: Send + Sync {
-    async fn call(
-        &self,
-        parts: Parts,
-        body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError>;
+pub trait Plugin: Send + Sync {
+    async fn call(&self, parts: Parts, body: Bytes) -> Result<Response<Full<Bytes>>, PluginError>;
 }
 
 #[derive(Debug)]
-pub enum InvocationError {
-    InvalidArgumentCount { expected: usize, found: usize },
+pub enum PluginError {
+    SpawnError { err: String },
     Other { msg: String },
 }
 
@@ -37,7 +33,7 @@ pub struct PluginDeclaration {
 }
 
 pub trait PluginRegistrar {
-    fn register_function(&mut self, name: &str, function: Arc<dyn Function>);
+    fn register_function(&mut self, name: &str, function: Arc<dyn Plugin>);
 }
 
 #[macro_export]

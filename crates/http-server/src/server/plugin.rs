@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use std::ffi::OsStr;
-use std::io;
+use std::io::{Error as IOError, Result as IOResult};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -13,48 +12,44 @@ use libloading::Library;
 use tokio::runtime::Handle;
 use tokio::sync::Mutex;
 
-use http_server_plugin::{
-    Function, InvocationError, PluginDeclaration, CORE_VERSION, RUSTC_VERSION,
-};
+use http_server_plugin::{Plugin, PluginDeclaration, PluginError, CORE_VERSION, RUSTC_VERSION};
 
-/// A proxy object which wraps a [`Function`] and makes sure it can't outlive
+use crate::plugins_path;
+
+/// A proxy object which wraps a [`Plugin`] and makes sure it can't outlive
 /// the library it came from.
 #[derive(Clone)]
-pub struct FunctionProxy {
-    function: Arc<dyn Function>,
+pub struct PluginProxy {
+    function: Arc<dyn Plugin>,
     _lib: Arc<Library>,
 }
 
 #[async_trait]
-impl Function for FunctionProxy {
-    async fn call(
-        &self,
-        parts: Parts,
-        bytes: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
+impl Plugin for PluginProxy {
+    async fn call(&self, parts: Parts, bytes: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
         self.function.call(parts, bytes).await
     }
 }
 
-pub struct ExternalFunctions {
+pub struct PluginStore {
+    functions: Mutex<HashMap<String, PluginProxy>>,
     handle: Arc<Handle>,
-    functions: Mutex<HashMap<String, FunctionProxy>>,
     libraries: Mutex<Vec<Arc<Library>>>,
 }
 
-impl Default for ExternalFunctions {
+impl Default for PluginStore {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ExternalFunctions {
-    pub fn new() -> ExternalFunctions {
+impl PluginStore {
+    pub fn new() -> Self {
         let handle = Arc::new(Handle::current());
 
-        ExternalFunctions {
-            handle,
+        Self {
             functions: Mutex::new(HashMap::default()),
+            handle,
             libraries: Mutex::new(Vec::new()),
         }
     }
@@ -65,20 +60,26 @@ impl ExternalFunctions {
     ///
     /// This function is unsafe because it loads a shared library and calls
     /// functions from it.
-    pub async unsafe fn load<P: AsRef<OsStr>>(
+    pub async unsafe fn load(
         &self,
         rt_handle: Arc<Handle>,
         config_path: PathBuf,
-        library_path: P,
-    ) -> io::Result<()> {
-        let library = Arc::new(Library::new(library_path).unwrap());
+        plugin_filename: &str,
+    ) -> IOResult<()> {
+        let plugin_path = plugins_path()
+            .map_err(|err| IOError::other(format!("Failed to retrieve plugin path: {err}")))?
+            .join(plugin_filename);
+        let library = Library::new(&plugin_path).map_err(|err| {
+            IOError::other(format!("Failed to load plugin from {plugin_path:?}: {err}"))
+        })?;
+        let library = Arc::new(library);
         let decl = library
             .get::<*mut PluginDeclaration>(b"PLUGIN_DECLARATION\0")
             .unwrap()
             .read();
 
         if decl.rustc_version != RUSTC_VERSION || decl.core_version != CORE_VERSION {
-            return Err(io::Error::new(io::ErrorKind::Other, "Version mismatch"));
+            return Err(IOError::other("Version Mismatch."));
         }
 
         let mut registrar = PluginRegistrar::new(Arc::clone(&library));
@@ -91,28 +92,30 @@ impl ExternalFunctions {
         Ok(())
     }
 
-    async fn get_function(&self, func: &str) -> Option<FunctionProxy> {
+    async fn get(&self, func: &str) -> Option<PluginProxy> {
         self.functions.lock().await.get(func).cloned()
     }
 
-    pub async fn call(
+    pub async fn run(
         &self,
-        func: &str,
+        plugin: &str,
         parts: Parts,
         bytes: Bytes,
-    ) -> Result<Response<Full<Bytes>>, InvocationError> {
-        let function_proxy = self.get_function(func).await.unwrap();
+    ) -> Result<Response<Full<Bytes>>, PluginError> {
+        let function_proxy = self.get(plugin).await.unwrap();
         let join_handle = self
             .handle
             .spawn(async move { function_proxy.call(parts, bytes).await })
             .await;
 
-        join_handle.unwrap()
+        join_handle.map_err(|err| PluginError::SpawnError {
+            err: err.to_string(),
+        })?
     }
 }
 
 struct PluginRegistrar {
-    functions: HashMap<String, FunctionProxy>,
+    functions: HashMap<String, PluginProxy>,
     lib: Arc<Library>,
 }
 
@@ -126,8 +129,8 @@ impl PluginRegistrar {
 }
 
 impl http_server_plugin::PluginRegistrar for PluginRegistrar {
-    fn register_function(&mut self, name: &str, function: Arc<dyn Function>) {
-        let proxy = FunctionProxy {
+    fn register_function(&mut self, name: &str, function: Arc<dyn Plugin>) {
+        let proxy = PluginProxy {
             function,
             _lib: Arc::clone(&self.lib),
         };

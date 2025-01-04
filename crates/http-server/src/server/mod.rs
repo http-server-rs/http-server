@@ -20,10 +20,8 @@ use tokio::runtime::Runtime;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::plugins_path;
-
 use self::config::Config;
-use self::plugin::ExternalFunctions;
+use self::plugin::PluginStore;
 
 const ALL_INTERFACES_IPV4: Ipv4Addr = Ipv4Addr::new(0, 0, 0, 0);
 
@@ -39,8 +37,7 @@ impl Server {
     pub async fn run(self, rt: Arc<Runtime>) -> Result<()> {
         let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
-        let functions = Arc::new(ExternalFunctions::new());
-        let plugin_library = plugins_path()?.join("file_explorer.plugin.httprs");
+        let plugin_store = Arc::new(PluginStore::new());
         let config = PathBuf::from_str("./config.toml")?;
         let handle = Arc::new(rt.handle().to_owned());
 
@@ -53,15 +50,15 @@ impl Server {
         }
 
         unsafe {
-            functions
-                .load(Arc::clone(&handle), config, plugin_library)
+            plugin_store
+                .load(Arc::clone(&handle), config, "file_explorer.plugin.httprs")
                 .await?;
         }
 
         loop {
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
-            let functions = Arc::clone(&functions);
+            let plugin_store = Arc::clone(&plugin_store);
             let cors = if self.config.cors {
                 Some(
                     CorsLayer::new()
@@ -73,12 +70,12 @@ impl Server {
             };
 
             handle.spawn(async move {
-                let functions = Arc::clone(&functions);
+                let plugin_store = Arc::clone(&plugin_store);
                 let svc = tower::service_fn(|req: Request<Incoming>| async {
                     let (parts, body) = req.into_parts();
                     let body = body.collect().await.unwrap().to_bytes();
 
-                    match functions.call("file-explorer", parts, body).await {
+                    match plugin_store.run("file-explorer", parts, body).await {
                         Ok(res) => Ok::<
                             Response<http_body_util::Full<hyper::body::Bytes>>,
                             Infallible,
