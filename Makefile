@@ -6,15 +6,10 @@ default:
 dev: ui-build plugin-build
 	cargo b --all && cargo r
 
-release:
-	@echo Preparing File Explorer Plugin…
-	make -C ./crates/file-explorer-ui release
-	plugin-build
-
-	@echo Preparing HTTP Server…
+release: plugin-build
 	make -C ./crates/file-explorer-plugin release
 
-plugin-build:
+plugin-build: ui-release
 	make -C ./crates/file-explorer-plugin release
 
 ui-build:
@@ -27,3 +22,6 @@ ui-dev:
 
 ui-fmt:
 	make -C ./crates/file-explorer-ui fmt
+
+ui-release:
+	make -C ./crates/file-explorer-ui release

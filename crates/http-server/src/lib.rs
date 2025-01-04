@@ -9,7 +9,7 @@ pub const HTTP_SERVER_HOME_DIRNAME: &str = ".http-server-rs";
 pub const HTTP_SERVER_PLUGINS_DIRNAME: &str = "plugins";
 pub const DEFAULT_PLUGIN_NAME: &str = "file_explorer.plugin.httprs";
 pub const FILE_EXPLORER_PLUGIN_BYTES: &[u8] =
-    include_bytes!("../../../target/debug/libfile_explorer_plugin.dylib");
+    include_bytes!("../inline/file_explorer.plugin.httprs");
 
 pub fn install_path() -> Result<PathBuf> {
     let Some(home) = home_dir() else {
