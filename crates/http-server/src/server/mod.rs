@@ -74,8 +74,8 @@ impl Server {
                 let svc = tower::service_fn(|req: Request<Incoming>| async {
                     let (parts, body) = req.into_parts();
                     let body = body.collect().await.unwrap().to_bytes();
-
-                    match plugin_store.run("file-explorer", parts, body).await {
+                    println!("Exec: hello-world");
+                    match plugin_store.run("hello-world", parts, body).await {
                         Ok(res) => Ok::<
                             Response<http_body_util::Full<hyper::body::Bytes>>,
                             Infallible,

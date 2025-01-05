@@ -26,8 +26,9 @@ pub struct PluginProxy {
 
 #[async_trait]
 impl Plugin for PluginProxy {
-    async fn call(&self, parts: Parts, bytes: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
-        self.function.call(parts, bytes).await
+    #[no_mangle]
+    fn call(&self, parts: Parts, bytes: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
+        self.function.call(parts, bytes)
     }
 }
 
@@ -103,14 +104,7 @@ impl PluginStore {
         bytes: Bytes,
     ) -> Result<Response<Full<Bytes>>, PluginError> {
         let function_proxy = self.get(plugin).await.unwrap();
-        let join_handle = self
-            .handle
-            .spawn(async move { function_proxy.call(parts, bytes).await })
-            .await;
-
-        join_handle.map_err(|err| PluginError::SpawnError {
-            err: err.to_string(),
-        })?
+        function_proxy.call(parts, bytes)
     }
 }
 

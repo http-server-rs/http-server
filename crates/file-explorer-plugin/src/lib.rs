@@ -62,7 +62,7 @@ struct FileExplorerPlugin {
 
 #[async_trait]
 impl Plugin for FileExplorerPlugin {
-    async fn call(&self, parts: Parts, body: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
+    fn call(&self, parts: Parts, body: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
         self.rt
             .block_on(async move { self.handle(parts, body).await })
     }
@@ -84,37 +84,38 @@ impl FileExplorerPlugin {
         parts: Parts,
         body: Bytes,
     ) -> Result<Response<Full<Bytes>>, PluginError> {
-        tracing::info!("Handling request: {:?}", parts);
+        Ok(Response::new(Full::new(Bytes::from("Unsupported method"))))
+        // tracing::info!("Handling request: {:?}", parts);
 
-        if parts.uri.path().starts_with("/api/v1") {
-            self.handle_api(parts, body).await
-        } else {
-            let path = parts.uri.path();
-            let path = path.strip_prefix('/').unwrap_or(path);
+        // if parts.uri.path().starts_with("/api/v1") {
+        //     self.handle_api(parts, body).await
+        // } else {
+        //     let path = parts.uri.path();
+        //     let path = path.strip_prefix('/').unwrap_or(path);
 
-            if let Some(file) = Assets::get(path) {
-                let content_type = mime_guess::from_path(path).first_or_octet_stream();
-                let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
-                let body = Full::new(Bytes::from(file.data.to_vec()));
-                let mut response = Response::new(body);
-                let mut headers = response.headers().clone();
+        //     if let Some(file) = Assets::get(path) {
+        //         let content_type = mime_guess::from_path(path).first_or_octet_stream();
+        //         let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
+        //         let body = Full::new(Bytes::from(file.data.to_vec()));
+        //         let mut response = Response::new(body);
+        //         let mut headers = response.headers().clone();
 
-                headers.append(CONTENT_TYPE, content_type);
-                *response.headers_mut() = headers;
+        //         headers.append(CONTENT_TYPE, content_type);
+        //         *response.headers_mut() = headers;
 
-                return Ok(response);
-            }
+        //         return Ok(response);
+        //     }
 
-            let index = Assets::get("index.html").unwrap();
-            let body = Full::new(Bytes::from(index.data.to_vec()));
-            let mut response = Response::new(body);
-            let mut headers = response.headers().clone();
+        //     let index = Assets::get("index.html").unwrap();
+        //     let body = Full::new(Bytes::from(index.data.to_vec()));
+        //     let mut response = Response::new(body);
+        //     let mut headers = response.headers().clone();
 
-            headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
-            *response.headers_mut() = headers;
+        //     headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
+        //     *response.headers_mut() = headers;
 
-            Ok(response)
-        }
+        //     Ok(response)
+        // }
     }
 
     async fn handle_api(

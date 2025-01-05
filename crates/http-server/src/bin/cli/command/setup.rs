@@ -1,4 +1,4 @@
-use std::fs::{create_dir_all, write};
+use std::fs::{create_dir_all, remove_file, write};
 
 use anyhow::Result;
 use clap::Parser;
@@ -33,6 +33,14 @@ impl SetupOpt {
                 "Installing File Explorer Plugin at: {}",
                 file_explorer_plugin_path.display()
             );
+
+            if let Err(err) = remove_file(&file_explorer_plugin_path) {
+                eprint!(
+                    "Failed to delete previous plugin version at {}\nError: {err}",
+                    file_explorer_plugin_path.display()
+                );
+            }
+
             write(&file_explorer_plugin_path, FILE_EXPLORER_PLUGIN_BYTES)?;
         }
 
