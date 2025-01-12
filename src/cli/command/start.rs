@@ -7,8 +7,8 @@ use clap::Parser;
 use tokio::runtime::Builder;
 use tracing::{error, info};
 
-use http_server_rs::server::config::Config;
-use http_server_rs::server::Server;
+use crate::config::Config;
+use crate::server::Server;
 
 const THREAD_NAME: &str = "http-server";
 
@@ -46,7 +46,7 @@ impl StartOpt {
         let server = Server::new(config);
 
         rt.block_on(async {
-            match server.run(Arc::clone(&rt)).await {
+            match server.run().await {
                 Ok(_) => {
                     info!("Server exited successfuly");
                     Ok(())
