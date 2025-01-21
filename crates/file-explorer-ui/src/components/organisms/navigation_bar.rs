@@ -1,7 +1,6 @@
 use leptos::{component, view, For, IntoView, Signal, SignalGet};
 
-use file_explorer_proto::BreadcrumbItem;
-
+use crate::api::proto::BreadcrumbItem;
 use crate::components::atoms::icons::House;
 
 #[component]

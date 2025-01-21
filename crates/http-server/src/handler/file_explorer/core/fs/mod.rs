@@ -1,12 +1,9 @@
-mod directory;
-mod file;
+pub mod directory;
+pub mod file;
 
 use std::path::PathBuf;
 
 use anyhow::Result;
-
-pub use self::directory::Directory;
-pub use self::file::File;
 
 #[derive(Debug, Clone)]
 pub struct FileSystem {

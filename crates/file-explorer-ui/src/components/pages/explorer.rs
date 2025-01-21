@@ -3,8 +3,7 @@ use leptos::{
     component, create_memo, create_signal, spawn_local, view, IntoView, SignalGet, SignalSet,
 };
 
-use file_explorer_proto::DirectoryIndex;
-
+use crate::api::proto::DirectoryIndex;
 use crate::api::Api;
 use crate::components::organisms::action_bar::ActionBar;
 use crate::components::organisms::navigation_bar::NavigationBar;

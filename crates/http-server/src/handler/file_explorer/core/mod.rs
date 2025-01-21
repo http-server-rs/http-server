@@ -2,11 +2,11 @@ mod fs;
 
 use std::path::{Component, PathBuf};
 
+use anyhow::Result;
 use tokio::fs::OpenOptions;
 
-pub use self::fs::{Directory, File};
-
-use anyhow::Result;
+use self::fs::directory::Directory;
+use self::fs::file::File;
 
 /// Any OS filesystem entry recognized by [`FileExplorer`] is treated as a
 /// `Entry` both `File` and `Directory` are possible values.

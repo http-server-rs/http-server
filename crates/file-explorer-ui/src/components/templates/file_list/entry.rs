@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local};
 use leptos::{component, view, IntoView, View};
 
-use file_explorer_proto::EntryType;
+use crate::api::proto::EntryType;
 
 use super::download_button::DownloadButton;
 use super::entry_icon::EntryIcon;

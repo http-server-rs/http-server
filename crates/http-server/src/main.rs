@@ -1,4 +1,7 @@
 pub mod cli;
+pub mod config;
+pub mod handler;
+pub mod server;
 
 use anyhow::Result;
 use clap::Parser;
@@ -14,7 +17,6 @@ fn main() -> Result<()> {
 
     match args.command {
         Command::Start(opt) => opt.exec()?,
-        Command::Setup(opt) => opt.exec()?,
     }
 
     Ok(())

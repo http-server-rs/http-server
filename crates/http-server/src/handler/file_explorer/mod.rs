@@ -1,127 +1,79 @@
+mod core;
+mod proto;
 mod utils;
 
+use core::Entry;
 use std::fs::read_dir;
-use std::mem::MaybeUninit;
 use std::path::{Component, Path, PathBuf};
-use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
-use http::request::Parts;
-use http::HeaderValue;
-use http_body_util::Full;
-use hyper::body::Bytes;
-use hyper::header::CONTENT_TYPE;
-use hyper::{Method, Response, StatusCode, Uri};
+use bytes::Bytes;
+use http::{header::CONTENT_TYPE, request::Parts, HeaderValue, Method, Response, StatusCode, Uri};
+use http_body_util::{BodyExt, Full};
 use multer::Multipart;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
-use serde::Deserialize;
+use proto::{DirectoryEntry, DirectoryIndex, EntryType, Sort};
+use rust_embed::Embed;
 use tokio::io::AsyncWriteExt;
-use tokio::runtime::Handle;
 
-use file_explorer::{Entry, FileExplorer};
-use file_explorer_proto::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, EntryType, Sort};
-use file_explorer_ui::Assets;
-use http_server_plugin::config::read_from_path;
-use http_server_plugin::{export_plugin, Plugin, PluginError, PluginRegistrar};
+use crate::server::{HttpRequest, HttpResponse};
 
+use self::proto::BreadcrumbItem;
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
-const FILE_BUFFER_SIZE: usize = 8 * 1024;
+#[derive(Embed)]
+#[folder = "../file-explorer-ui/public/dist"]
+struct FileExplorerAssets;
 
-pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
-
-export_plugin!(register);
-
-const PLUGIN_NAME: &str = "file-explorer";
-
-#[allow(improper_ctypes_definitions)]
-extern "C" fn register(config_path: PathBuf, rt: Arc<Handle>, registrar: &mut dyn PluginRegistrar) {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
-
-    let config: FileExplorerConfig = read_from_path(config_path, PLUGIN_NAME).unwrap();
-
-    registrar.register_function(
-        PLUGIN_NAME,
-        Arc::new(FileExplorerPlugin::new(rt, config.path)),
-    );
-}
-
-#[derive(Debug, Deserialize)]
-struct FileExplorerConfig {
-    pub path: PathBuf,
-}
-
-struct FileExplorerPlugin {
-    file_explorer: FileExplorer,
+pub struct FileExplorer {
+    file_explorer: core::FileExplorer,
     path: PathBuf,
-    rt: Arc<Handle>,
 }
 
-#[async_trait]
-impl Plugin for FileExplorerPlugin {
-    async fn call(&self, parts: Parts, body: Bytes) -> Result<Response<Full<Bytes>>, PluginError> {
-        self.rt
-            .block_on(async move { self.handle(parts, body).await })
-    }
-}
-
-impl FileExplorerPlugin {
-    fn new(rt: Arc<Handle>, path: PathBuf) -> Self {
-        let file_explorer = FileExplorer::new(path.clone());
-
+impl FileExplorer {
+    pub fn new(path: PathBuf) -> Self {
         Self {
-            file_explorer,
+            file_explorer: core::FileExplorer::new(path.clone()),
             path,
-            rt,
         }
     }
 
-    async fn handle(
-        &self,
-        parts: Parts,
-        body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, PluginError> {
-        tracing::info!("Handling request: {:?}", parts);
+    pub async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
+        let (parts, body) = req.into_parts();
+        let body = body.collect().await.unwrap().to_bytes();
 
         if parts.uri.path().starts_with("/api/v1") {
-            self.handle_api(parts, body).await
-        } else {
-            let path = parts.uri.path();
-            let path = path.strip_prefix('/').unwrap_or(path);
+            return self.handle_api(parts, body).await;
+        }
 
-            if let Some(file) = Assets::get(path) {
-                let content_type = mime_guess::from_path(path).first_or_octet_stream();
-                let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
-                let body = Full::new(Bytes::from(file.data.to_vec()));
-                let mut response = Response::new(body);
-                let mut headers = response.headers().clone();
+        let path = parts.uri.path();
+        let path = path.strip_prefix('/').unwrap_or(path);
 
-                headers.append(CONTENT_TYPE, content_type);
-                *response.headers_mut() = headers;
-
-                return Ok(response);
-            }
-
-            let index = Assets::get("index.html").unwrap();
-            let body = Full::new(Bytes::from(index.data.to_vec()));
+        if let Some(file) = FileExplorerAssets::get(path) {
+            let content_type = mime_guess::from_path(path).first_or_octet_stream();
+            let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
+            let body = Full::new(Bytes::from(file.data.to_vec()));
             let mut response = Response::new(body);
             let mut headers = response.headers().clone();
 
-            headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
+            headers.append(CONTENT_TYPE, content_type);
             *response.headers_mut() = headers;
 
-            Ok(response)
+            return Ok(response);
         }
+
+        let index = FileExplorerAssets::get("index.html").unwrap();
+        let body = Full::new(Bytes::from(index.data.to_vec()));
+        let mut response = Response::new(body);
+        let mut headers = response.headers().clone();
+
+        headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
+        *response.headers_mut() = headers;
+
+        Ok(response)
     }
 
-    async fn handle_api(
-        &self,
-        parts: Parts,
-        body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, PluginError> {
+    async fn handle_api(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
         let path = Self::parse_req_uri(parts.uri.clone()).unwrap();
 
         match parts.method {
@@ -166,11 +118,7 @@ impl FileExplorerPlugin {
         }
     }
 
-    async fn handle_file_upload(
-        &self,
-        parts: Parts,
-        body: Bytes,
-    ) -> Result<Response<Full<Bytes>>, PluginError> {
+    async fn handle_file_upload(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
         // Extract the `multipart/form-data` boundary from the headers.
         let boundary = parts
             .headers

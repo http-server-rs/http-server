@@ -4,7 +4,7 @@ mod entry_icon;
 
 use leptos::{component, view, For, IntoView, Signal, SignalGet};
 
-use file_explorer_proto::DirectoryEntry;
+use crate::api::proto::DirectoryEntry;
 
 use self::entry::Entry;
 

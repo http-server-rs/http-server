@@ -1,9 +1,11 @@
+pub mod proto;
+
 use anyhow::Result;
 use gloo::utils::window;
 use reqwest::{header::CONTENT_TYPE, Url};
 use web_sys::FormData;
 
-use file_explorer_proto::DirectoryIndex;
+use self::proto::DirectoryIndex;
 
 pub struct FileDownload {
     pub bytes: Vec<u8>,

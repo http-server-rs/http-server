@@ -1,7 +1,6 @@
 use leptos::{component, view, IntoView};
 
-use file_explorer_proto::EntryType;
-
+use crate::api::proto::EntryType;
 use crate::components::atoms::icons::{File, Folder, Git, Justfile, Markdown, Rust, Toml};
 
 #[component]

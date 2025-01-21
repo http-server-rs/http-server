@@ -10,20 +10,13 @@ keywords = ["configurable", "http", "server", "serve", "static"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 
-[[bin]]
-name = "http-server"
-path = "src/bin/main.rs"
-
-[lib]
-name = "http_server_rs"
-path = "src/lib.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 bytes = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
 clap = { workspace = true, features = ["env", "derive", "std"] }
 dirs = { workspace = true }
 http = { workspace = true }
@@ -32,11 +25,16 @@ hyper = { workspace = true }
 hyper-util = { workspace = true, features = ["full"] }
 libloading = { workspace = true }
 local-ip-address = { workspace = true }
+mime_guess = { workspace = true }
+multer = { workspace = true }
+rust-embed = { workspace = true }
+percent-encoding = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
+tokio-util = { workspace = true }
 tower-http = { workspace = true, features = ["cors"] }
 tower = { workspace = true, features = ["util"] }
 tower-layer = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-
-http-server-plugin = { workspace = true }
