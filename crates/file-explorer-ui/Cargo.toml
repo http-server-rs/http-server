@@ -23,7 +23,6 @@ leptos =  { workspace = true, features = ["csr"] }
 leptos_meta = { workspace = true, features = ["csr"] }
 leptos_router = { workspace = true, features = ["csr"] }
 reqwest = { workspace = true, features = ["json"] }
-rust-embed = { workspace = true }
 web-sys = { workspace = true, features = ["FileList", "HtmlInputElement"] }
 
 [dev-dependencies]

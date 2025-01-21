@@ -3,9 +3,6 @@
 default:
 	@echo No default target.
 
-build:
-	trunk build --locked --config ./Trunk.toml
-
 dev:
 	trunk serve --config ./Trunk.toml
 

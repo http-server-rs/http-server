@@ -24,6 +24,8 @@ hyper = { workspace = true }
 hyper-util = { workspace = true, features = ["full"] }
 libloading = { workspace = true }
 local-ip-address = { workspace = true }
+mime_guess = { workspace = true }
+rust-embed = { workspace = true }
 tokio = { workspace = true, features = ["fs", "rt-multi-thread", "signal", "macros"] }
 tower-http = { workspace = true, features = ["cors"] }
 tower = { workspace = true, features = ["util"] }
