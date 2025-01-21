@@ -1,9 +1,10 @@
-use std::convert::Infallible;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use http_body_util::{BodyExt, Full};
+use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::{Method, Request, Response};
@@ -15,7 +16,7 @@ use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::config::Config;
-use crate::handler::file_explorer::{self, FileExplorer};
+use crate::handler::file_explorer::FileExplorer;
 
 pub type HttpRequest = Request<Incoming>;
 pub type HttpResponse = Response<Full<Bytes>>;
@@ -43,7 +44,7 @@ impl Server {
             }
         }
 
-        let file_explorer = FileExplorer::new();
+        let file_explorer = FileExplorer::new(PathBuf::from_str("./").unwrap());
         let file_explorer = Arc::new(file_explorer);
 
         loop {

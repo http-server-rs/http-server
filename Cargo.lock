@@ -1015,6 +1015,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
+ "chrono",
  "clap",
  "dirs",
  "http 1.2.0",
@@ -1024,8 +1025,13 @@ dependencies = [
  "libloading",
  "local-ip-address",
  "mime_guess",
+ "multer",
+ "percent-encoding",
  "rust-embed",
+ "serde",
+ "serde_json",
  "tokio",
+ "tokio-util",
  "tower",
  "tower-http",
  "tower-layer",
@@ -1699,6 +1705,23 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "multer"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83e87776546dc87511aa5ee218730c92b666d7264ab6ed41f9d215af9cd5224b"
+dependencies = [
+ "bytes",
+ "encoding_rs",
+ "futures-util",
+ "http 1.2.0",
+ "httparse",
+ "memchr",
+ "mime",
+ "spin",
+ "version_check",
 ]
 
 [[package]]
