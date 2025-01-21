@@ -42,7 +42,7 @@ impl FileExplorer {
         let (parts, body) = req.into_parts();
         let body = body.collect().await.unwrap().to_bytes();
 
-        if parts.uri.path().starts_with("api/v1") {
+        if parts.uri.path().starts_with("/api/v1") {
             return self.handle_api(parts, body).await;
         }
 

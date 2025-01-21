@@ -1,5 +1,5 @@
 [package]
-name = "file-explorer"
+name = "file-explorer-ui"
 version = "0.0.0"
 edition = "2021"
 authors = ["Esteban Borai <estebanborai@gmail.com>"]
@@ -23,6 +23,7 @@ leptos =  { workspace = true, features = ["csr"] }
 leptos_meta = { workspace = true, features = ["csr"] }
 leptos_router = { workspace = true, features = ["csr"] }
 reqwest = { workspace = true, features = ["json"] }
+serde = { workspace = true, features = ["derive"] }
 web-sys = { workspace = true, features = ["FileList", "HtmlInputElement"] }
 
 [dev-dependencies]
