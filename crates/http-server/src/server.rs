@@ -1,7 +1,6 @@
 use std::convert::Infallible;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::Result;
 use http_body_util::{BodyExt, Full};
@@ -16,6 +15,10 @@ use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::config::Config;
+use crate::handler::file_explorer::{self, FileExplorer};
+
+pub type HttpRequest = Request<Incoming>;
+pub type HttpResponse = Response<Full<Bytes>>;
 
 const ALL_INTERFACES_IPV4: Ipv4Addr = Ipv4Addr::new(0, 0, 0, 0);
 
@@ -31,7 +34,6 @@ impl Server {
     pub async fn run(&self) -> Result<()> {
         let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
-        let config = PathBuf::from_str("./config.toml")?;
 
         println!("Listening on http://{}", addr);
 
@@ -41,7 +43,11 @@ impl Server {
             }
         }
 
+        let file_explorer = FileExplorer::new();
+        let file_explorer = Arc::new(file_explorer);
+
         loop {
+            let file_explorer = Arc::clone(&file_explorer);
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
             let cors = if self.config.cors {
@@ -56,11 +62,7 @@ impl Server {
 
             tokio::spawn(async move {
                 let svc = tower::service_fn(|req: Request<Incoming>| async {
-                    let (parts, body) = req.into_parts();
-                    let body = body.collect().await.unwrap().to_bytes();
-
-                    let res = Response::new(Full::new(Bytes::from("Hello, World!")));
-                    Ok::<Response<http_body_util::Full<hyper::body::Bytes>>, Infallible>(res)
+                    file_explorer.handle(req).await
                 });
 
                 let svc = ServiceBuilder::new().option_layer(cors).service(svc);
