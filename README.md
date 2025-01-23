@@ -18,26 +18,21 @@
 
 </div>
 
-<div align="center">
-  <img src="https://github.com/http-server-rs/http-server/blob/main/docs/screenshot.png?raw=true" width="600" />
-</div>
-
-## Installation
-
-```bash
-cargo install http-server
-```
-
-Verify successful installation.
-
-```bash
-http-server --help
-```
-
 ## Development
 
-Since November the 17th of 2024 the version `v0.x` is now LTS and will not receive
-further updates. The current version is `v1.x` and is on active development.
+### Release Build
+
+Build release binaries with:
+
+```bash
+make release
+```
+
+Then use the following _alias_ for convenience
+
+```bash
+alias htps = './target/release/http-server'
+```
 
 ## Release
 

@@ -1,7 +1,9 @@
 .PHONY: default
 
-default:
-	@echo No default target.
+default: release
+
+release: ui-build
+	make -C ./crates/http-server release
 
 ui-build:
 	make -C ./crates/file-explorer-ui release
