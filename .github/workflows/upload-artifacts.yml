@@ -38,17 +38,6 @@ jobs:
       - name: Checkout project files
         uses: actions/checkout@v2
 
-      - name: Cache .cargo and target
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cargo-build
-
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
