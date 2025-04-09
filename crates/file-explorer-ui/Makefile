@@ -6,6 +6,9 @@ default:
 dev:
 	trunk serve --config ./Trunk.toml
 
+dist:
+	trunk build --config ./Trunk.toml
+
 fmt:
 	@leptosfmt --version >/dev/null 2>&1 || (echo "Error: leptosfmt is required."; exit 1)
 	leptosfmt ./src/**/*.rs

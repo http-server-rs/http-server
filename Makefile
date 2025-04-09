@@ -5,6 +5,9 @@ default: release
 release: ui-build
 	make -C ./crates/http-server release
 
+run:
+	make -C ./crates/http-server run
+
 ui-build:
 	make -C ./crates/file-explorer-ui release
 

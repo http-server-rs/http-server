@@ -22,7 +22,7 @@ use self::proto::BreadcrumbItem;
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 #[derive(Embed)]
-#[folder = "../file-explorer-ui/public/dist"]
+#[folder = "../file-explorer-ui/dist"]
 struct FileExplorerAssets;
 
 pub struct FileExplorer {
@@ -208,7 +208,7 @@ impl FileExplorer {
     fn breadcrumbs_from_path(root_dir: &Path, path: &Path) -> Result<Vec<BreadcrumbItem>> {
         let root_dir_name = root_dir
             .components()
-            .last()
+            .next_back()
             .unwrap()
             .as_os_str()
             .to_str()
