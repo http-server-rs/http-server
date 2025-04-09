@@ -39,8 +39,8 @@ jobs:
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo-build
 
-      - name: cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --locked
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release

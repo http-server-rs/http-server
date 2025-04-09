@@ -49,11 +49,11 @@ jobs:
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo-build
 
-      - name: Builds artifacts for {{ matrix.os }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --locked
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release
 
       - name: Upload release artifacts
         uses: actions/github-script@v5

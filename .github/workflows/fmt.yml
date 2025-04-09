@@ -13,28 +13,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache .cargo and target
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-cargo-fmt-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-fmt-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cargo-fmt
-
-      - name: Run fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - name: Run
+        run: cargo fmt --all -- --check
