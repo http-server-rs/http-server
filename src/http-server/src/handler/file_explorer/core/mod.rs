@@ -1,6 +1,6 @@
 mod fs;
 
-use std::path::{Component, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use anyhow::Result;
 use tokio::fs::OpenOptions;
@@ -53,7 +53,7 @@ impl FileExplorer {
     /// # Reference
     ///
     /// - https://owasp.org/www-community/attacks/Path_Traversal
-    fn normalize_path(&self, path: &PathBuf) -> PathBuf {
+    fn normalize_path(&self, path: &Path) -> PathBuf {
         path.components()
             .fold(PathBuf::new(), |mut result, p| match p {
                 Component::ParentDir => {
