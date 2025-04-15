@@ -16,6 +16,14 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Cargo Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force leptosfmt
+          cargo binstall -y --force trunk
+
       - name: Release
         run: make release
 
