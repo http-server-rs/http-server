@@ -1,4 +1,4 @@
-.PHONY: default
+.PHONY: default test
 
 default: release
 
@@ -20,3 +20,6 @@ ui-fmt:
 
 ui-release:
 	make -C ./crates/file-explorer-ui release
+
+test:
+	make -C ./test run
