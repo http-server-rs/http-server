@@ -1,10 +1,10 @@
 [workspace]
 members = [
-    "crates/file-explorer-ui",
-    "crates/http-server",
+    "src/file-explorer-ui",
+    "src/http-server",
     "test",
 ]
-default-members = ["crates/http-server"]
+default-members = ["src/http-server"]
 resolver = "1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

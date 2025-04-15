@@ -64,5 +64,5 @@ dist
 
 # Plugins #
 ###########
-crates/http-server/inline/*
-!crates/http-server/inline/.gitkeep
+src/http-server/inline/*
+!src/http-server/inline/.gitkeep
