@@ -2,8 +2,8 @@ use std::fs::Metadata;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use tokio::io::AsyncReadExt;
 use mime_guess::{from_path, Mime};
+use tokio::io::AsyncReadExt;
 
 /// Wrapper around `tokio::fs::File` built from a OS ScopedFileSystem file
 /// providing `std::fs::Metadata` and the path to such file
