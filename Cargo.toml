@@ -1,9 +1,10 @@
 [workspace]
 members = [
-    "crates/file-explorer-ui",
-    "crates/http-server",
+    "src/file-explorer-ui",
+    "src/http-server",
+    "test",
 ]
-default-members = ["crates/http-server"]
+default-members = ["src/http-server"]
 resolver = "1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -45,4 +46,6 @@ tower-http = "0.6.1"
 tower-layer = "0.3.3"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+wait-on = "0.0.14"
 web-sys = "0.3.72"
+xprocess = "0.0.2"

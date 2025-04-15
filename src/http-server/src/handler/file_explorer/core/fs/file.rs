@@ -1,16 +1,9 @@
-use anyhow::{Context, Result};
-use chrono::{DateTime, Local};
-use tokio::io::AsyncReadExt;
-
 use std::fs::Metadata;
-use std::mem::MaybeUninit;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use mime_guess::{from_path, Mime};
-
-pub const FILE_BUFFER_SIZE: usize = 8 * 1024;
-
-pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
+use tokio::io::AsyncReadExt;
 
 /// Wrapper around `tokio::fs::File` built from a OS ScopedFileSystem file
 /// providing `std::fs::Metadata` and the path to such file
@@ -36,16 +29,6 @@ impl File {
 
     pub fn size(&self) -> u64 {
         self.metadata.len()
-    }
-
-    pub fn last_modified(&self) -> Result<DateTime<Local>> {
-        let modified = self
-            .metadata
-            .modified()
-            .context("Failed to read last modified time for file")?;
-        let modified: DateTime<Local> = modified.into();
-
-        Ok(modified)
     }
 
     pub async fn bytes(&mut self) -> Result<Vec<u8>> {

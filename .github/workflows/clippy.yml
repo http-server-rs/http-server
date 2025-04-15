@@ -15,6 +15,19 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Setup Cargo Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force leptosfmt
+          cargo binstall -y --force trunk
+
+      - name: Release
+        run: make release
 
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings

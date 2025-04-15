@@ -42,7 +42,7 @@ impl Api {
         Ok(())
     }
 
-    pub async fn download(&self, path: &String) -> Result<FileDownload> {
+    pub async fn download(&self, path: &str) -> Result<FileDownload> {
         let path = path.strip_prefix("/").unwrap();
         let url = self.base_url.join(&format!("/api/v1/{path}"))?;
         let res = reqwest::get(url).await?;

@@ -1,4 +1,4 @@
-name: build
+name: test
 on:
   merge_group:
   pull_request:
@@ -39,5 +39,5 @@ jobs:
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
-      - name: Build
-        run: make release
+      - name: Run Tests
+        run: make test

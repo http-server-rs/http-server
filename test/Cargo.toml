@@ -1,0 +1,13 @@
+[package]
+name = "test"
+authors = ["Esteban Borai <estebanborai@gmail.com>"]
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+reqwest = { workspace = true, features = ["json"] }
+serde_json = { workspace = true }
+wait-on = { workspace = true }
+xprocess = { workspace = true }
