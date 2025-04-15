@@ -16,7 +16,6 @@ jobs:
         name:
           - linux
           - macos
-          - windows
 
       include:
         - name: linux
@@ -29,20 +28,15 @@ jobs:
           artifact_name: http-server
           asset_name: http-server
 
-        - name: windows
-          os: windows-latest
-          artifact_name: http-server
-          asset_name: http-server.exe
-
     steps:
       - name: Checkout project files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build
-        run: cargo build --release
+      - name: Release
+        run: make release
 
       - name: Upload release artifacts
         uses: actions/github-script@v5

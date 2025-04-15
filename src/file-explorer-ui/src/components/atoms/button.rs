@@ -1,12 +1,5 @@
 use leptos::{component, view, Children, IntoView};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum ButtonVariant {
-    Primary,
-    #[default]
-    Secondary,
-}
-
 #[component]
 pub fn Button(children: Children) -> impl IntoView {
     view! {

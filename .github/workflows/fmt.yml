@@ -18,5 +18,8 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Release
+        run: make release
+
       - name: Run
         run: cargo fmt --all -- --check

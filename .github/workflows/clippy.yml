@@ -16,5 +16,8 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Release
+        run: make release
+
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings

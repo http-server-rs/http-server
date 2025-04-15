@@ -26,7 +26,7 @@ pub fn Entry(
         let name = name.clone();
 
         move || -> View {
-            if matches!(entry_type, EntryType::Directory) {
+            if matches!(entry_type, EntryType::Directory) || is_dir {
                 view! {
                     <a href={entry_path} class="hover:text-blue-500">
                         {name}
