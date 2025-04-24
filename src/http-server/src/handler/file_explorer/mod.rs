@@ -22,7 +22,7 @@ use self::proto::BreadcrumbItem;
 use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
 
 #[derive(Embed)]
-#[folder = "../file-explorer-ui/dist"]
+#[folder = "../file-explorer-ui/public/dist"]
 struct FileExplorerAssets;
 
 pub struct FileExplorer {
