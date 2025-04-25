@@ -2,7 +2,12 @@
 
 default: release
 
-release: ui-build
+build:
+	make -C ./src/file-explorer-ui dist
+	make -C ./src/http-server build
+
+release:
+	make -C ./src/file-explorer-ui release
 	make -C ./src/http-server release
 
 run:

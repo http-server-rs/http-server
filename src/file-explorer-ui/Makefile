@@ -11,7 +11,7 @@ dist:
 
 fmt:
 	@leptosfmt --version >/dev/null 2>&1 || (echo "Error: leptosfmt is required."; exit 1)
-	leptosfmt ./src/**/*.rs
+	@leptosfmt ./src/**/*.rs
 
 release:
 	trunk build --release --locked --config ./Trunk.toml

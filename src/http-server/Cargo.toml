@@ -1,16 +1,19 @@
 [package]
 name = "http-server"
 version = "0.8.9"
-authors = ["Esteban Borai <estebanborai@gmail.com>"]
+authors = ["Leo Borai <estebanborai@gmail.com>"]
 edition = "2021"
 description = "Simple and configurable command-line HTTP server"
 repository = "https://github.com/http-server-rs/http-server"
 categories = ["web-programming", "web-programming::http-server"]
 keywords = ["configurable", "http", "server", "serve", "static"]
 license = "MIT OR Apache-2.0"
-readme = "README.md"
+readme = "../../README.md"
+include = ["/ui", "/src/"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "http-server"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }

@@ -1,6 +1,7 @@
 [build]
 # The index HTML file to drive the bundling process.
 target = "./public/index.html"
+dist = "../http-server/ui"
 
 [watch]
 # Paths to watch. The `build.target`'s parent folder is watched by default.

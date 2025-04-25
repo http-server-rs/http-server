@@ -3,6 +3,9 @@
 default:
 	cargo r -- start
 
+build:
+	cargo b
+
 release:
 	cargo b --release
 

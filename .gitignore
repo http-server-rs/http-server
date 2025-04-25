@@ -6,6 +6,8 @@
 #######################
 /target
 /tmp
+/src/http-server/ui/*
+!/src/http-server/ui/.gitkeep
 
 # Compiled source #
 ###################

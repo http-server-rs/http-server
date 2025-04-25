@@ -30,8 +30,20 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Setup Cargo Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force cargo-edit
+          cargo binstall -y --force leptosfmt
+          cargo binstall -y --force trunk
+
+      - name: Build (debug)
+        run: make build
+
       - name: publish crate
-        run: cargo publish -p http-server --dry-run
+        run: cargo publish -p http-server --dry-run --allow-dirty
 
   release:
     name: Create Release
@@ -78,7 +90,7 @@ jobs:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Publish crate
-        run: cargo publish -p http-server
+        run: cargo publish -p http-server --allow-dirty
 
       - name: Create Release
         id: create_release
