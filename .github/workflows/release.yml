@@ -43,7 +43,9 @@ jobs:
         run: make build
 
       - name: publish crate
-        run: cargo publish -p http-server --dry-run --allow-dirty
+        run: |
+          cargo package --list --allow-dirty
+          cargo publish -p http-server --dry-run --allow-dirty
 
   release:
     name: Create Release
@@ -90,7 +92,9 @@ jobs:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Publish crate
-        run: cargo publish -p http-server --allow-dirty
+        run: |
+          cargo package --list --allow-dirty
+          cargo publish -p http-server --allow-dirty
 
       - name: Create Release
         id: create_release
