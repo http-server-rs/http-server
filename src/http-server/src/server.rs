@@ -36,7 +36,7 @@ impl Server {
         let addr = SocketAddr::from((self.config.host, self.config.port));
         let listener = TcpListener::bind(addr).await?;
 
-        println!("Listening on http://{}", addr);
+        println!("Listening on http://{addr}");
 
         if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4)) {
             if let Ok(local_ip) = local_ip() {
@@ -71,7 +71,7 @@ impl Server {
                 let svc = TowerToHyperService::new(svc);
 
                 if let Err(err) = http1::Builder::new().serve_connection(io, svc).await {
-                    eprintln!("server error: {}", err);
+                    eprintln!("server error: {err}");
                 }
             });
         }

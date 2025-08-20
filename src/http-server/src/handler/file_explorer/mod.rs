@@ -104,7 +104,7 @@ impl FileExplorer {
                     }
                 },
                 Err(err) => {
-                    let message = format!("Failed to resolve path: {}", err);
+                    let message = format!("Failed to resolve path: {err}");
                     Ok(Response::new(Full::new(Bytes::from(message))))
                 }
             },
@@ -138,7 +138,7 @@ impl FileExplorer {
         if let Err(err) = self.process_multipart(body, boundary.unwrap()).await {
             return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Full::from(format!("INTERNAL SERVER ERROR: {}", err)))
+                .body(Full::from(format!("INTERNAL SERVER ERROR: {err}")))
                 .unwrap());
         }
 
@@ -165,8 +165,7 @@ impl FileExplorer {
             let mut file = tokio::fs::File::create(file_name).await.unwrap();
 
             println!(
-                "\n\nName: {:?}, FileName: {:?}, Content-Type: {:?}\n\n",
-                name, file_name, content_type
+                "\n\nName: {name:?}, FileName: {file_name:?}, Content-Type: {content_type:?}\n\n"
             );
 
             // Process the field data chunks e.g. store them in a file.
@@ -177,7 +176,7 @@ impl FileExplorer {
                 file.write_all(&field_chunk).await.unwrap();
             }
 
-            println!("Field Bytes Length: {:?}", field_bytes_len);
+            println!("Field Bytes Length: {field_bytes_len:?}");
         }
 
         Ok(())
