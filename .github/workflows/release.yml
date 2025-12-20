@@ -11,6 +11,9 @@ on:
           - patch
           - minor
           - major
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -47,10 +50,25 @@ jobs:
           cargo package --list --allow-dirty
           cargo publish -p http-server --dry-run --allow-dirty
 
-  release:
-    name: Create Release
-    needs: publish-dry-run
-    runs-on: ubuntu-latest
+  build-binaries:
+    name: Build binaries
+    if: always() && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && needs.publish-dry-run.result == 'success'))
+    strategy:
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - name: linux-arm64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - name: macos-x64
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - name: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,7 +76,13 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: ${{ matrix.target }}
+
+      - name: Install Linker for ARM64 Linux GNU
+        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
@@ -71,7 +95,79 @@ jobs:
 
       - id: cargo-set-version
         name: Set Version
-        run: cargo set-version -p http-server --bump ${{ inputs.version }}
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            cargo set-version -p http-server --bump ${{ inputs.version }}
+          else
+            # For push events, add pre-release suffix
+            current_version=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml | head -1)
+            pre_version="${current_version}-pre.$(date +%Y%m%d%H%M%S)"
+            cargo set-version -p http-server $pre_version
+          fi
+
+      - name: Set Crate Version as Environment Variable
+        run: |
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            CARGO_TOML_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml | head -1)
+          else
+            CARGO_TOML_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml)
+          fi
+          echo "CRATE_VERSION=$CARGO_TOML_VERSION" >> $GITHUB_ENV
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }} -p http-server
+
+      - name: Package binary
+        run: |
+          # Create binary name with version and target
+          BINARY_NAME="http-server-v${{ env.CRATE_VERSION }}-${{ matrix.name }}"
+
+          # Copy and rename binary
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ] || [ "${{ matrix.os }}" == "macos-latest" ]; then
+            cp target/${{ matrix.target }}/release/http-server $BINARY_NAME
+          fi
+
+          # Create tar.gz archive
+          tar -czf $BINARY_NAME.tar.gz $BINARY_NAME
+
+          # Store artifact name for later use
+          echo "ARTIFACT_NAME=$BINARY_NAME.tar.gz" >> $GITHUB_ENV
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_NAME }}
+
+  release:
+    name: Create Release
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Cargo Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force cargo-edit
+
+      - id: cargo-set-version
+        name: Set Version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            cargo set-version -p http-server --bump ${{ inputs.version }}
+          else
+            # For push events, add pre-release suffix
+            current_version=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml)
+            pre_version="${current_version}-pre.$(date +%Y%m%d%H%M%S)"
+            cargo set-version -p http-server $pre_version
+          fi
 
       - name: Set Crate Version as Environment Variable
         run: |
@@ -79,6 +175,7 @@ jobs:
           echo "CRATE_VERSION=$CARGO_TOML_VERSION" >> $GITHUB_ENV
 
       - name: Create Commit
+        if: github.event_name == 'workflow_dispatch'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -87,21 +184,46 @@ jobs:
           git push origin main --follow-tags
 
       - name: Login to Crates.io
+        if: github.event_name == 'workflow_dispatch'
         run: cargo login ${CRATES_IO_TOKEN}
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Publish crate
+        if: github.event_name == 'workflow_dispatch'
         run: |
           cargo package --list --allow-dirty
           cargo publish -p http-server --allow-dirty
 
-      - name: Create Release
-        id: create_release
-        uses: actions/github-script@v5
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          script: |
-            await github.request(`POST /repos/${{ github.repository }}/releases`, {
-              tag_name: "v${{ env.CRATE_VERSION }}",
-              generate_release_notes: true
-            });
+          path: ./artifacts
+
+      - name: Create Release with GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Determine if this is a pre-release
+          IS_PRERELEASE=""
+          if [ "${{ github.event_name }}" == "push" ]; then
+            IS_PRERELEASE="--prerelease"
+          fi
+
+          # Create the release
+          gh release create "v${{ env.CRATE_VERSION }}" \
+            --title "Release v${{ env.CRATE_VERSION }}" \
+            --generate-notes \
+            $IS_PRERELEASE
+
+          # Upload all binary artifacts
+          for artifact_dir in ./artifacts/*/; do
+            if [ -d "$artifact_dir" ]; then
+              for file in "$artifact_dir"*.tar.gz; do
+                if [ -f "$file" ]; then
+                  echo "Uploading $(basename "$file")"
+                  gh release upload "v${{ env.CRATE_VERSION }}" "$file"
+                fi
+              done
+            fi
+          done
