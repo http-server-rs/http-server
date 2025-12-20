@@ -8,19 +8,27 @@ on:
 
 jobs:
   build:
-    name: Builds for ${{ matrix.os }}
+    name: Builds for ${{ matrix.name }} (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        name:
-          - linux
-          - macos
-
         include:
-          - name: linux
+          - name: linux-x64
             os: ubuntu-latest
-          - name: macos
+            target: x86_64-unknown-linux-gnu
+            cross: false
+          - name: linux-arm64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            cross: true
+          - name: macos-x64
             os: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
+          - name: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            cross: false
 
     steps:
       - name: Checkout
@@ -29,7 +37,15 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: |
+            wasm32-unknown-unknown
+            ${{ matrix.target }}
+
+      - name: Install Cross
+        if: matrix.cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
 
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
@@ -40,4 +56,4 @@ jobs:
           cargo binstall -y --force trunk
 
       - name: Build
-        run: make release
+        run: make release TARGET=${{ matrix.target }}
