@@ -1,4 +1,4 @@
-TARGET ?= aarch64-apple-darwin
+TARGET ?= $(shell rustc --version --verbose | grep host | cut -d' ' -f2)
 
 .PHONY: default
 
