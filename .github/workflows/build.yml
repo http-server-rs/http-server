@@ -55,5 +55,11 @@ jobs:
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
+      - name: Install `aarch64-unknown-linux-gnu` toolchain
+        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Build
         run: make release TARGET=${{ matrix.target }}
