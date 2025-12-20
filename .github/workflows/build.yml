@@ -41,12 +41,6 @@ jobs:
             wasm32-unknown-unknown
             ${{ matrix.target }}
 
-      - name: Install Cross
-        if: matrix.cross
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cross
-
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
 
