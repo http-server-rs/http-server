@@ -20,6 +20,8 @@
 
 ## Development
 
+The source code in `main` belongs to the code for the version `1.0.0`.
+
 ### Release Build
 
 Build release binaries with:
