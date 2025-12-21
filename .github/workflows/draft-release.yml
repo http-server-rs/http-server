@@ -1,0 +1,60 @@
+name: Draft Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        required: true
+        description: 'Version number to bump'
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  publish-dry-run:
+    name: "Runs cargo publish --dry-run"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: publish crate
+        run: cargo publish --dry-run
+
+  release:
+    name: Create Release
+    needs: publish-dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Cargo Binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force cargo-tag
+
+      - name: Bump Version
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          cd ./src/http-server
+          echo "CRATE_VERSION=$(cargo tag --no-tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
+          git checkout -b release/$CRATE_VERSION
+          git push origin HEAD
+          gh pr create --fill
