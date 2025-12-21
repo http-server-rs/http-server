@@ -1,13 +1,17 @@
+TARGET ?= $(shell rustc --version --verbose | grep host | cut -d' ' -f2)
+
 .PHONY: default
 
 default:
 	cargo r -- start
 
 build:
-	cargo b
+	@echo "Building for target: $(TARGET)"
+	cargo b --target $(TARGET)
 
 release:
-	cargo b --release
+	@echo "Building with release mode for target: $(TARGET)"
+	cargo b --release --target $(TARGET)
 
 dist:
 	make -C ../file-explorer-ui dist

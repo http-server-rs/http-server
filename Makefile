@@ -1,14 +1,16 @@
+TARGET ?= $(shell rustc --version --verbose | grep host | cut -d' ' -f2)
+
 .PHONY: default test
 
 default: release
 
 build:
 	make -C ./src/file-explorer-ui dist
-	make -C ./src/http-server build
+	make -C ./src/http-server build TARGET=$(TARGET)
 
 release:
 	make -C ./src/file-explorer-ui release
-	make -C ./src/http-server release
+	make -C ./src/http-server release TARGET=$(TARGET)
 
 run:
 	make -C ./src/http-server run

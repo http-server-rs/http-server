@@ -40,4 +40,5 @@ jobs:
           cargo binstall -y --force trunk
 
       - name: Run Tests
-        run: make test
+        run: |
+          TARGET=$(rustc --version --verbose | grep host | cut -d' ' -f2) make test

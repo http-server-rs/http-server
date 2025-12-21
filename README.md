@@ -28,6 +28,21 @@ Build release binaries with:
 make release
 ```
 
+Optionally you can build for other targets by specifying the `TARGET` variable
+
+```bash
+make release TARGET=<target-triple>
+```
+
+For example:
+
+```bash
+# Install aarch64-unknown-linux-gnu target
+rustup target install aarch64-unknown-linux-gnu
+# Build for aarch64-unknown-linux-gnu target
+make release TARGET=aarch64-unknown-linux-gnu
+```
+
 Then use the following _alias_ for convenience
 
 ```bash
