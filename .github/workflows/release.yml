@@ -89,30 +89,21 @@ jobs:
 
       - name: Install Rust Binaries
         run: |
-          cargo binstall -y --force cargo-edit
+          cargo binstall -y --force cargo-tag
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
-      - id: cargo-set-version
-        name: Set Version
+      - name: Retrieve Version
         run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            cargo set-version -p http-server --bump ${{ inputs.version }}
+            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
-            # For push events, add pre-release suffix
-            current_version=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml | head -1)
-            pre_version="${current_version}-pre.$(date +%Y%m%d%H%M%S)"
-            cargo set-version -p http-server $pre_version
+            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v pre.$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
           fi
-
-      - name: Set Crate Version as Environment Variable
-        run: |
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            CARGO_TOML_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml | head -1)
-          else
-            CARGO_TOML_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml)
-          fi
-          echo "CRATE_VERSION=$CARGO_TOML_VERSION" >> $GITHUB_ENV
+          git push origin main --follow-tags
 
       - name: Build binary
         run: cargo build --release --target ${{ matrix.target }} -p http-server
@@ -120,7 +111,7 @@ jobs:
       - name: Package binary
         run: |
           # Create binary name with version and target
-          BINARY_NAME="http-server-v${{ env.CRATE_VERSION }}-${{ matrix.name }}"
+          BINARY_NAME="http-server-${{ env.CRATE_VERSION }}-${{ matrix.name }}"
 
           # Copy and rename binary
           if [ "${{ matrix.os }}" == "ubuntu-latest" ] || [ "${{ matrix.os }}" == "macos-latest" ]; then
@@ -157,30 +148,16 @@ jobs:
         run: |
           cargo binstall -y --force cargo-edit
 
-      - id: cargo-set-version
-        name: Set Version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            cargo set-version -p http-server --bump ${{ inputs.version }}
-          else
-            # For push events, add pre-release suffix
-            current_version=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml)
-            pre_version="${current_version}-pre.$(date +%Y%m%d%H%M%S)"
-            cargo set-version -p http-server $pre_version
-          fi
-
-      - name: Set Crate Version as Environment Variable
-        run: |
-          CARGO_TOML_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' ./src/http-server/Cargo.toml)
-          echo "CRATE_VERSION=$CARGO_TOML_VERSION" >> $GITHUB_ENV
-
-      - name: Create Commit
-        if: github.event_name == 'workflow_dispatch'
+      - name: Retrieve Version
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .
-          git commit -m "chore: bump version to v$CRATE_VERSION"
+          cd ./src/http-server
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
+          else
+            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v pre.$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+          fi
           git push origin main --follow-tags
 
       - name: Login to Crates.io
@@ -211,8 +188,8 @@ jobs:
           fi
 
           # Create the release
-          gh release create "v${{ env.CRATE_VERSION }}" \
-            --title "Release v${{ env.CRATE_VERSION }}" \
+          gh release create "${{ env.CRATE_VERSION }}" \
+            --title "Release ${{ env.CRATE_VERSION }}" \
             --generate-notes \
             $IS_PRERELEASE
 
@@ -222,7 +199,7 @@ jobs:
               for file in "$artifact_dir"*.tar.gz; do
                 if [ -f "$file" ]; then
                   echo "Uploading $(basename "$file")"
-                  gh release upload "v${{ env.CRATE_VERSION }}" "$file"
+                  gh release upload "${{ env.CRATE_VERSION }}" "$file"
                 fi
               done
             fi
