@@ -76,7 +76,9 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: |
+            wasm32-unknown-unknown
+            ${{ matrix.target }}
 
       - name: Install Linker for ARM64 Linux GNU
         if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
@@ -139,6 +141,10 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: |
+            wasm32-unknown-unknown
+            ${{ matrix.target }}
 
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
