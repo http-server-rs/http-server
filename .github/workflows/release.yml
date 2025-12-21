@@ -151,7 +151,7 @@ jobs:
 
       - name: Install Rust Binaries
         run: |
-          cargo binstall -y --force cargo-edit
+          cargo binstall -y --force cargo-tag
 
       - name: Commit Version Bump
         run: |
