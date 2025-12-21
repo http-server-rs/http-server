@@ -163,7 +163,6 @@ jobs:
           else
             echo "CRATE_VERSION=$(cargo tag -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
           fi
-          git push origin main --follow-tags
 
       - name: Login to Crates.io
         if: github.event_name == 'workflow_dispatch'
