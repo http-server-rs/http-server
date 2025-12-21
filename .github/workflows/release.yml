@@ -97,8 +97,6 @@ jobs:
 
       - name: Retrieve Version
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "CRATE_VERSION=$(cargo tag --dry-run -p=v ${{ inputs.version }})" >> $GITHUB_ENV
