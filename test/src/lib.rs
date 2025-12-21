@@ -8,8 +8,8 @@ use reqwest::{Method, Url};
 use wait_on::{WaitOptions, Waitable, resource::http::HttpWaiter};
 
 pub fn release_binary_path() -> Result<String> {
-    let path = var("CARGO_TARGET_DIR")?;
-    Ok(format!("{path}/release/http-server"))
+    let path = var("TARGET")?;
+    Ok(format!("../target/{path}/release/http-server"))
 }
 
 pub async fn wait_on_http_server(port: u16) -> Result<()> {

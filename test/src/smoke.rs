@@ -6,7 +6,7 @@ use crate::{release_binary_path, wait_on_http_server};
 
 #[tokio::test]
 async fn runs_without_panicking() -> Result<()> {
-    let http_server = Process::spawn_with_args(release_binary_path()?, ["start".into()])?;
+    let http_server = Process::spawn_with_args(release_binary_path()?, ["start"])?;
     wait_on_http_server(7878).await?;
     http_server.kill()?;
 
@@ -15,10 +15,8 @@ async fn runs_without_panicking() -> Result<()> {
 
 #[tokio::test]
 async fn returns_json_from_api_index() -> Result<()> {
-    let http_server = Process::spawn_with_args(
-        release_binary_path()?,
-        ["start".into(), "--port".into(), "7879".into()],
-    )?;
+    let http_server =
+        Process::spawn_with_args(release_binary_path()?, ["start", "--port", "7879"])?;
     wait_on_http_server(7879).await?;
 
     let res = get("http://127.0.0.1:7879/api/v1")
