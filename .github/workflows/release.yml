@@ -101,9 +101,9 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag --dry-run -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
-            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag --dry-run -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
           fi
 
       - name: Build binary
@@ -159,9 +159,9 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
-            echo "CRATE_VERSION=$(cargo tag --no-commit --no-tag -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
           fi
           git push origin main --follow-tags
 
