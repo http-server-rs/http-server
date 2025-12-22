@@ -1,6 +1,6 @@
 [package]
 name = "http-server"
-version = "1.0.0-pre.20251222213010"
+version = "1.0.0-pre.20251222225846"
 authors = ["Leo Borai <estebanborai@gmail.com>"]
 edition = "2021"
 description = "Simple and configurable command-line HTTP server"
