@@ -14,7 +14,8 @@ on:
   pull_request:
     branches:
       - main
-    types: [closed]
+    types:
+      - closed
 
 permissions:
   contents: write
@@ -25,7 +26,6 @@ jobs:
   publish-dry-run:
     name: "Runs cargo publish --dry-run"
     runs-on: ubuntu-latest
-    if: ${{ always() && (github.event.pull_request.merged || github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
