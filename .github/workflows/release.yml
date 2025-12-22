@@ -188,7 +188,6 @@ jobs:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Publish crate
-        if: github.event_name == 'workflow_dispatch'
         run: |
           cargo package --list --allow-dirty
           cargo publish -p http-server --allow-dirty
