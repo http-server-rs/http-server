@@ -19,7 +19,8 @@
 
 ## Development
 
-The source code in `main` belongs to the code for the version `1.0.0`.
+> [!NOTE]
+> The source code in `main` belongs to the code for the version `1.0.0`.
 
 ### Release Build
 
