@@ -11,9 +11,10 @@ on:
           - patch
           - minor
           - major
-  push:
+  pull_request:
     branches:
       - main
+    types: [closed]
 
 permissions:
   contents: write
@@ -24,6 +25,7 @@ jobs:
   publish-dry-run:
     name: "Runs cargo publish --dry-run"
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
