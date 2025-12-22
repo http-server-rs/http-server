@@ -58,7 +58,7 @@ jobs:
 
   build-binaries:
     name: Build binaries
-    if: always() && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && needs.publish-dry-run.result == 'success'))
+    if: always() && (if: github.event.pull_request.merged || (github.event_name == 'workflow_dispatch' && needs.publish-dry-run.result == 'success'))
     strategy:
       matrix:
         include:
