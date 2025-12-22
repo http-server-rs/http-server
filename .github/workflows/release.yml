@@ -203,7 +203,7 @@ jobs:
         run: |
           # Determine if this is a pre-release
           IS_PRERELEASE=""
-          if [ "${{ github.event_name }}" == "push" ]; then
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             IS_PRERELEASE="--prerelease"
           fi
 
