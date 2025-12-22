@@ -23,6 +23,9 @@ pub struct StartOpt {
     /// Enable CORS with a permissive policy
     #[clap(long, default_value = "false")]
     pub cors: bool,
+    /// Use widely supported File Explorer UI
+    #[clap(long, default_value = "false")]
+    pub legacy_ui: bool,
 }
 
 impl From<&StartOpt> for Config {
