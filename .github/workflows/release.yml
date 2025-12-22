@@ -26,12 +26,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.HTTP_SERVER_AUTOMATION }}
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
@@ -71,7 +75,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.HTTP_SERVER_AUTOMATION }}
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -79,6 +85,9 @@ jobs:
           targets: |
             wasm32-unknown-unknown
             ${{ matrix.target }}
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Install Linker for ARM64 Linux GNU
         if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
@@ -137,7 +146,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.HTTP_SERVER_AUTOMATION }}
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -145,6 +156,9 @@ jobs:
           targets: |
             wasm32-unknown-unknown
             ${{ matrix.target }}
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup Cargo Binstall
         uses: cargo-bins/cargo-binstall@main
