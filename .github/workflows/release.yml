@@ -182,7 +182,6 @@ jobs:
           git push origin main --follow-tags
 
       - name: Login to Crates.io
-        if: github.event_name == 'workflow_dispatch'
         run: cargo login ${CRATES_IO_TOKEN}
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
