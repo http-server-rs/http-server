@@ -106,6 +106,9 @@ jobs:
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
+      - name: Retrieve Git Commit SHA
+        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
+
       - name: Retrieve Version
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -114,7 +117,7 @@ jobs:
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "CRATE_VERSION=$(cargo tag --no-tag --no-commit -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
-            echo "CRATE_VERSION=$(cargo tag --no-tag --no-commit -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag --no-tag --no-commit -p=v prerelease pre.$GIT_COMMIT_SHA7)" >> $GITHUB_ENV
           fi
 
       - name: Build binary
@@ -166,8 +169,10 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install Rust Binaries
-        run: |
-          cargo binstall -y --force cargo-tag
+        run: cargo binstall -y --force cargo-tag
+      
+      - name: Retrieve Git Commit SHA
+        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
 
       - name: Commit Version Bump
         run: |
@@ -177,7 +182,7 @@ jobs:
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "CRATE_VERSION=$(cargo tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
-            echo "CRATE_VERSION=$(cargo tag -p=v prerelease pre.$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
+            echo "CRATE_VERSION=$(cargo tag -p=v prerelease pre.$GIT_COMMIT_SHA7)" >> $GITHUB_ENV
           fi
           git push origin main --follow-tags
 
@@ -185,6 +190,11 @@ jobs:
         run: cargo login ${CRATES_IO_TOKEN}
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force leptosfmt
+          cargo binstall -y --force trunk
 
       - name: Prep Assets and Binary
         run: make release
