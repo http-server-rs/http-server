@@ -186,6 +186,12 @@ jobs:
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
+      - name: Install Rust Binaries
+        run: |
+          cargo binstall -y --force cargo-tag
+          cargo binstall -y --force leptosfmt
+          cargo binstall -y --force trunk
+
       - name: Prep Assets and Binary
         run: make release
 
