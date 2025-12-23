@@ -107,7 +107,7 @@ jobs:
           cargo binstall -y --force trunk
 
       - name: Retrieve Git Commit SHA
-        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
+        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
       - name: Retrieve Version
         run: |
@@ -172,7 +172,7 @@ jobs:
         run: cargo binstall -y --force cargo-tag
       
       - name: Retrieve Git Commit SHA
-        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
+        run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
       - name: Commit Version Bump
         run: |
