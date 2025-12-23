@@ -186,6 +186,9 @@ jobs:
         env:
           CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
+      - name: Prep Assets and Binary
+        run: make release
+
       - name: Publish crate
         run: |
           cargo package --list --allow-dirty
