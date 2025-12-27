@@ -4,15 +4,17 @@ mod http_utils;
 mod query_params;
 mod scoped_file_system;
 
+use bytes::Bytes;
 use chrono::{DateTime, Local};
 
 pub use file::File;
-use humansize::{format_size, DECIMAL};
+use http_body_util::Full;
+use humansize::{DECIMAL, format_size};
 
 pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 use anyhow::{Context, Result};
-use handlebars::{handlebars_helper, Handlebars};
+use handlebars::{Handlebars, handlebars_helper};
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
 use hyper::Response;
@@ -23,10 +25,11 @@ use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::handler::file_server::utils::url_encode::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
+use crate::handler::file_server::utils::url_encode::{PERCENT_ENCODE_SET, decode_uri, encode_uri};
+use crate::server::HttpResponse;
 
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
-use self::http_utils::{make_http_file_response, CacheControlDirective};
+use self::http_utils::{CacheControlDirective, make_http_file_response};
 use self::query_params::{QueryParams, SortBy};
 
 /// Explorer's Handlebars template filename
@@ -136,7 +139,7 @@ impl<'a> FileServer {
     ///
     /// If the matched path resolves to a file, attempts to render it if the
     /// MIME type is supported, otherwise returns the binary (downloadable file)
-    pub async fn resolve(&self, req_path: String) -> Result<Response<Body>> {
+    pub async fn resolve(&self, req_path: String) -> Result<HttpResponse> {
         let (path, query_params) = FileServer::parse_path(req_path.as_str())?;
 
         match self.scoped_file_system.resolve(path).await {
@@ -202,12 +205,12 @@ impl<'a> FileServer {
                 let response = hyper::Response::builder()
                     .status(status)
                     .header(http::header::CONTENT_TYPE, "text/html")
-                    .body(hyper::Body::from(
+                    .body(Full::new(Bytes::from(
                         handlebars::Handlebars::new().render_template(
                             include_str!("./template/error.hbs"),
                             &serde_json::json!({"error": err.to_string(), "code": code}),
                         )?,
-                    ))?;
+                    )))?;
 
                 Ok(response)
             }
@@ -221,7 +224,7 @@ impl<'a> FileServer {
         &self,
         path: PathBuf,
         query_params: Option<QueryParams>,
-    ) -> Result<Response<Body>> {
+    ) -> Result<HttpResponse> {
         let directory_index =
             FileServer::index_directory(self.config.root_dir.clone(), path, query_params)?;
         let html = self
@@ -229,7 +232,7 @@ impl<'a> FileServer {
             .render(EXPLORER_TEMPLATE, &directory_index)
             .unwrap();
 
-        let body = Body::from(html);
+        let body = Full::new(Bytes::from(html.as_bytes().to_vec()));
 
         Ok(HttpResponseBuilder::new()
             .header(http::header::CONTENT_TYPE, "text/html")
