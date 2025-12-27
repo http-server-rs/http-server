@@ -2,12 +2,15 @@ mod service;
 mod utils;
 
 use anyhow::Result;
+use async_trait::async_trait;
 use bytes::Bytes;
 use http::{Method, Response, StatusCode};
 use http_body_util::Full;
 
-use crate::handler::file_server::service::FileServerConfig;
+use crate::handler::Handler;
 use crate::server::{HttpRequest, HttpResponse};
+
+pub use crate::handler::file_server::service::FileServerConfig;
 
 use self::service::FileServer as FileServerService;
 
@@ -21,8 +24,11 @@ impl FileServer {
             file_service: FileServerService::new(config),
         }
     }
+}
 
-    pub async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
+#[async_trait]
+impl Handler for FileServer {
+    async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
         let (parts, _) = req.into_parts();
 
         if parts.uri.path().starts_with("/api/v1") {

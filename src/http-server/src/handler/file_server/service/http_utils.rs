@@ -1,28 +1,19 @@
-use std::mem::MaybeUninit;
-use std::pin::Pin;
-use std::task::{self, Poll};
+use std::fmt::Display;
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, Utc};
-use futures::Stream;
 use http::response::Builder as HttpResponseBuilder;
 use http_body_util::Full;
 use hyper::body::Bytes;
-use tokio::io::{AsyncRead, ReadBuf};
 
 use crate::server::HttpResponse;
 
 use super::file::File;
 
-const FILE_BUFFER_SIZE: usize = 8 * 1024;
-
-pub type FileBuffer = Box<[MaybeUninit<u8>; FILE_BUFFER_SIZE]>;
-
 /// HTTP Response `Cache-Control` directive
 ///
 /// Allow dead code until we have support for cache control configuration
 #[allow(dead_code)]
-
 pub enum CacheControlDirective {
     /// Cache-Control: must-revalidate
     MustRevalidate,
@@ -44,25 +35,25 @@ pub enum CacheControlDirective {
     SMaxAge(u64),
 }
 
-impl ToString for CacheControlDirective {
-    fn to_string(&self) -> String {
+impl Display for CacheControlDirective {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            Self::MustRevalidate => String::from("must-revalidate"),
-            Self::NoCache => String::from("no-cache"),
-            Self::NoStore => String::from("no-store"),
-            Self::NoTransform => String::from("no-transform"),
-            Self::Public => String::from("public"),
-            Self::Private => String::from("private"),
-            Self::ProxyRavalidate => String::from("proxy-revalidate"),
-            Self::MaxAge(age) => format!("max-age={}", age),
-            Self::SMaxAge(age) => format!("s-maxage={}", age),
+            Self::MustRevalidate => write!(f, "must-revalidate"),
+            Self::NoCache => write!(f, "no-cache"),
+            Self::NoStore => write!(f, "no-store"),
+            Self::NoTransform => write!(f, "no-transform"),
+            Self::Public => write!(f, "public"),
+            Self::Private => write!(f, "private"),
+            Self::ProxyRavalidate => write!(f, "proxy-revalidate"),
+            Self::MaxAge(age) => write!(f, "max-age={}", age),
+            Self::SMaxAge(age) => write!(f, "s-maxage={}", age),
         }
     }
 }
 
+#[derive(Debug)]
 pub struct ResponseHeaders {
     cache_control: String,
-    content_length: u64,
     content_type: String,
     etag: String,
     last_modified: String,
@@ -77,15 +68,10 @@ impl ResponseHeaders {
 
         Ok(ResponseHeaders {
             cache_control: cache_control_directive.to_string(),
-            content_length: ResponseHeaders::content_length(file),
             content_type: ResponseHeaders::content_type(file),
             etag: ResponseHeaders::etag(file, &last_modified),
             last_modified: ResponseHeaders::last_modified(&last_modified),
         })
-    }
-
-    fn content_length(file: &File) -> u64 {
-        file.size()
     }
 
     fn content_type(file: &File) -> String {
@@ -112,52 +98,20 @@ impl ResponseHeaders {
 }
 
 pub async fn make_http_file_response(
-    file: File,
+    mut file: File,
     cache_control_directive: CacheControlDirective,
 ) -> Result<HttpResponse> {
     let headers = ResponseHeaders::new(&file, cache_control_directive)?;
     let builder = HttpResponseBuilder::new()
-        .header(http::header::CONTENT_LENGTH, headers.content_length)
         .header(http::header::CACHE_CONTROL, headers.cache_control)
         .header(http::header::CONTENT_TYPE, headers.content_type)
         .header(http::header::ETAG, headers.etag)
         .header(http::header::LAST_MODIFIED, headers.last_modified);
 
-    let body = Full::new(Bytes::from(file.bytes()));
+    let body = Full::new(Bytes::from(file.bytes().await?));
     let response = builder
         .body(body)
         .context("Failed to build HTTP File Response")?;
 
     Ok(response)
-}
-
-pub struct ByteStream {
-    file: tokio::fs::File,
-    buffer: FileBuffer,
-}
-
-impl Stream for ByteStream {
-    type Item = Result<Bytes>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Option<Self::Item>> {
-        let ByteStream {
-            ref mut file,
-            ref mut buffer,
-        } = *self;
-        let mut read_buffer = ReadBuf::uninit(&mut buffer[..]);
-
-        match Pin::new(file).poll_read(cx, &mut read_buffer) {
-            Poll::Ready(Ok(())) => {
-                let filled = read_buffer.filled();
-
-                if filled.is_empty() {
-                    Poll::Ready(None)
-                } else {
-                    Poll::Ready(Some(Ok(Bytes::copy_from_slice(filled))))
-                }
-            }
-            Poll::Ready(Err(error)) => Poll::Ready(Some(Err(error.into()))),
-            Poll::Pending => Poll::Pending,
-        }
-    }
 }

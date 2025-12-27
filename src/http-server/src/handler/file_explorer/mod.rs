@@ -7,6 +7,7 @@ use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context, Result};
+use async_trait::async_trait;
 use bytes::Bytes;
 use http::{HeaderValue, Method, Response, StatusCode, Uri, header::CONTENT_TYPE, request::Parts};
 use http_body_util::{BodyExt, Full};
@@ -16,6 +17,7 @@ use proto::{DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use rust_embed::Embed;
 use tokio::io::AsyncWriteExt;
 
+use crate::handler::Handler;
 use crate::server::{HttpRequest, HttpResponse};
 
 use self::proto::BreadcrumbItem;
@@ -36,41 +38,6 @@ impl FileExplorer {
             file_explorer: core::FileExplorer::new(path.clone()),
             path,
         }
-    }
-
-    pub async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
-        let (parts, body) = req.into_parts();
-        let body = body.collect().await.unwrap().to_bytes();
-
-        if parts.uri.path().starts_with("/api/v1") {
-            return self.handle_api(parts, body).await;
-        }
-
-        let path = parts.uri.path();
-        let path = path.strip_prefix('/').unwrap_or(path);
-
-        if let Some(file) = FileExplorerAssets::get(path) {
-            let content_type = mime_guess::from_path(path).first_or_octet_stream();
-            let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
-            let body = Full::new(Bytes::from(file.data.to_vec()));
-            let mut response = Response::new(body);
-            let mut headers = response.headers().clone();
-
-            headers.append(CONTENT_TYPE, content_type);
-            *response.headers_mut() = headers;
-
-            return Ok(response);
-        }
-
-        let index = FileExplorerAssets::get("index.html").unwrap();
-        let body = Full::new(Bytes::from(index.data.to_vec()));
-        let mut response = Response::new(body);
-        let mut headers = response.headers().clone();
-
-        headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
-        *response.headers_mut() = headers;
-
-        Ok(response)
     }
 
     async fn handle_api(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
@@ -326,5 +293,43 @@ impl FileExplorer {
 
     async fn marshall_directory_index(&self, path: PathBuf) -> Result<DirectoryIndex> {
         Self::index_directory(self.path.clone(), path)
+    }
+}
+
+#[async_trait]
+impl Handler for FileExplorer {
+    async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
+        let (parts, body) = req.into_parts();
+        let body = body.collect().await.unwrap().to_bytes();
+
+        if parts.uri.path().starts_with("/api/v1") {
+            return self.handle_api(parts, body).await;
+        }
+
+        let path = parts.uri.path();
+        let path = path.strip_prefix('/').unwrap_or(path);
+
+        if let Some(file) = FileExplorerAssets::get(path) {
+            let content_type = mime_guess::from_path(path).first_or_octet_stream();
+            let content_type = HeaderValue::from_str(content_type.as_ref()).unwrap();
+            let body = Full::new(Bytes::from(file.data.to_vec()));
+            let mut response = Response::new(body);
+            let mut headers = response.headers().clone();
+
+            headers.append(CONTENT_TYPE, content_type);
+            *response.headers_mut() = headers;
+
+            return Ok(response);
+        }
+
+        let index = FileExplorerAssets::get("index.html").unwrap();
+        let body = Full::new(Bytes::from(index.data.to_vec()));
+        let mut response = Response::new(body);
+        let mut headers = response.headers().clone();
+
+        headers.append(CONTENT_TYPE, "text/html".try_into().unwrap());
+        *response.headers_mut() = headers;
+
+        Ok(response)
     }
 }

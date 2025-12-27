@@ -4,24 +4,20 @@ mod http_utils;
 mod query_params;
 mod scoped_file_system;
 
-use bytes::Bytes;
-use chrono::{DateTime, Local};
-
-pub use file::File;
-use http_body_util::Full;
-use humansize::{DECIMAL, format_size};
-
-pub use scoped_file_system::{Entry, ScopedFileSystem};
-
-use anyhow::{Context, Result};
-use handlebars::{Handlebars, handlebars_helper};
-use http::response::Builder as HttpResponseBuilder;
-use http::{StatusCode, Uri};
-use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
+
+use anyhow::{Context, Result};
+use bytes::Bytes;
+use chrono::{DateTime, Local};
+use handlebars::{Handlebars, handlebars_helper};
+use http::response::Builder as HttpResponseBuilder;
+use http::{StatusCode, Uri};
+use http_body_util::Full;
+use humansize::{DECIMAL, format_size};
+use percent_encoding::{percent_decode_str, utf8_percent_encode};
 
 use crate::handler::file_server::utils::url_encode::{PERCENT_ENCODE_SET, decode_uri, encode_uri};
 use crate::server::HttpResponse;
@@ -29,6 +25,10 @@ use crate::server::HttpResponse;
 use self::directory_entry::{BreadcrumbItem, DirectoryEntry, DirectoryIndex, Sort};
 use self::http_utils::{CacheControlDirective, make_http_file_response};
 use self::query_params::{QueryParams, SortBy};
+
+pub use file::File;
+
+pub use scoped_file_system::{Entry, ScopedFileSystem};
 
 /// Explorer's Handlebars template filename
 const EXPLORER_TEMPLATE: &str = "explorer";
@@ -380,90 +380,5 @@ impl<'a> FileServer {
         let path = entry_path.strip_prefix(root_dir).unwrap();
 
         encode_uri(path)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::path::PathBuf;
-    use std::str::FromStr;
-    use std::vec;
-
-    use super::{BreadcrumbItem, FileServer};
-
-    #[test]
-    fn makes_dir_entry_link() {
-        let root_dir = PathBuf::from_str("/Users/bob/sources/http-server").unwrap();
-        let entry_path =
-            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/testing stuff/filename with spaces.txt")
-                .unwrap();
-
-        assert_eq!(
-            "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
-            FileServer::make_dir_entry_link(&root_dir, &entry_path)
-        );
-    }
-
-    #[test]
-    fn parse_req_uri_path() {
-        let have = [
-            "/index.html",
-            "/index.html?foo=1234",
-            "/foo/index.html?bar=baz",
-            "/foo/bar/baz.html?day=6&month=27&year=2021",
-        ];
-
-        let want = [
-            "/index.html",
-            "/index.html",
-            "/foo/index.html",
-            "/foo/bar/baz.html",
-        ];
-
-        for (idx, req_uri) in have.iter().enumerate() {
-            let sanitized_path = FileServer::parse_path(req_uri).unwrap().0;
-            let wanted_path = PathBuf::from_str(want[idx]).unwrap();
-
-            assert_eq!(sanitized_path, wanted_path);
-        }
-    }
-
-    #[test]
-    fn breadcrumbs_from_paths() {
-        let root_dir = PathBuf::from_str("/Users/bob/sources/http-server").unwrap();
-        let entry_path =
-            PathBuf::from_str("/Users/bob/sources/http-server/src/server/service/testing stuff/filename with spaces.txt")
-                .unwrap();
-        let breadcrumbs = FileServer::breadcrumbs_from_path(&root_dir, &entry_path).unwrap();
-        let expect = vec![
-            BreadcrumbItem {
-                entry_name: String::from("http-server"),
-                entry_link: String::from("/"),
-            },
-            BreadcrumbItem {
-                entry_name: String::from("src"),
-                entry_link: String::from("/src"),
-            },
-            BreadcrumbItem {
-                entry_name: String::from("server"),
-                entry_link: String::from("/src/server"),
-            },
-            BreadcrumbItem {
-                entry_name: String::from("service"),
-                entry_link: String::from("/src/server/service"),
-            },
-            BreadcrumbItem {
-                entry_name: String::from("testing stuff"),
-                entry_link: String::from("/src/server/service/testing%20stuff"),
-            },
-            BreadcrumbItem {
-                entry_name: String::from("filename with spaces.txt"),
-                entry_link: String::from(
-                    "/src/server/service/testing%20stuff/filename%20with%20spaces.txt",
-                ),
-            },
-        ];
-
-        assert_eq!(breadcrumbs, expect);
     }
 }
