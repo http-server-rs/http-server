@@ -1,4 +1,4 @@
-mod start;
+pub mod start;
 
 use clap::Parser;
 
