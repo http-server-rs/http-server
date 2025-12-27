@@ -34,6 +34,7 @@ impl From<&StartOpt> for Config {
             host: val.host,
             port: val.port,
             cors: val.cors,
+            legacy_ui: val.legacy_ui,
         }
     }
 }

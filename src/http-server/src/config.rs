@@ -11,6 +11,8 @@ pub struct Config {
     pub port: u16,
     /// Enable CORS with a permissive policy.
     pub cors: bool,
+    /// Enable Legacy File Explorer UI.
+    pub legacy_ui: bool,
 }
 
 #[derive(Clone, Debug)]
