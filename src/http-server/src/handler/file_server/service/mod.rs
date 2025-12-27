@@ -17,8 +17,6 @@ use anyhow::{Context, Result};
 use handlebars::{Handlebars, handlebars_helper};
 use http::response::Builder as HttpResponseBuilder;
 use http::{StatusCode, Uri};
-use hyper::Response;
-use hyper::body::Body;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use std::fs::read_dir;
 use std::path::{Component, Path, PathBuf};
@@ -36,20 +34,20 @@ use self::query_params::{QueryParams, SortBy};
 const EXPLORER_TEMPLATE: &str = "explorer";
 
 pub struct FileServerConfig {
-    index: bool,
-    root_dir: PathBuf,
-    spa: bool,
+    pub index: bool,
+    pub root_dir: PathBuf,
+    pub spa: bool,
 }
 
 pub struct FileServer {
     handlebars: Arc<Handlebars<'static>>,
     scoped_file_system: ScopedFileSystem,
-    config: Arc<FileServerConfig>,
+    config: FileServerConfig,
 }
 
 impl<'a> FileServer {
     /// Creates a new instance of the `FileExplorer` with the provided `root_dir`
-    pub fn new(config: Arc<FileServerConfig>) -> Self {
+    pub fn new(config: FileServerConfig) -> Self {
         let handlebars = FileServer::make_handlebars_engine();
         let scoped_file_system = ScopedFileSystem::new(config.root_dir.clone()).unwrap();
 
@@ -259,7 +257,7 @@ impl<'a> FileServer {
     fn breadcrumbs_from_path(root_dir: &Path, path: &Path) -> Result<Vec<BreadcrumbItem>> {
         let root_dir_name = root_dir
             .components()
-            .last()
+            .next_back()
             .unwrap()
             .as_os_str()
             .to_str()
@@ -332,34 +330,30 @@ impl<'a> FileServer {
             });
         }
 
-        if let Some(query_params) = query_params {
-            if let Some(sort_by) = query_params.sort_by {
-                match sort_by {
-                    SortBy::Name => {
-                        directory_entries.sort_by_key(|entry| entry.display_name.clone());
-                    }
-                    SortBy::Size => directory_entries.sort_by_key(|entry| entry.size_bytes),
-                    SortBy::DateCreated => {
-                        directory_entries.sort_by_key(|entry| entry.date_created)
-                    }
-                    SortBy::DateModified => {
-                        directory_entries.sort_by_key(|entry| entry.date_modified)
-                    }
-                };
+        if let Some(query_params) = query_params
+            && let Some(sort_by) = query_params.sort_by
+        {
+            match sort_by {
+                SortBy::Name => {
+                    directory_entries.sort_by_key(|entry| entry.display_name.clone());
+                }
+                SortBy::Size => directory_entries.sort_by_key(|entry| entry.size_bytes),
+                SortBy::DateCreated => directory_entries.sort_by_key(|entry| entry.date_created),
+                SortBy::DateModified => directory_entries.sort_by_key(|entry| entry.date_modified),
+            };
 
-                let sort_enum = match sort_by {
-                    SortBy::Name => Sort::Name,
-                    SortBy::Size => Sort::Size,
-                    SortBy::DateCreated => Sort::DateCreated,
-                    SortBy::DateModified => Sort::DateModified,
-                };
+            let sort_enum = match sort_by {
+                SortBy::Name => Sort::Name,
+                SortBy::Size => Sort::Size,
+                SortBy::DateCreated => Sort::DateCreated,
+                SortBy::DateModified => Sort::DateModified,
+            };
 
-                return Ok(DirectoryIndex {
-                    entries: directory_entries,
-                    breadcrumbs,
-                    sort: sort_enum,
-                });
-            }
+            return Ok(DirectoryIndex {
+                entries: directory_entries,
+                breadcrumbs,
+                sort: sort_enum,
+            });
         }
 
         directory_entries.sort();

@@ -7,7 +7,6 @@ use chrono::{DateTime, Local, Utc};
 use futures::Stream;
 use http::response::Builder as HttpResponseBuilder;
 use http_body_util::Full;
-use hyper::body::Body;
 use hyper::body::Bytes;
 use tokio::io::{AsyncRead, ReadBuf};
 

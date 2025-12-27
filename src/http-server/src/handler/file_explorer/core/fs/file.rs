@@ -2,7 +2,7 @@ use std::fs::Metadata;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use mime_guess::{from_path, Mime};
+use mime_guess::{Mime, from_path};
 use tokio::io::AsyncReadExt;
 
 /// Wrapper around `tokio::fs::File` built from a OS ScopedFileSystem file

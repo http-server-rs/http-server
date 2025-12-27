@@ -8,7 +8,7 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
 use futures::Stream;
 use hyper::body::Bytes;
-use mime_guess::{from_path, Mime};
+use mime_guess::{Mime, from_path};
 use tokio::io::{AsyncRead, ReadBuf};
 
 pub const FILE_BUFFER_SIZE: usize = 8 * 1024;

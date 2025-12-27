@@ -38,10 +38,10 @@ impl Server {
 
         println!("Listening on http://{addr}");
 
-        if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4)) {
-            if let Ok(local_ip) = local_ip() {
-                println!("Local Network on http://{}:{}", local_ip, self.config.port);
-            }
+        if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4))
+            && let Ok(local_ip) = local_ip()
+        {
+            println!("Local Network on http://{}:{}", local_ip, self.config.port);
         }
 
         let file_explorer = FileExplorer::new(PathBuf::from_str("./").unwrap());

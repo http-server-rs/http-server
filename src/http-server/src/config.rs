@@ -1,7 +1,7 @@
 use std::net::IpAddr;
 use std::str::FromStr;
 
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -28,7 +28,9 @@ impl FromStr for BasicAuth {
         let parts = s.split(":").collect::<Vec<&str>>();
 
         if parts.len() != 2 {
-            bail!("Expected a string with a colon to separe username and password for Basic Authentication.");
+            bail!(
+                "Expected a string with a colon to separe username and password for Basic Authentication."
+            );
         }
 
         Ok(BasicAuth {

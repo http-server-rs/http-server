@@ -8,7 +8,7 @@ use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use http::{header::CONTENT_TYPE, request::Parts, HeaderValue, Method, Response, StatusCode, Uri};
+use http::{HeaderValue, Method, Response, StatusCode, Uri, header::CONTENT_TYPE, request::Parts};
 use http_body_util::{BodyExt, Full};
 use multer::Multipart;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
@@ -19,7 +19,7 @@ use tokio::io::AsyncWriteExt;
 use crate::server::{HttpRequest, HttpResponse};
 
 use self::proto::BreadcrumbItem;
-use self::utils::{decode_uri, encode_uri, PERCENT_ENCODE_SET};
+use self::utils::{PERCENT_ENCODE_SET, decode_uri, encode_uri};
 
 #[derive(Embed)]
 #[folder = "./ui"]
