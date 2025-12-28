@@ -1,6 +1,5 @@
-use std::path::{Path, PathBuf};
-
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode, utf8_percent_encode};
+use std::path::{Path, PathBuf};
 
 pub const PERCENT_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'-')

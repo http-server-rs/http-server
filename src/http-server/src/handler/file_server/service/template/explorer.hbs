@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>File Explorer</title>
+  <style>
+    :root {
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      --font-weight: 300;
+      --min-width: 700px;
+    }
+
+    body {
+      font-family: var(--font);
+      margin: 0;
+      padding: 0;
+    }
+
+    #explorer {
+      box-sizing: border-box;
+      border-collapse: collapse;
+      border: 1px solid #DDDDDD;
+      border-radius: .5rem;
+      font-family: var(--font);
+      font-weight: var(--font-weight);
+      margin: 0 auto;
+      max-height: calc(100vh - 3.3rem);
+      min-width: var(--min-width);
+      overflow-y: auto;
+      padding: 0;
+      width: 95%;
+    }
+
+    #explorer .hrow {
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #DDDDDD;
+    }
+
+    #explorer .hrow .hcol {
+      border-right: 1px solid #DDDDDD;
+      box-sizing: border-box;
+      color: #000000;
+      padding: .3rem;
+      text-decoration: none;
+    }
+
+    #explorer .brow, .bcol {
+      box-sizing: border-box;
+      padding: .15rem 0;
+    }
+
+    .bcol {
+      overflow: hidden;
+    }
+
+    #explorer .hrow .hcol:first-child,
+    #explorer .hrow .hcol:last-child {
+      border-right: none;
+    }
+
+    #explorer .hcol, #explorer .bcol { display: inline-block; }
+
+    #explorer .hcol:nth-child(1), #explorer .bcol:nth-child(1) {
+      /* Icon Column */
+      width: 1.5rem;
+    }
+
+    #explorer .hcol:nth-child(2), #explorer .bcol:nth-child(2) {
+      /* Name Column */
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 300px;
+    }
+
+    #explorer .hcol:nth-child(3), #explorer .bcol:nth-child(3) {
+      /* Size Column */
+      max-width: 20%;
+      min-width: 150px;
+    }
+
+    #explorer .hcol:nth-child(4), #explorer .bcol:nth-child(4) {
+      /* Date created Column */
+      max-width: 20%;
+      min-width: 200px;
+    }
+
+    #explorer .hcol:nth-child(5), #explorer .bcol:nth-child(5) {
+      /* Date modified Column */
+      max-width: 20%;
+      min-width: 200px;
+    }
+
+    #explorer .icon-col { width: 1rem; }
+
+    #explorer .entry-link {
+      color: #000000;
+      display: inline-block;
+      text-decoration: none;
+      width: 100%;
+    }
+
+    #explorer .brow { cursor: pointer; }
+
+    #explorer .brow:nth-child(even) { background-color: #FAFAFA; }
+
+    #explorer .brow:hover { background-color: #EEEEEE; }
+
+    #explorer .hcol { font-weight: var(--font-weight); }
+
+    #explorer .hcol, #explorer .bcol {
+      box-sizing: border-box;
+      padding-left: .5rem;
+    }
+
+    #status-bar {
+      align-items: center;
+      background-color: #FFFFFF;
+      bottom: 0;
+      border-top: 1px solid #DDDDDD;
+      display: flex;
+      justify-content: flex-end;
+      height: 1.5rem;
+      position: fixed;
+      min-width: var(--min-width);
+      width: 100%;
+    }
+    #support {
+      border-right: 1px solid #DDDDDD;
+      box-sizing: border-box;
+      display: flex;
+      height: 100%;
+      padding: 0 1rem;
+      margin: 0;
+      list-style-type: none;
+    }
+
+    #support li {
+      align-items: center;
+      border-right: 1px solid #DDDDDD;
+      display: flex;
+      justify-content: center;
+      width: 2rem;
+    }
+
+    #support li:last-child { border-right: none; }
+
+    #breadcrumbs {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      list-style-type: none;
+      margin:0 auto;
+      width: 95%;
+    }
+
+    .breadcrumb-item {
+      padding: .25rem;
+    }
+
+    .breadcrumb-item:first-of-type {
+      padding-left: 0;
+    }
+
+    .breadcrumb-item:last-of-type {
+      padding-right: 0;
+    }
+
+    .breadcrumb-entry-link {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <ul id="breadcrumbs">
+    <li class="breadcrumb-item">
+      <a class="breadcrumb-entry-link" href="/">
+        <span class="breadcrumb-divider">/</span>
+      </a>
+    </li>
+    {{#each breadcrumbs}}
+      <li class="breadcrumb-item">
+        <a class="breadcrumb-entry-link" href={{entry_link}}>
+          {{entry_name}}
+        </a>
+        <span class="breadcrumb-divider">/</span>
+      </li>
+    {{/each}}
+  </ul>
+  <main>
+    <ul id="explorer">
+      <li class="hrow">
+        <span class="hcol icon-col"></span>
+        {{#if (sort_name sort)}}
+          <a class="hcol" href="?sort_by=">Name&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=name">Name</a>
+        {{/if}}
+        {{#if (sort_size sort)}}
+          <a class="hcol" href="?sort_by=">Size&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=size">Size</a>
+        {{/if}}
+        {{#if (sort_date_created sort)}}
+          <a class="hcol" href="?sort_by=">Date created&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=date_created">Date created</a>
+        {{/if}}
+        {{#if (sort_date_modified sort)}}
+          <a class="hcol" href="?sort_by=">Date modified&nbsp;↓</a>
+        {{else}}
+          <a class="hcol" href="?sort_by=date_modified">Date modified</a>
+        {{/if}}
+
+      </li>
+      {{#each entries}}
+      <li class="brow">
+        <a class="entry-link" href={{entry_path}}>
+          <span class="bcol icon-col">
+            {{#if is_dir}}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3h-6.5a.25.25 0 01-.2-.1l-.9-1.2c-.33-.44-.85-.7-1.4-.7h-3.5z"></path></svg>
+            {{else}}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237v8.086A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"></path></svg>
+            {{/if}}
+          </span>
+          <span class="bcol">{{display_name}}</span>
+          <span class="bcol">{{size size_bytes}}</span>
+          <span class="bcol">{{date date_created}}</span>
+          <span class="bcol">{{date date_modified}}</span>
+        </a>
+      </li>
+      {{/each}}
+    </ul>
+    <div id="status-bar">
+      <ul id="support">
+        <li>
+          <a href="https://github.com/EstebanBorai/http-server/issues/new" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"></path></svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/EstebanBorai/http-server/compare" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"></path></svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,7 +1,8 @@
 use std::fs::Metadata;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use chrono::{DateTime, Local};
 use mime_guess::{Mime, from_path};
 use tokio::io::AsyncReadExt;
 
@@ -29,6 +30,16 @@ impl File {
 
     pub fn size(&self) -> u64 {
         self.metadata.len()
+    }
+
+    pub fn last_modified(&self) -> Result<DateTime<Local>> {
+        let modified = self
+            .metadata
+            .modified()
+            .context("Failed to read last modified time for file")?;
+        let modified: DateTime<Local> = modified.into();
+
+        Ok(modified)
     }
 
     pub async fn bytes(&mut self) -> Result<Vec<u8>> {

@@ -6,8 +6,8 @@ pub mod server;
 use anyhow::Result;
 use clap::Parser;
 
-use self::cli::command::Command;
 use self::cli::Cli;
+use self::cli::command::Command;
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt()

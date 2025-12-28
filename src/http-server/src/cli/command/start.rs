@@ -1,5 +1,6 @@
 use std::net::IpAddr;
 use std::process::exit;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -12,6 +13,24 @@ use crate::server::Server;
 
 const THREAD_NAME: &str = "http-server";
 
+#[derive(Clone, Debug, Parser)]
+pub enum Service {
+    FileServer,
+    FileExplorer,
+}
+
+impl FromStr for Service {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s {
+            "file-server" => Ok(Service::FileServer),
+            "file-explorer" => Ok(Service::FileExplorer),
+            _ => Err(format!("Invalid service: {}", s)),
+        }
+    }
+}
+
 #[derive(Debug, Parser)]
 pub struct StartOpt {
     /// Host (IP) to bind the server
@@ -23,6 +42,9 @@ pub struct StartOpt {
     /// Enable CORS with a permissive policy
     #[clap(long, default_value = "false")]
     pub cors: bool,
+    /// Service to run
+    #[clap(long, default_value = "file-explorer")]
+    pub service: Service,
 }
 
 impl From<&StartOpt> for Config {
@@ -31,6 +53,7 @@ impl From<&StartOpt> for Config {
             host: val.host,
             port: val.port,
             cors: val.cors,
+            service: val.service.clone().into(),
         }
     }
 }

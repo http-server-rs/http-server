@@ -15,8 +15,10 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::config::Config;
+use crate::config::{Config, Service};
+use crate::handler::Handler;
 use crate::handler::file_explorer::FileExplorer;
+use crate::handler::file_server::{FileServer, FileServerConfig};
 
 pub type HttpRequest = Request<Incoming>;
 pub type HttpResponse = Response<Full<Bytes>>;
@@ -38,17 +40,30 @@ impl Server {
 
         println!("Listening on http://{addr}");
 
-        if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4)) {
-            if let Ok(local_ip) = local_ip() {
-                println!("Local Network on http://{}:{}", local_ip, self.config.port);
-            }
+        if matches!(addr.ip(), IpAddr::V4(ALL_INTERFACES_IPV4))
+            && let Ok(local_ip) = local_ip()
+        {
+            println!("Local Network on http://{}:{}", local_ip, self.config.port);
         }
 
-        let file_explorer = FileExplorer::new(PathBuf::from_str("./").unwrap());
-        let file_explorer = Arc::new(file_explorer);
+        let root_dir = PathBuf::from_str("./")?;
+        let service: Arc<dyn Handler> = match self.config.service {
+            Service::FileExplorer { .. } => {
+                let file_explorer = FileExplorer::new(root_dir);
+                Arc::new(file_explorer)
+            }
+            Service::FileServer { .. } => {
+                let file_server = FileServer::new(FileServerConfig {
+                    root_dir,
+                    index: false,
+                    spa: false,
+                });
+                Arc::new(file_server)
+            }
+        };
 
         loop {
-            let file_explorer = Arc::clone(&file_explorer);
+            let service: Arc<dyn Handler> = Arc::clone(&service);
             let (stream, _) = listener.accept().await?;
             let io = TokioIo::new(stream);
             let cors = if self.config.cors {
@@ -62,9 +77,8 @@ impl Server {
             };
 
             tokio::spawn(async move {
-                let svc = tower::service_fn(|req: Request<Incoming>| async {
-                    file_explorer.handle(req).await
-                });
+                let svc =
+                    tower::service_fn(|req: Request<Incoming>| async { service.handle(req).await });
 
                 let svc = ServiceBuilder::new().option_layer(cors).service(svc);
 

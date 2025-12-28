@@ -1,15 +1,15 @@
 [package]
 name = "http-server"
-version = "1.0.0-pre.6fa7635"
-authors = ["Leo Borai <estebanborai@gmail.com>"]
-edition = "2021"
-description = "Simple and configurable command-line HTTP server"
-repository = "https://github.com/http-server-rs/http-server"
-categories = ["web-programming", "web-programming::http-server"]
-keywords = ["configurable", "http", "server", "serve", "static"]
-license = "MIT OR Apache-2.0"
-readme = "../../README.md"
-include = ["/ui", "/src/"]
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+documentation.workspace = true
+edition.workspace = true
+keywords.workspace = true
+include.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [[bin]]
 name = "http-server"
@@ -22,8 +22,11 @@ bytes = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 clap = { workspace = true, features = ["env", "derive", "std"] }
 dirs = { workspace = true }
+futures = { workspace = true }
+handlebars = { workspace = true }
 http = { workspace = true }
 http-body-util = { workspace = true }
+humansize = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true, features = ["full"] }
 libloading = { workspace = true }
