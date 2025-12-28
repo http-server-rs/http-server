@@ -113,7 +113,6 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "CRATE_VERSION=$(cargo tag --no-tag --no-commit -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
@@ -170,7 +169,7 @@ jobs:
 
       - name: Install Rust Binaries
         run: cargo binstall -y --force cargo-tag
-      
+
       - name: Retrieve Git Commit SHA
         run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
@@ -178,7 +177,6 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          cd ./src/http-server
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "CRATE_VERSION=$(cargo tag -p=v ${{ inputs.version }})" >> $GITHUB_ENV
           else
