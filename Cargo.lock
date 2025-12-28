@@ -1155,7 +1155,7 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "1.0.0-pre.6fa7635"
+version = "1.0.0-pre.1488578"
 dependencies = [
  "anyhow",
  "async-trait",
