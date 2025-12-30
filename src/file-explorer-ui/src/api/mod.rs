@@ -36,23 +36,14 @@ impl Api {
         let reader = gloo_file::futures::read_as_bytes(&file.into()).await?;
 
         let url = self.base_url.join("api/v1")?;
-        let _response = Client::new()
+
+        Client::new()
             .post(url.as_ref())
             .header("Content-Type", "application/octet-stream")
             .header("X-File-Name", file_name)
             .body(reader)
             .send()
             .await?;
-        // let form_data = FormData::new()
-        //     .map_err(|err| Error::msg(format!("Failed to create FormData: {:?}", err)))?;
-        // form_data
-        //     .append_with_blob("file", &file)
-        //     .map_err(|err| Error::msg(format!("Failed to append file to FormData: {:?}", err)))?;
-
-        // gloo::net::http::Request::post(url.as_ref())
-        //     .body(form_data)?
-        //     .send()
-        //     .await?;
 
         Ok(())
     }
