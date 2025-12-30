@@ -87,22 +87,22 @@ impl FileExplorer {
 
     async fn handle_file_upload(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
         // Extract the `multipart/form-data` boundary from the headers.
-        let boundary = parts
+        let mb_boundary = parts
             .headers
             .get(CONTENT_TYPE)
             .and_then(|ct| ct.to_str().ok())
             .and_then(|ct| multer::parse_boundary(ct).ok());
 
         // Send `BAD_REQUEST` status if the content-type is not multipart/form-data.
-        if boundary.is_none() {
+        let Some(boundary) = mb_boundary else {
             return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Full::from("BAD REQUEST"))
                 .unwrap());
-        }
+        };
 
         // Process the multipart e.g. you can store them in files.
-        if let Err(err) = self.process_multipart(body, boundary.unwrap()).await {
+        if let Err(err) = self.process_multipart(body, boundary).await {
             return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Full::from(format!("INTERNAL SERVER ERROR: {err}")))
@@ -112,38 +112,31 @@ impl FileExplorer {
         Ok(Response::new(Full::from("Success")))
     }
 
-    async fn process_multipart(&self, bytes: Bytes, boundary: String) -> multer::Result<()> {
+    async fn process_multipart(&self, bytes: Bytes, boundary: String) -> Result<()> {
         let cursor = std::io::Cursor::new(bytes);
         let bytes_stream = tokio_util::io::ReaderStream::new(cursor);
         let mut multipart = Multipart::new(bytes_stream, boundary);
 
-        // Iterate over the fields, `next_field` method will return the next field if
-        // available.
         while let Some(mut field) = multipart.next_field().await? {
-            // Get the field name.
             let name = field.name();
-
-            // Get the field's filename if provided in "Content-Disposition" header.
-            let file_name = field.file_name().to_owned().unwrap_or("default.png");
-
-            // Get the "Content-Type" header as `mime::Mime` type.
+            let file_name = field
+                .file_name()
+                .to_owned()
+                .context("No file name available in form file.")?;
             let content_type = field.content_type();
-
-            let mut file = tokio::fs::File::create(file_name).await.unwrap();
+            let mut file = tokio::fs::File::create(file_name)
+                .await
+                .context("Failed to create target file for upload.")?;
 
             println!(
                 "\n\nName: {name:?}, FileName: {file_name:?}, Content-Type: {content_type:?}\n\n"
             );
 
-            // Process the field data chunks e.g. store them in a file.
-            let mut field_bytes_len = 0;
             while let Some(field_chunk) = field.chunk().await? {
-                // Do something with field chunk.
-                field_bytes_len += field_chunk.len();
-                file.write_all(&field_chunk).await.unwrap();
+                file.write_all(&field_chunk)
+                    .await
+                    .context("Failed to write bytes to file")?;
             }
-
-            println!("Field Bytes Length: {field_bytes_len:?}");
         }
 
         Ok(())
