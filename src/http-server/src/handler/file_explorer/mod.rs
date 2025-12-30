@@ -9,13 +9,17 @@ use std::path::{Component, Path, PathBuf};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
+use futures::StreamExt;
+use http::HeaderName;
 use http::{HeaderValue, Method, Response, StatusCode, Uri, header::CONTENT_TYPE, request::Parts};
 use http_body_util::{BodyExt, Full};
-use multer::Multipart;
+use hyper::body::Incoming;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use proto::{DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use rust_embed::Embed;
+use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
 
 use crate::handler::Handler;
 use crate::server::{HttpRequest, HttpResponse};
@@ -23,9 +27,18 @@ use crate::server::{HttpRequest, HttpResponse};
 use self::proto::BreadcrumbItem;
 use self::utils::{PERCENT_ENCODE_SET, decode_uri, encode_uri};
 
+const X_FILE_NAME: &str = "x-file-name";
+const X_FILE_NAME_HTTP_HEADER: HeaderName = HeaderName::from_static(X_FILE_NAME);
+
 #[derive(Embed)]
 #[folder = "./ui"]
 struct FileExplorerAssets;
+
+#[derive(Debug)]
+pub enum UploadFileMessage {
+    Progress(u64),
+    Failed(String),
+}
 
 pub struct FileExplorer {
     file_explorer: core::FileExplorer,
@@ -40,8 +53,8 @@ impl FileExplorer {
         }
     }
 
-    async fn handle_api(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
-        let path = Self::parse_req_uri(parts.uri.clone()).unwrap();
+    async fn handle_api(&self, parts: Parts, body: Incoming) -> Result<HttpResponse> {
+        let path = Self::parse_req_uri(parts.uri.clone())?;
 
         match parts.method {
             Method::GET => match self.file_explorer.peek(path).await {
@@ -75,34 +88,13 @@ impl FileExplorer {
                     Ok(Response::new(Full::new(Bytes::from(message))))
                 }
             },
-            Method::POST => {
-                self.handle_file_upload(parts, body).await?;
-                Ok(Response::new(Full::new(Bytes::from(
-                    "POST method is not supported",
-                ))))
-            }
+            Method::POST => self.handle_file_upload(parts, body).await,
             _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
         }
     }
 
-    async fn handle_file_upload(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
-        // Extract the `multipart/form-data` boundary from the headers.
-        let boundary = parts
-            .headers
-            .get(CONTENT_TYPE)
-            .and_then(|ct| ct.to_str().ok())
-            .and_then(|ct| multer::parse_boundary(ct).ok());
-
-        // Send `BAD_REQUEST` status if the content-type is not multipart/form-data.
-        if boundary.is_none() {
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Full::from("BAD REQUEST"))
-                .unwrap());
-        }
-
-        // Process the multipart e.g. you can store them in files.
-        if let Err(err) = self.process_multipart(body, boundary.unwrap()).await {
+    async fn handle_file_upload(&self, parts: Parts, body: Incoming) -> Result<HttpResponse> {
+        if let Err(err) = self.process_multipart(body, parts).await {
             return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Full::from(format!("INTERNAL SERVER ERROR: {err}")))
@@ -112,38 +104,49 @@ impl FileExplorer {
         Ok(Response::new(Full::from("Success")))
     }
 
-    async fn process_multipart(&self, bytes: Bytes, boundary: String) -> multer::Result<()> {
-        let cursor = std::io::Cursor::new(bytes);
-        let bytes_stream = tokio_util::io::ReaderStream::new(cursor);
-        let mut multipart = Multipart::new(bytes_stream, boundary);
+    async fn process_multipart(&self, bytes: Incoming, parts: Parts) -> Result<()> {
+        let file_name = parts
+            .headers
+            .get(X_FILE_NAME_HTTP_HEADER)
+            .and_then(|hv| hv.to_str().ok())
+            .context(format!("Missing '{X_FILE_NAME}' header"))?
+            .to_string();
+        let (tx, mut rx) = mpsc::channel(100);
 
-        // Iterate over the fields, `next_field` method will return the next field if
-        // available.
-        while let Some(mut field) = multipart.next_field().await? {
-            // Get the field name.
-            let name = field.name();
+        tokio::spawn(async move {
+            let mut stream = bytes.into_data_stream();
+            let mut file = match File::create(file_name).await {
+                Ok(f) => f,
+                Err(err) => {
+                    if let Err(err) = tx.send(UploadFileMessage::Failed(err.to_string())).await {
+                        eprintln!("Failed to send message through mpsc channel. {err:?}");
+                    }
 
-            // Get the field's filename if provided in "Content-Disposition" header.
-            let file_name = field.file_name().to_owned().unwrap_or("default.png");
+                    return;
+                }
+            };
 
-            // Get the "Content-Type" header as `mime::Mime` type.
-            let content_type = field.content_type();
+            let mut total = 0u64;
 
-            let mut file = tokio::fs::File::create(file_name).await.unwrap();
+            while let Some(Ok(bytes)) = stream.next().await {
+                total += bytes.len() as u64;
 
-            println!(
-                "\n\nName: {name:?}, FileName: {file_name:?}, Content-Type: {content_type:?}\n\n"
-            );
+                if let Err(err) = file.write_all(&bytes).await {
+                    if let Err(err) = tx.send(UploadFileMessage::Failed(err.to_string())).await {
+                        eprintln!("Failed to send message through mpsc channel. {err:?}");
+                    }
 
-            // Process the field data chunks e.g. store them in a file.
-            let mut field_bytes_len = 0;
-            while let Some(field_chunk) = field.chunk().await? {
-                // Do something with field chunk.
-                field_bytes_len += field_chunk.len();
-                file.write_all(&field_chunk).await.unwrap();
+                    break;
+                }
+
+                if let Err(err) = tx.send(UploadFileMessage::Progress(total)).await {
+                    eprintln!("Failed to send message through mpsc channel. {err:?}");
+                }
             }
+        });
 
-            println!("Field Bytes Length: {field_bytes_len:?}");
+        while let Some(message) = rx.recv().await {
+            println!("{message:?}");
         }
 
         Ok(())
@@ -300,7 +303,6 @@ impl FileExplorer {
 impl Handler for FileExplorer {
     async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
         let (parts, body) = req.into_parts();
-        let body = body.collect().await.unwrap().to_bytes();
 
         if parts.uri.path().starts_with("/api/v1") {
             return self.handle_api(parts, body).await;

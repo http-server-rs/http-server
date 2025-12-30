@@ -18,7 +18,7 @@ path = "src/bin/main.rs"
 anyhow = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 gloo = { workspace = true }
-gloo-file = { workspace = true }
+gloo-file = { workspace = true, features = ["futures"] }
 leptos =  { workspace = true, features = ["csr"] }
 leptos_meta = { workspace = true, features = ["csr"] }
 leptos_router = { workspace = true, features = ["csr"] }

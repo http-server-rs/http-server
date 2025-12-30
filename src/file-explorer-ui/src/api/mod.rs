@@ -2,8 +2,8 @@ pub mod proto;
 
 use anyhow::Result;
 use gloo::utils::window;
-use reqwest::{header::CONTENT_TYPE, Url};
-use web_sys::FormData;
+use reqwest::{header::CONTENT_TYPE, Client, Url};
+use web_sys::File;
 
 use self::proto::DirectoryIndex;
 
@@ -31,11 +31,17 @@ impl Api {
         Ok(index)
     }
 
-    pub async fn upload(&self, form_data: FormData) -> Result<()> {
+    pub async fn upload(&self, file: File) -> Result<()> {
+        let file_name = file.name();
+        let reader = gloo_file::futures::read_as_bytes(&file.into()).await?;
+
         let url = self.base_url.join("api/v1")?;
 
-        gloo::net::http::Request::post(url.as_ref())
-            .body(form_data)?
+        Client::new()
+            .post(url.as_ref())
+            .header("Content-Type", "application/octet-stream")
+            .header("X-File-Name", file_name)
+            .body(reader)
             .send()
             .await?;
 
