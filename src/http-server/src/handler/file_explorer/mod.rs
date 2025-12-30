@@ -9,12 +9,15 @@ use std::path::{Component, Path, PathBuf};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
+use futures::StreamExt;
+use http::HeaderName;
 use http::{HeaderValue, Method, Response, StatusCode, Uri, header::CONTENT_TYPE, request::Parts};
 use http_body_util::{BodyExt, Full};
-use multer::Multipart;
+use hyper::body::Incoming;
 use percent_encoding::{percent_decode_str, utf8_percent_encode};
 use proto::{DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use rust_embed::Embed;
+use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
 use crate::handler::Handler;
@@ -22,6 +25,9 @@ use crate::server::{HttpRequest, HttpResponse};
 
 use self::proto::BreadcrumbItem;
 use self::utils::{PERCENT_ENCODE_SET, decode_uri, encode_uri};
+
+const X_FILE_NAME: &str = "x-file-name";
+const X_FILE_NAME_HTTP_HEADER: HeaderName = HeaderName::from_static(X_FILE_NAME);
 
 #[derive(Embed)]
 #[folder = "./ui"]
@@ -40,8 +46,8 @@ impl FileExplorer {
         }
     }
 
-    async fn handle_api(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
-        let path = Self::parse_req_uri(parts.uri.clone()).unwrap();
+    async fn handle_api(&self, parts: Parts, body: Incoming) -> Result<HttpResponse> {
+        let path = Self::parse_req_uri(parts.uri.clone())?;
 
         match parts.method {
             Method::GET => match self.file_explorer.peek(path).await {
@@ -75,34 +81,13 @@ impl FileExplorer {
                     Ok(Response::new(Full::new(Bytes::from(message))))
                 }
             },
-            Method::POST => {
-                self.handle_file_upload(parts, body).await?;
-                Ok(Response::new(Full::new(Bytes::from(
-                    "POST method is not supported",
-                ))))
-            }
+            Method::POST => self.handle_file_upload(parts, body).await,
             _ => Ok(Response::new(Full::new(Bytes::from("Unsupported method")))),
         }
     }
 
-    async fn handle_file_upload(&self, parts: Parts, body: Bytes) -> Result<HttpResponse> {
-        // Extract the `multipart/form-data` boundary from the headers.
-        let mb_boundary = parts
-            .headers
-            .get(CONTENT_TYPE)
-            .and_then(|ct| ct.to_str().ok())
-            .and_then(|ct| multer::parse_boundary(ct).ok());
-
-        // Send `BAD_REQUEST` status if the content-type is not multipart/form-data.
-        let Some(boundary) = mb_boundary else {
-            return Ok(Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Full::from("BAD REQUEST"))
-                .unwrap());
-        };
-
-        // Process the multipart e.g. you can store them in files.
-        if let Err(err) = self.process_multipart(body, boundary).await {
+    async fn handle_file_upload(&self, parts: Parts, body: Incoming) -> Result<HttpResponse> {
+        if let Err(err) = self.process_multipart(body, parts).await {
             return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Full::from(format!("INTERNAL SERVER ERROR: {err}")))
@@ -112,31 +97,21 @@ impl FileExplorer {
         Ok(Response::new(Full::from("Success")))
     }
 
-    async fn process_multipart(&self, bytes: Bytes, boundary: String) -> Result<()> {
-        let cursor = std::io::Cursor::new(bytes);
-        let bytes_stream = tokio_util::io::ReaderStream::new(cursor);
-        let mut multipart = Multipart::new(bytes_stream, boundary);
+    async fn process_multipart(&self, bytes: Incoming, parts: Parts) -> Result<()> {
+        let file_name = parts
+            .headers
+            .get(X_FILE_NAME_HTTP_HEADER)
+            .and_then(|hv| hv.to_str().ok())
+            .context(format!("Missing '{X_FILE_NAME}' header"))?;
+        let mut stream = bytes.into_data_stream();
+        let mut file = File::create(file_name)
+            .await
+            .context("Failed to create target file for upload.")?;
 
-        while let Some(mut field) = multipart.next_field().await? {
-            let name = field.name();
-            let file_name = field
-                .file_name()
-                .to_owned()
-                .context("No file name available in form file.")?;
-            let content_type = field.content_type();
-            let mut file = tokio::fs::File::create(file_name)
+        while let Some(Ok(bytes)) = stream.next().await {
+            file.write_all(&bytes)
                 .await
-                .context("Failed to create target file for upload.")?;
-
-            println!(
-                "\n\nName: {name:?}, FileName: {file_name:?}, Content-Type: {content_type:?}\n\n"
-            );
-
-            while let Some(field_chunk) = field.chunk().await? {
-                file.write_all(&field_chunk)
-                    .await
-                    .context("Failed to write bytes to file")?;
-            }
+                .context("Failed to write bytes to file")?;
         }
 
         Ok(())
@@ -293,7 +268,6 @@ impl FileExplorer {
 impl Handler for FileExplorer {
     async fn handle(&self, req: HttpRequest) -> Result<HttpResponse> {
         let (parts, body) = req.into_parts();
-        let body = body.collect().await.unwrap().to_bytes();
 
         if parts.uri.path().starts_with("/api/v1") {
             return self.handle_api(parts, body).await;

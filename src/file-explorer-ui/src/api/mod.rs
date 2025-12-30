@@ -1,9 +1,9 @@
 pub mod proto;
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use gloo::utils::window;
-use reqwest::{header::CONTENT_TYPE, Url};
-use web_sys::{File, FormData};
+use reqwest::{header::CONTENT_TYPE, Client, Url};
+use web_sys::File;
 
 use self::proto::DirectoryIndex;
 
@@ -32,17 +32,27 @@ impl Api {
     }
 
     pub async fn upload(&self, file: File) -> Result<()> {
-        let url = self.base_url.join("api/v1")?;
-        let form_data = FormData::new()
-            .map_err(|err| Error::msg(format!("Failed to create FormData: {:?}", err)))?;
-        form_data
-            .append_with_blob("file", &file)
-            .map_err(|err| Error::msg(format!("Failed to append file to FormData: {:?}", err)))?;
+        let file_name = file.name();
+        let reader = gloo_file::futures::read_as_bytes(&file.into()).await?;
 
-        gloo::net::http::Request::post(url.as_ref())
-            .body(form_data)?
+        let url = self.base_url.join("api/v1")?;
+        let _response = Client::new()
+            .post(url.as_ref())
+            .header("Content-Type", "application/octet-stream")
+            .header("X-File-Name", file_name)
+            .body(reader)
             .send()
             .await?;
+        // let form_data = FormData::new()
+        //     .map_err(|err| Error::msg(format!("Failed to create FormData: {:?}", err)))?;
+        // form_data
+        //     .append_with_blob("file", &file)
+        //     .map_err(|err| Error::msg(format!("Failed to append file to FormData: {:?}", err)))?;
+
+        // gloo::net::http::Request::post(url.as_ref())
+        //     .body(form_data)?
+        //     .send()
+        //     .await?;
 
         Ok(())
     }
