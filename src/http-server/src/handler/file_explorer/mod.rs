@@ -19,6 +19,7 @@ use proto::{DirectoryEntry, DirectoryIndex, EntryType, Sort};
 use rust_embed::Embed;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
 
 use crate::handler::Handler;
 use crate::server::{HttpRequest, HttpResponse};
@@ -32,6 +33,12 @@ const X_FILE_NAME_HTTP_HEADER: HeaderName = HeaderName::from_static(X_FILE_NAME)
 #[derive(Embed)]
 #[folder = "./ui"]
 struct FileExplorerAssets;
+
+#[derive(Debug)]
+pub enum UploadFileMessage {
+    Progress(u64),
+    Failed(String),
+}
 
 pub struct FileExplorer {
     file_explorer: core::FileExplorer,
@@ -102,16 +109,44 @@ impl FileExplorer {
             .headers
             .get(X_FILE_NAME_HTTP_HEADER)
             .and_then(|hv| hv.to_str().ok())
-            .context(format!("Missing '{X_FILE_NAME}' header"))?;
-        let mut stream = bytes.into_data_stream();
-        let mut file = File::create(file_name)
-            .await
-            .context("Failed to create target file for upload.")?;
+            .context(format!("Missing '{X_FILE_NAME}' header"))?
+            .to_string();
+        let (tx, mut rx) = mpsc::channel(100);
 
-        while let Some(Ok(bytes)) = stream.next().await {
-            file.write_all(&bytes)
-                .await
-                .context("Failed to write bytes to file")?;
+        tokio::spawn(async move {
+            let mut stream = bytes.into_data_stream();
+            let mut file = match File::create(file_name).await {
+                Ok(f) => f,
+                Err(err) => {
+                    if let Err(err) = tx.send(UploadFileMessage::Failed(err.to_string())).await {
+                        eprintln!("Failed to send message through mpsc channel. {err:?}");
+                    }
+
+                    return;
+                }
+            };
+
+            let mut total = 0u64;
+
+            while let Some(Ok(bytes)) = stream.next().await {
+                total += bytes.len() as u64;
+
+                if let Err(err) = file.write_all(&bytes).await {
+                    if let Err(err) = tx.send(UploadFileMessage::Failed(err.to_string())).await {
+                        eprintln!("Failed to send message through mpsc channel. {err:?}");
+                    }
+
+                    break;
+                }
+
+                if let Err(err) = tx.send(UploadFileMessage::Progress(total)).await {
+                    eprintln!("Failed to send message through mpsc channel. {err:?}");
+                }
+            }
+        });
+
+        while let Some(message) = rx.recv().await {
+            println!("{message:?}");
         }
 
         Ok(())
