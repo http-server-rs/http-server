@@ -1,9 +1,9 @@
 pub mod proto;
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use gloo::utils::window;
 use reqwest::{header::CONTENT_TYPE, Url};
-use web_sys::FormData;
+use web_sys::{File, FormData};
 
 use self::proto::DirectoryIndex;
 
@@ -31,8 +31,13 @@ impl Api {
         Ok(index)
     }
 
-    pub async fn upload(&self, form_data: FormData) -> Result<()> {
+    pub async fn upload(&self, file: File) -> Result<()> {
         let url = self.base_url.join("api/v1")?;
+        let form_data = FormData::new()
+            .map_err(|err| Error::msg(format!("Failed to create FormData: {:?}", err)))?;
+        form_data
+            .append_with_blob("file", &file)
+            .map_err(|err| Error::msg(format!("Failed to append file to FormData: {:?}", err)))?;
 
         gloo::net::http::Request::post(url.as_ref())
             .body(form_data)?

@@ -2,7 +2,7 @@ use gloo::utils::window;
 use leptos::logging::log;
 use leptos::wasm_bindgen::JsCast;
 use leptos::{component, create_action, create_node_ref, html, view, IntoView};
-use web_sys::{Event, FormData, HtmlInputElement};
+use web_sys::{Event, HtmlInputElement};
 
 use crate::api::Api;
 use crate::components::atoms::button::Button;
@@ -13,11 +13,8 @@ pub fn FileUpload() -> impl IntoView {
     let upload_file = create_action(|file: &web_sys::File| {
         let file = file.to_owned();
 
-        let form_data = FormData::new().unwrap();
-        form_data.append_with_blob("file", &file).unwrap();
-
         async move {
-            match Api::new().upload(form_data).await {
+            match Api::new().upload(file).await {
                 Ok(_) => {
                     log!("File uploaded successfully");
                     window()
