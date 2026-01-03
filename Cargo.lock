@@ -4073,9 +4073,9 @@ checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
 
 [[package]]
 name = "xprocess"
-version = "0.0.3"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7b0f0ce2ac21c210195be868a7cdf586956dc8ac36ca43a5e64249be06ef71d"
+checksum = "4de17a3ff97bb2ff1cd0f3cbcbc444dc028361806adcb479d69ae1a09707cb61"
 dependencies = [
  "anyhow",
  "libc",
