@@ -18,7 +18,7 @@ keywords = ["configurable", "http", "server", "serve", "static"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/http-server-rs/http-server"
 readme = "./README.md"
-version = "1.0.0-pre.0ba09a6"
+version = "1.0.0-pre.e025b58"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
