@@ -1,4 +1,4 @@
-use leptos::{mount_to_body, view};
+use leptos::prelude::*;
 
 use file_explorer_ui::App;
 

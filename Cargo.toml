@@ -5,7 +5,7 @@ members = [
     "test",
 ]
 default-members = ["src/http-server"]
-resolver = "1"
+resolver = "2"
 
 [workspace.package]
 authors = ["Leo Borai <estebanborai@gmail.com>"]

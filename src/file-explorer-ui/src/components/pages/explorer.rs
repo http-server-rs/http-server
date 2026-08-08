@@ -1,7 +1,5 @@
 use gloo::utils::window;
-use leptos::{
-    component, create_memo, create_signal, spawn_local, view, IntoView, SignalGet, SignalSet,
-};
+use leptos::{prelude::*, task::spawn_local};
 
 use crate::api::proto::DirectoryIndex;
 use crate::api::Api;

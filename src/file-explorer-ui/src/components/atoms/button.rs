@@ -1,4 +1,5 @@
-use leptos::{component, view, Children, IntoView};
+use leptos::children::Children;
+use leptos::prelude::*;
 
 #[component]
 pub fn Button(children: Children) -> impl IntoView {

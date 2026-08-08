@@ -2,7 +2,7 @@ mod download_button;
 mod entry;
 mod entry_icon;
 
-use leptos::{component, view, For, IntoView, Signal, SignalGet};
+use leptos::prelude::*;
 
 use crate::api::proto::DirectoryEntry;
 
