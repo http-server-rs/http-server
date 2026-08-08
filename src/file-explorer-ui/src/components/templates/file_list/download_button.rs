@@ -9,7 +9,7 @@ pub fn DownloadButton(
     #[prop(into)] entry_path: String,
     #[prop(into)] download_name: String,
 ) -> impl IntoView {
-    let anchor_ref = create_node_ref::<A>();
+    let anchor_ref = NodeRef::<A>::new();
     let download_file = {
         move |_: _| {
             let entry_path = entry_path.clone();

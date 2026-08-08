@@ -9,14 +9,14 @@ use crate::components::templates::file_list::FileList;
 
 #[component]
 pub fn Explorer() -> impl IntoView {
-    let (index_getter, index_setter) = create_signal::<Option<DirectoryIndex>>(None);
-    let entries = create_memo(move |_| {
+    let (index_getter, index_setter) = signal::<Option<DirectoryIndex>>(None);
+    let entries = Memo::new(move |_| {
         index_getter
             .get()
             .map(|index| index.entries.clone())
             .unwrap_or_default()
     });
-    let breadcrumbs = create_memo(move |_| {
+    let breadcrumbs = Memo::new(move |_| {
         index_getter
             .get()
             .map(|index| index.breadcrumbs.clone())

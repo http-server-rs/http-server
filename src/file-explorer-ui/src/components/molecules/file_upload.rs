@@ -9,7 +9,7 @@ use crate::components::atoms::button::Button;
 
 #[component]
 pub fn FileUpload() -> impl IntoView {
-    let file_input_el = create_node_ref::<html::Input>();
+    let file_input_el = NodeRef::<html::Input>::new();
     let upload_file = Action::new_local(|file: &web_sys::File| {
         let file = file.to_owned();
 
