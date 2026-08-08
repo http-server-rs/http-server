@@ -8,39 +8,39 @@ default:
     just --list
 
 # Build (debug)
-build:
-    make -C ./src/file-explorer-ui dist
-    make -C ./src/http-server build TARGET={{target}}
+build target=target:
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui dist
+    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server build {{target}}
 
 # Build (release)
-release:
-    make -C ./src/file-explorer-ui release
-    make -C ./src/http-server release TARGET={{target}}
+release target=target:
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
+    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server release {{target}}
 
 # Run http-server
 run:
-    make -C ./src/http-server run
+    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server run
 
 # Build File Explorer UI (release)
 ui-build:
-    make -C ./src/file-explorer-ui release
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
 
 # Run File Explorer UI dev server
 ui-dev:
     @echo Starting File Explorer UI…
-    make -C ./src/file-explorer-ui dev
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui dev
 
 # Format File Explorer UI
 ui-fmt:
-    make -C ./src/file-explorer-ui fmt
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui fmt
 
 # Build File Explorer UI (release)
 ui-release:
-    make -C ./src/file-explorer-ui release
+    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
 
 # Run tests
 test:
-    make -C ./test run
+    just --justfile ./test/Justfile --working-directory ./test run
 
 # Runs the Development-Kit Container
 dkc:

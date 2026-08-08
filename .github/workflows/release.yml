@@ -45,11 +45,12 @@ jobs:
       - name: Install Rust Binaries
         run: |
           cargo binstall -y --force cargo-edit
+          cargo binstall -y --force just
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
       - name: Build (debug)
-        run: make build
+        run: just build
 
       - name: publish crate
         run: |
@@ -103,6 +104,7 @@ jobs:
       - name: Install Rust Binaries
         run: |
           cargo binstall -y --force cargo-tag
+          cargo binstall -y --force just
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
@@ -120,7 +122,7 @@ jobs:
           fi
 
       - name: Build binary
-        run: make release TARGET=${{ matrix.target }}
+        run: just release ${{ matrix.target }}
 
       - name: Package binary
         run: |
@@ -195,7 +197,7 @@ jobs:
           cargo binstall -y --force trunk
 
       - name: Prep Assets and Binary
-        run: make release
+        run: just release
 
       - name: Publish crate
         run: |

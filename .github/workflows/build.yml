@@ -42,6 +42,7 @@ jobs:
 
       - name: Install Rust Binaries
         run: |
+          cargo binstall -y --force just
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
@@ -52,4 +53,4 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Build
-        run: make release TARGET=${{ matrix.target }}
+        run: just release ${{ matrix.target }}

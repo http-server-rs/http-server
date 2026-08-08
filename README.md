@@ -27,13 +27,13 @@
 Build release binaries with:
 
 ```bash
-make release
+just release
 ```
 
-Optionally you can build for other targets by specifying the `TARGET` variable
+Optionally you can build for other targets by passing the target triple
 
 ```bash
-make release TARGET=<target-triple>
+just release <target-triple>
 ```
 
 For example:
@@ -42,7 +42,7 @@ For example:
 # Install aarch64-unknown-linux-gnu target
 rustup target install aarch64-unknown-linux-gnu
 # Build for aarch64-unknown-linux-gnu target
-make release TARGET=aarch64-unknown-linux-gnu
+just release aarch64-unknown-linux-gnu
 ```
 
 Then use the following _alias_ for convenience

@@ -36,9 +36,9 @@ jobs:
 
       - name: Install Rust Binaries
         run: |
+          cargo binstall -y --force just
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
       - name: Run Tests
-        run: |
-          TARGET=$(rustc --version --verbose | grep host | cut -d' ' -f2) make test
+        run: just test
