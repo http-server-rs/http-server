@@ -1,0 +1,23 @@
+set dotenv-load
+set positional-arguments
+
+# List Tasks
+default:
+    just --list
+
+# Run dev server
+dev:
+    trunk serve --config ./Trunk.toml
+
+# Build (debug)
+dist:
+    trunk build --config ./Trunk.toml
+
+# Format
+fmt:
+    @leptosfmt --version >/dev/null 2>&1 || (echo "Error: leptosfmt is required."; exit 1)
+    @leptosfmt ./src/**/*.rs
+
+# Build (release)
+release:
+    trunk build --release --locked --config ./Trunk.toml

@@ -1,0 +1,26 @@
+set dotenv-load
+set positional-arguments
+
+target := `rustc --version --verbose | grep host | cut -d' ' -f2`
+
+# List Tasks
+default:
+    cargo r -- start
+
+# Build (debug)
+build target=target:
+    @echo "Building for target: {{target}}"
+    cargo b --target {{target}}
+
+# Build (release)
+release target=target:
+    @echo "Building with release mode for target: {{target}}"
+    cargo b --release --target {{target}}
+
+# Build File Explorer UI (debug)
+dist:
+    just --justfile ../file-explorer-ui/Justfile --working-directory ../file-explorer-ui dist
+
+# Run http-server
+run: dist
+    cargo r -- start

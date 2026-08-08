@@ -23,11 +23,12 @@ jobs:
 
       - name: Install Rust Binaries
         run: |
+          cargo binstall -y --force just
           cargo binstall -y --force leptosfmt
           cargo binstall -y --force trunk
 
       - name: Release
-        run: make release
+        run: just release
 
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings

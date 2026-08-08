@@ -1,0 +1,14 @@
+set dotenv-load
+set positional-arguments
+
+# List Tasks
+default:
+    just --list
+
+# Run tests
+run: build
+    cargo test
+
+# Build release artifacts
+build:
+    just --justfile ../Justfile --working-directory ../ release
