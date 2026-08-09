@@ -1,4 +1,4 @@
-use leptos::{component, view, IntoView};
+use leptos::prelude::*;
 
 #[component]
 pub fn Toml() -> impl IntoView {

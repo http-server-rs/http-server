@@ -1,7 +1,7 @@
 use gloo::utils::window;
 use leptos::logging::log;
 use leptos::wasm_bindgen::JsCast;
-use leptos::{component, create_action, create_node_ref, html, view, IntoView};
+use leptos::{html, prelude::*};
 use web_sys::{Event, HtmlInputElement};
 
 use crate::api::Api;
@@ -9,8 +9,8 @@ use crate::components::atoms::button::Button;
 
 #[component]
 pub fn FileUpload() -> impl IntoView {
-    let file_input_el = create_node_ref::<html::Input>();
-    let upload_file = create_action(|file: &web_sys::File| {
+    let file_input_el = NodeRef::<html::Input>::new();
+    let upload_file = Action::new_local(|file: &web_sys::File| {
         let file = file.to_owned();
 
         async move {

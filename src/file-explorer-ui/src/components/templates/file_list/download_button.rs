@@ -1,5 +1,5 @@
 use gloo_file::{Blob, ObjectUrl};
-use leptos::{component, create_node_ref, html::A, spawn_local, view, IntoView};
+use leptos::{html::A, prelude::*, task::spawn_local};
 
 use crate::api::{Api, FileDownload};
 use crate::components::atoms::icons::Download;
@@ -9,7 +9,7 @@ pub fn DownloadButton(
     #[prop(into)] entry_path: String,
     #[prop(into)] download_name: String,
 ) -> impl IntoView {
-    let anchor_ref = create_node_ref::<A>();
+    let anchor_ref = NodeRef::<A>::new();
     let download_file = {
         move |_: _| {
             let entry_path = entry_path.clone();
@@ -43,6 +43,6 @@ pub fn DownloadButton(
         >
             <Download class="h-6 w-6" />
         </button>
-        <a hidden="true" _ref={anchor_ref} />
+        <a hidden="true" node_ref={anchor_ref} />
     }
 }

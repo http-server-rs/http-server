@@ -20,8 +20,8 @@ chrono = { workspace = true, features = ["serde"] }
 gloo = { workspace = true }
 gloo-file = { workspace = true, features = ["futures"] }
 leptos =  { workspace = true, features = ["csr"] }
-leptos_meta = { workspace = true, features = ["csr"] }
-leptos_router = { workspace = true, features = ["csr"] }
+leptos_meta = { workspace = true }
+leptos_router = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }
 web-sys = { workspace = true, features = ["FileList", "HtmlInputElement"] }

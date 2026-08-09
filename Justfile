@@ -52,4 +52,4 @@ dkc:
 
 # Perform formatting and linting
 fmt:
-    cargo clippy --workspace --all && cargo fmt
+    cargo clippy --fix --workspace --allow-dirty --allow-staged && cargo fmt

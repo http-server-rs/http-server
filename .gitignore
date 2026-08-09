@@ -68,3 +68,7 @@ dist
 ###########
 src/http-server/inline/*
 !src/http-server/inline/.gitkeep
+
+# AI #
+######
+.claude/settings.local.json

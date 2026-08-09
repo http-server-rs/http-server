@@ -1,5 +1,5 @@
 use chrono::{DateTime, Local};
-use leptos::{component, view, IntoView, View};
+use leptos::prelude::*;
 
 use crate::api::proto::EntryType;
 
@@ -25,14 +25,14 @@ pub fn Entry(
         let entry_type = entry_type.clone();
         let name = name.clone();
 
-        move || -> View {
+        move || -> AnyView {
             if matches!(entry_type, EntryType::Directory) || is_dir {
                 view! {
                     <a href={entry_path} class="hover:text-blue-500">
                         {name}
                     </a>
                 }
-                .into_view()
+                .into_any()
             } else {
                 let download_name = name.clone();
 
@@ -45,14 +45,14 @@ pub fn Entry(
                         download_name={download_name.clone()}
                     />
                 }
-                .into_view()
+                .into_any()
             }
         }
     };
 
     view! {
         <tr class="bg-white border-b hover:bg-blue-50 text-gray-600">
-            <td scope="row" class="px-6 py-2 text-zinc-400">
+            <td class="px-6 py-2 text-zinc-400">
                 <EntryIcon entry_type={entry_type.clone()} />
             </td>
             <th scope="row" class="px-6 py-2 font-semibold whitespace-nowrap text-gray-800">

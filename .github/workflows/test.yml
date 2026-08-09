@@ -19,8 +19,10 @@ jobs:
         include:
           - name: linux
             os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
           - name: macos
             os: macos-latest
+            target: aarch64-apple-darwin
 
     steps:
       - name: Checkout
@@ -41,4 +43,6 @@ jobs:
           cargo binstall -y --force trunk
 
       - name: Run Tests
+        env:
+          TARGET: ${{ matrix.target }}
         run: just test

@@ -1,4 +1,4 @@
-use leptos::{component, view, For, IntoView, Signal, SignalGet};
+use leptos::prelude::*;
 
 use crate::api::proto::BreadcrumbItem;
 use crate::components::atoms::icons::House;
@@ -24,6 +24,7 @@ pub fn NavigationBar(#[prop(into)] breadcrumbs: Signal<Vec<BreadcrumbItem>>) -> 
                                         <span class="mx-2">/</span>
                                     </li>
                                 }
+                                .into_any()
                             } else {
                                 view! {
                                     <li class="flex items-center justify-center">
@@ -31,6 +32,7 @@ pub fn NavigationBar(#[prop(into)] breadcrumbs: Signal<Vec<BreadcrumbItem>>) -> 
                                         <span class="mx-2">/</span>
                                     </li>
                                 }
+                                .into_any()
                             }
                         }
                     />

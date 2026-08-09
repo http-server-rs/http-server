@@ -1,4 +1,4 @@
-use leptos::{component, view, IntoView};
+use leptos::prelude::*;
 
 use crate::components::molecules::file_upload::FileUpload;
 
