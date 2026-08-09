@@ -1289,7 +1289,7 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "1.0.0-pre.e025b58"
+version = "1.0.0-pre.3a26934"
 dependencies = [
  "anyhow",
  "async-stream",
