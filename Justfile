@@ -9,38 +9,37 @@ default:
 
 # Build (debug)
 build target=target:
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui dist
-    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server build {{target}}
+    @echo "Building for target: {{target}}"
+    cargo b --target {{target}}
 
 # Build (release)
 release target=target:
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
-    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server release {{target}}
+    @echo "Building with release mode for target: {{target}}"
+    cargo b --release --target {{target}}
 
-# Run http-server
-run:
-    just --justfile ./src/http-server/Justfile --working-directory ./src/http-server run
+# Run http-server (File Explorer UI is embedded, no extra build step)
+run port="7878" service="file-explorer":
+    cargo r -- start --port {{port}} --service {{service}}
 
-# Build File Explorer UI (release)
-ui-build:
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
+# Type-check the workspace
+check:
+    cargo check --workspace
 
-# Run File Explorer UI dev server
-ui-dev:
-    @echo Starting File Explorer UI…
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui dev
+# Lint with clippy (warnings are errors)
+lint:
+    cargo clippy --workspace -- -D warnings
 
-# Format File Explorer UI
-ui-fmt:
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui fmt
-
-# Build File Explorer UI (release)
-ui-release:
-    just --justfile ./src/file-explorer-ui/Justfile --working-directory ./src/file-explorer-ui release
+# Check formatting without changing files
+fmt-check:
+    cargo fmt --all -- --check
 
 # Run tests
 test:
     just --justfile ./test/Justfile --working-directory ./test run
+
+# Remove build artifacts
+clean:
+    cargo clean
 
 # Runs the Development-Kit Container
 dkc:

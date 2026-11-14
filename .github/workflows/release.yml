@@ -34,8 +34,6 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
 
@@ -46,8 +44,6 @@ jobs:
         run: |
           cargo binstall -y --force cargo-edit
           cargo binstall -y --force just
-          cargo binstall -y --force leptosfmt
-          cargo binstall -y --force trunk
 
       - name: Build (debug)
         run: just build
@@ -86,7 +82,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: |
-            wasm32-unknown-unknown
             ${{ matrix.target }}
 
       - name: Setup Rust Cache
@@ -105,8 +100,6 @@ jobs:
         run: |
           cargo binstall -y --force cargo-tag
           cargo binstall -y --force just
-          cargo binstall -y --force leptosfmt
-          cargo binstall -y --force trunk
 
       - name: Retrieve Git Commit SHA
         run: echo "GIT_COMMIT_SHA7=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
@@ -160,7 +153,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: |
-            wasm32-unknown-unknown
             ${{ matrix.target }}
 
       - name: Setup Rust Cache
@@ -194,8 +186,6 @@ jobs:
       - name: Install Rust Binaries
         run: |
           cargo binstall -y --force just
-          cargo binstall -y --force leptosfmt
-          cargo binstall -y --force trunk
 
       - name: Prep Assets and Binary
         run: just release

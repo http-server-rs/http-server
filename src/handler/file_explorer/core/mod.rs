@@ -1,4 +1,4 @@
-mod fs;
+pub mod fs;
 
 use std::path::{Component, Path, PathBuf};
 
@@ -29,6 +29,11 @@ impl FileExplorer {
     pub async fn peek(&self, path: PathBuf) -> Result<Entry> {
         let relative_path = self.build_relative_path(path);
         self.open(relative_path).await
+    }
+
+    /// Root directory served by this [`FileExplorer`] instance.
+    pub fn root(&self) -> &Path {
+        &self.root
     }
 
     /// Joins the provided `path` with the `root` path of this [`FileExplorer`] instance.
