@@ -17,6 +17,27 @@
 
 </div>
 
+## Install
+
+You can install HTTP Server via cURL
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/http-server-rs/http-server/main/install.sh | sh
+```
+> [!NOTE]
+> Pin version or directory:
+> 
+> ```bash
+> curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/http-server-rs/http-server/main/install.sh \
+    | HTTP_SERVER_VERSION=v1.0.0 HTTP_SERVER_INSTALL_DIR=/usr/local/bin sh
+> ```
+
+or via `cargo`
+
+```
+cargo install http-server
+```
+
 ## Development
 
 > [!NOTE]
