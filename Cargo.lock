@@ -909,7 +909,7 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "1.0.0-pre.6bd810e"
+version = "1.0.0-pre.a502434"
 dependencies = [
  "anyhow",
  "async-trait",
