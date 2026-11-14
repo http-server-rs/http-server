@@ -9,8 +9,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 use async_trait::async_trait;
 use bytes::Bytes;
-use http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
-use http::{HeaderValue, Method, Response};
+use http::header::{CONTENT_DISPOSITION, CONTENT_TYPE, LOCATION};
+use http::{HeaderValue, Method, Response, StatusCode};
 use http_body_util::{BodyExt, Full};
 use topcoat::router::{Body, Router};
 
@@ -73,8 +73,31 @@ impl Handler for FileExplorer {
                 .query()
                 .is_some_and(|q| q.split('&').any(|p| p == "download"));
 
-            if let Ok(Entry::File(file)) = self.file_explorer.peek(path).await {
-                return self.serve_file(file, download).await;
+            match self.file_explorer.peek(path.clone()).await {
+                Ok(Entry::File(file)) => return self.serve_file(file, download).await,
+                Ok(Entry::Directory(_)) => {
+                    // Directory with `index.html`: serve it so browsers render the site.
+                    if let Ok(Entry::File(index)) =
+                        self.file_explorer.peek(path.join("index.html")).await
+                    {
+                        if !req.uri().path().ends_with('/') {
+                            // Redirect so relative asset URLs resolve inside the directory.
+                            let mut location = format!("{}/", req.uri().path());
+                            if let Some(q) = req.uri().query() {
+                                location.push('?');
+                                location.push_str(q);
+                            }
+                            let mut response = Response::new(Full::new(Bytes::new()));
+                            *response.status_mut() = StatusCode::MOVED_PERMANENTLY;
+                            response
+                                .headers_mut()
+                                .insert(LOCATION, HeaderValue::from_str(&location)?);
+                            return Ok(response);
+                        }
+                        return self.serve_file(index, false).await;
+                    }
+                }
+                Err(_) => {}
             }
         }
 
