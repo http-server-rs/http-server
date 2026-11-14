@@ -14,25 +14,23 @@ async fn runs_without_panicking() -> Result<()> {
 }
 
 #[tokio::test]
-async fn returns_json_from_api_index() -> Result<()> {
+async fn renders_html_file_explorer() -> Result<()> {
     let http_server =
         Process::spawn_with_args(release_binary_path()?, ["start", "--port", "7879"])?;
     wait_on_http_server(7879).await?;
 
-    let res = get("http://127.0.0.1:7879/api/v1")
-        .await?
-        .json::<serde_json::Value>()
-        .await?;
+    let res = get("http://127.0.0.1:7879/").await?;
+    let content_type = res
+        .headers()
+        .get("content-type")
+        .context("Missing content-type header.")?
+        .to_str()?
+        .to_string();
+    let body = res.text().await?;
 
-    let entries = res
-        .get("entries")
-        .context("Failed to retrieve entries from JSON.")?;
-
-    let entries = entries
-        .as_array()
-        .context("Failed to convert entries to array.")?;
-
-    assert!(!entries.is_empty(), "Entries array is empty.");
+    assert!(content_type.starts_with("text/html"), "{content_type}");
+    assert!(body.contains("<table>"), "Directory listing table missing.");
+    assert!(body.contains("Cargo.toml"), "Expected entry missing.");
 
     http_server.kill()?;
     Ok(())

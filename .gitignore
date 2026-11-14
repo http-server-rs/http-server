@@ -6,8 +6,6 @@
 #######################
 /target
 /tmp
-/src/http-server/ui/*
-!/src/http-server/ui/.gitkeep
 
 # Compiled source #
 ###################
@@ -66,8 +64,6 @@ dist
 
 # Plugins #
 ###########
-src/http-server/inline/*
-!src/http-server/inline/.gitkeep
 
 # AI #
 ######
