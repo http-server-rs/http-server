@@ -15,10 +15,9 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::config::{Config, Service};
+use crate::config::Config;
 use crate::handler::Handler;
 use crate::handler::file_explorer::FileExplorer;
-use crate::handler::file_server::{FileServer, FileServerConfig};
 
 pub type HttpRequest = Request<Incoming>;
 pub type HttpResponse = Response<Full<Bytes>>;
@@ -47,20 +46,7 @@ impl Server {
         }
 
         let root_dir = PathBuf::from_str("./")?;
-        let service: Arc<dyn Handler> = match self.config.service {
-            Service::FileExplorer { .. } => {
-                let file_explorer = FileExplorer::new(root_dir);
-                Arc::new(file_explorer)
-            }
-            Service::FileServer { .. } => {
-                let file_server = FileServer::new(FileServerConfig {
-                    root_dir,
-                    index: true,
-                    spa: false,
-                });
-                Arc::new(file_server)
-            }
-        };
+        let service: Arc<dyn Handler> = Arc::new(FileExplorer::new(root_dir));
 
         loop {
             let service: Arc<dyn Handler> = Arc::clone(&service);

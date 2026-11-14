@@ -18,8 +18,8 @@ release target=target:
     cargo b --release --target {{target}}
 
 # Run http-server (File Explorer UI is embedded, no extra build step)
-run port="7878" service="file-explorer":
-    cargo r -- start --port {{port}} --service {{service}}
+run port="7878":
+    cargo r -- start --port {{port}}
 
 # Type-check the workspace
 check:

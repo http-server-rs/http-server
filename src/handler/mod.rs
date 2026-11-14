@@ -1,5 +1,4 @@
 pub mod file_explorer;
-pub mod file_server;
 
 use anyhow::Result;
 use async_trait::async_trait;
