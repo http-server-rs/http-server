@@ -119,25 +119,28 @@ jobs:
 
       - name: Package binary
         run: |
-          # Create binary name with version and target
-          BINARY_NAME="http-server-${{ env.CRATE_VERSION }}-${{ matrix.name }}"
+          # Archive layout: <name>/http-server, checked by install.sh
+          NAME="http-server-${{ env.CRATE_VERSION }}-${{ matrix.target }}"
+          mkdir "$NAME"
+          cp target/${{ matrix.target }}/release/http-server "$NAME/http-server"
+          tar -czf "$NAME.tar.gz" "$NAME"
 
-          # Copy and rename binary
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ] || [ "${{ matrix.os }}" == "macos-latest" ]; then
-            cp target/${{ matrix.target }}/release/http-server $BINARY_NAME
+          # SHA-256 published next to the archive, verified by install.sh
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256"
+          else
+            shasum -a 256 "$NAME.tar.gz" > "$NAME.tar.gz.sha256"
           fi
 
-          # Create tar.gz archive
-          tar -czf $BINARY_NAME.tar.gz $BINARY_NAME
-
-          # Store artifact name for later use
-          echo "ARTIFACT_NAME=$BINARY_NAME.tar.gz" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=$NAME.tar.gz" >> $GITHUB_ENV
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARCHIVE_NAME }}
+          path: |
+            ${{ env.ARCHIVE_NAME }}
+            ${{ env.ARCHIVE_NAME }}.sha256
 
   release:
     name: Create Release
@@ -219,7 +222,7 @@ jobs:
           # Upload all binary artifacts
           for artifact_dir in ./artifacts/*/; do
             if [ -d "$artifact_dir" ]; then
-              for file in "$artifact_dir"*.tar.gz; do
+              for file in "$artifact_dir"*.tar.gz "$artifact_dir"*.tar.gz.sha256; do
                 if [ -f "$file" ]; then
                   echo "Uploading $(basename "$file")"
                   gh release upload "${{ env.CRATE_VERSION }}" "$file"
