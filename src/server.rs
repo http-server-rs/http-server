@@ -55,7 +55,7 @@ impl Server {
             Service::FileServer { .. } => {
                 let file_server = FileServer::new(FileServerConfig {
                     root_dir,
-                    index: false,
+                    index: true,
                     spa: false,
                 });
                 Arc::new(file_server)
